@@ -22,11 +22,23 @@ class Home extends StatelessWidget {
             ),
           ),
           new SliverList(
-            delegate: new SliverChildBuilderDelegate((context, index){
+            delegate: new SliverChildListDelegate(
+              [
+                new Container(
+                  child: new Text("hi"),
+                ),
+                new Container(
+                  child: new Text("hi"),
+                ),
+              ]
+            ),
+
+      /*      new SliverChildBuilderDelegate((context, index){
               return new Container(
                 child: new Text("hi"),
               );
             }),
+    */
           )
         ],
       ),
