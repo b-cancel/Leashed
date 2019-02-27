@@ -12,5 +12,5 @@ void main() {
   ]);
 
   //Run our App
-  //runApp(Navigation());
+  runApp(Navigation());
 }

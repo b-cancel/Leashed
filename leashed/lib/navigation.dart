@@ -8,16 +8,17 @@ import 'splash.dart';
 ///(2) define a global Route that can be used by the rest of widgets for navigation
 ///(3) define all potential routes throughout the application
 
-/*
 //-------------------------Root Widget-------------------------
 
 class Navigation extends StatelessWidget {
   //constructor
+  /*
   Navigation() {
     final appRouter = new Router();
     Routes.configureRoutes(appRouter);
     Application.router = appRouter;
   }
+  */
 
   //build app
   @override
@@ -26,7 +27,7 @@ class Navigation extends StatelessWidget {
       title: 'Leashed',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(), //TODO... be able to dynamically change theme in settings
-      onGenerateRoute: Application.router.generator,
+      //onGenerateRoute: Application.router.generator,
       home: new Container(
         child: new Text("asdfsafsdafadsf"),
       ),
@@ -35,6 +36,7 @@ class Navigation extends StatelessWidget {
     );
   }
 }
+/*
 
 //-------------------------Routes-------------------------
 
