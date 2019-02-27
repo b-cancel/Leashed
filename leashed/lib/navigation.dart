@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
+import 'package:leashed/home.dart';
 
-import 'splash.dart';
+
 
 ///This Exists Exclusively to
 ///(1) create a top level Material App that can be used by the rest of the widgets for navigation
@@ -11,14 +12,14 @@ import 'splash.dart';
 //-------------------------Root Widget-------------------------
 
 class Navigation extends StatelessWidget {
-  //constructor
-  /*
+  static final appRouter = new Router();
+
+  //-------------------------Overrides-------------------------
+
+  //init app
   Navigation() {
-    final appRouter = new Router();
-    Routes.configureRoutes(appRouter);
-    Application.router = appRouter;
+    configureRoutes(appRouter);
   }
-  */
 
   //build app
   @override
@@ -27,27 +28,14 @@ class Navigation extends StatelessWidget {
       title: 'Leashed',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(), //TODO... be able to dynamically change theme in settings
-      //onGenerateRoute: Application.router.generator,
-      home: new Container(
-        child: new Text("asdfsafsdafadsf"),
-      ),
-
-      // new SplashScreen(),
+      onGenerateRoute: appRouter.generator,
+      home: new Home(),
     );
   }
-}
-/*
 
-//-------------------------Routes-------------------------
+  //-------------------------Routes-------------------------
 
-class Application {
-  static Router router;
-}
-
-//-------------------------Routes-------------------------
-
-class Routes {
-  static void configureRoutes(Router router) {
+  void configureRoutes(Router router) {
     //----make sure we have a valid router
     router.notFoundHandler = new Handler(
       handlerFunc: (BuildContext context, Map<String, List<String>> params) {
@@ -56,15 +44,15 @@ class Routes {
     );
 
     //-----define the different routes within the router
-    router.define("splash", handler: splashScreenHandler);
+    router.define("home", handler: homeHandler); //TODO... define TransitionType IF needed
   }
-}
 
-//---------------------Router Handlers--------------------
+  //---------------------Router Handlers--------------------
+  /// NOTE: with Fluro you can pass parameters between routes like you do with Ruby
 
-var splashScreenHandler = new Handler(
+  var homeHandler = new Handler(
     handlerFunc: (BuildContext context, Map<String, List<String>> params) {
-      return new SplashScreen();
+      return new Home();
     },
-);
-*/
+  );
+}
