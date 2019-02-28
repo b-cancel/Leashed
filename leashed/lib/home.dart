@@ -1,39 +1,59 @@
 import 'package:flutter/material.dart';
+import 'persistentHeaderDelegate.dart';
 
 class Home extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
         slivers: <Widget>[
-          SliverAppBar(
-            expandedHeight: 200.0,
-            title: new Container(
-              color: Colors.red,
-              child: new Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                mainAxisSize: MainAxisSize.max,
-                children: <Widget>[
-                  Container(child: new Text("left")),
-                  Container(child: new Text("center")),
-                  Container(child: new Text("right")),
-                ],
-              ),
+          SliverPersistentHeader(
+            //---settings
+            //TRUE the app bar should be immediately visible when the user starts scrolling towards the top
+            floating: true,
+            //FALSE lets the bar be scroll away when scrolling to far from view
+            pinned: true,
+            delegate: PersistentHeader(
+              minExtent: 100,
+              maxExtent: 200,
             ),
           ),
           new SliverList(
-            delegate: new SliverChildListDelegate(
-              [
-                new Container(
-                  child: new Text("hi"),
-                ),
-                new Container(
-                  child: new Text("hi"),
-                ),
-              ]
-            ),
+            delegate: new SliverChildListDelegate([
+              new Container(
+                color: Colors.pink,
+                height: 250,
+                child: new Text("hi"),
+              ),
+              new Container(
+                color: Colors.cyan,
+                height: 250,
+                child: new Text("hi"),
+              ),
+              new Container(
+                color: Colors.pink,
+                height: 250,
+                child: new Text("hi"),
+              ),
+              new Container(
+                color: Colors.cyan,
+                height: 250,
+                child: new Text("hi"),
+              ),
+              new Container(
+                color: Colors.pink,
+                height: 250,
+                child: new Text("hi"),
+              ),
+              new Container(
+                color: Colors.cyan,
+                height: 250,
+                child: new Text("hi"),
+              ),
+            ]),
 
-      /*      new SliverChildBuilderDelegate((context, index){
+            /*      new SliverChildBuilderDelegate((context, index){
               return new Container(
                 child: new Text("hi"),
               );
@@ -44,26 +64,7 @@ class Home extends StatelessWidget {
       ),
     );
   }
-}
 
-/*
-this.leading,
-this.automaticallyImplyLeading = true,
-this.title,
-this.actions,
-this.flexibleSpace,
-this.bottom,
-this.elevation,
-this.forceElevated = false,
-this.backgroundColor,
-this.brightness,
-this.iconTheme,
-this.textTheme,
-this.primary = true,
-this.centerTitle,
-this.titleSpacing = NavigationToolbar.kMiddleSpacing,
-this.expandedHeight,
-this.floating = false,
-this.pinned = false,
-this.snap = false,
-*/
+  //functions within class
+
+}

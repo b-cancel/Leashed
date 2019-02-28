@@ -27,7 +27,7 @@ class Navigation extends StatelessWidget {
     return MaterialApp(
       title: 'Leashed',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(), //TODO... be able to dynamically change theme in settings
+      theme: ThemeData.light(), //TODO... be able to dynamically change theme in settings
       onGenerateRoute: appRouter.generator,
       home: new Home(),
     );
