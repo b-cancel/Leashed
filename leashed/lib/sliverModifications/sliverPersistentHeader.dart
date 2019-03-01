@@ -65,6 +65,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     @required this.title,
     @required this.actions,
     @required this.flexibleSpace,
+    @required this.bottom,
     @required this.elevation,
     @required this.forceElevated,
     @required this.backgroundColor,
@@ -80,13 +81,15 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     @required this.floating,
     @required this.pinned,
     @required this.snapConfiguration,
-  }) : assert(primary || topPadding == 0.0);
+  }) : assert(primary || topPadding == 0.0),
+        _bottomHeight = bottom?.preferredSize?.height ?? 0.0;
 
   final Widget leading;
   final bool automaticallyImplyLeading;
   final Widget title;
   final List<Widget> actions;
   final Widget flexibleSpace;
+  final PreferredSizeWidget bottom;
   final double elevation;
   final bool forceElevated;
   final Color backgroundColor;
@@ -102,11 +105,13 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final bool floating;
   final bool pinned;
 
-  @override
-  double get minExtent => 0.0; //collapsedHeight ?? (topPadding + kToolbarHeight);
+  final double _bottomHeight;
 
   @override
-  double get maxExtent => math.max(topPadding + (expandedHeight ?? kToolbarHeight), minExtent);
+  double get minExtent => 0.0; //collapsedHeight ?? (topPadding + kToolbarHeight + _bottomHeight);
+
+  @override
+  double get maxExtent => math.max(topPadding + (expandedHeight ?? kToolbarHeight + _bottomHeight), minExtent);
 
   @override
   final FloatingHeaderSnapConfiguration snapConfiguration;
@@ -115,7 +120,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     final double visibleMainHeight = maxExtent - shrinkOffset - topPadding;
     final double toolbarOpacity = pinned && !floating ? 1.0
-        : ((visibleMainHeight) / kToolbarHeight).clamp(0.0, 1.0);
+        : ((visibleMainHeight - _bottomHeight) / kToolbarHeight).clamp(0.0, 1.0);
     final Widget appBar = MyFlexibleSpaceBar.createSettings(
       minExtent: minExtent,
       maxExtent: maxExtent,
@@ -129,6 +134,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
         flexibleSpace: (title == null && flexibleSpace != null)
             ? Semantics(child: flexibleSpace, header: true)
             : flexibleSpace,
+        bottom: bottom,
         elevation: forceElevated || overlapsContent || (pinned && shrinkOffset > maxExtent - minExtent) ? elevation ?? 4.0 : 0.0,
         backgroundColor: backgroundColor,
         brightness: brightness,
@@ -138,7 +144,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
         centerTitle: centerTitle,
         titleSpacing: titleSpacing,
         toolbarOpacity: toolbarOpacity,
-        bottomOpacity: pinned ? 1.0 : (visibleMainHeight).clamp(0.0, 1.0),
+        bottomOpacity: pinned ? 1.0 : (visibleMainHeight / _bottomHeight).clamp(0.0, 1.0),
       ),
     );
     return floating ? _FloatingAppBar(child: appBar) : appBar;
@@ -151,6 +157,8 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
         || title != oldDelegate.title
         || actions != oldDelegate.actions
         || flexibleSpace != oldDelegate.flexibleSpace
+        || bottom != oldDelegate.bottom
+        || _bottomHeight != oldDelegate._bottomHeight
         || elevation != oldDelegate.elevation
         || backgroundColor != oldDelegate.backgroundColor
         || brightness != oldDelegate.brightness
@@ -482,6 +490,7 @@ class _MySliverPersistentHeaderState extends State<MySliverPersistentHeader> wit
           title: widget.title,
           actions: widget.actions,
           flexibleSpace: widget.flexibleSpace,
+          bottom: widget.bottom,
           elevation: widget.elevation,
           forceElevated: widget.forceElevated,
           backgroundColor: widget.backgroundColor,
