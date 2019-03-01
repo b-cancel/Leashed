@@ -108,7 +108,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final double _bottomHeight;
 
   @override
-  double get minExtent => collapsedHeight ?? (topPadding + kToolbarHeight + _bottomHeight);
+  double get minExtent => 0.0; //collapsedHeight ?? (topPadding + kToolbarHeight + _bottomHeight);
 
   @override
   double get maxExtent => math.max(topPadding + (expandedHeight ?? kToolbarHeight + _bottomHeight), minExtent);

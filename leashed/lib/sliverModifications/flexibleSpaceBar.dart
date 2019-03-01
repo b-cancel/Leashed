@@ -150,6 +150,12 @@ class _MyFlexibleSpaceBarState extends State<MyFlexibleSpaceBar> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final FlexibleSpaceBarSettings settings = context.inheritFromWidgetOfExactType(FlexibleSpaceBarSettings);
     assert(settings != null, 'A FlexibleSpaceBar must be wrapped in the widget returned by FlexibleSpaceBar.createSettings().');
@@ -197,40 +203,29 @@ class _MyFlexibleSpaceBarState extends State<MyFlexibleSpaceBar> {
       }
 
       final ThemeData theme = Theme.of(context);
-      double opacity = 1.0;
-      if (opacity > 0.0) {
-        TextStyle titleStyle = theme.primaryTextTheme.title;
+      final bool effectiveCenterTitle = _getEffectiveCenterTitle(theme);
+      final Alignment titleAlignment = _getTitleAlignment(effectiveCenterTitle);
+      Widget titleHolder = Transform(
+        alignment: titleAlignment,
+        transform: Matrix4.identity(),
+        child: Align(
+          alignment: titleAlignment,
+          child: SafeArea(
+            child: title,
+          ),
+        ),
+      );
 
-        titleStyle = titleStyle.copyWith(
-            color: titleStyle.color.withOpacity(opacity)
-        );
-
-        final bool effectiveCenterTitle = _getEffectiveCenterTitle(theme);
-        final double scaleValue = Tween<double>(begin: 1.5, end: 1.0).transform(t);
-        final Matrix4 scaleTransform = Matrix4.identity()
-          ..scale(scaleValue, scaleValue, 1.0);
-        final Alignment titleAlignment = _getTitleAlignment(effectiveCenterTitle);
-        children.add(Container(
-            padding: EdgeInsetsDirectional.only(
-                start: effectiveCenterTitle ? 0.0 : 72.0,
-                bottom: 16.0
-            ),
-            child: Transform(
-                alignment: titleAlignment,
-                transform: scaleTransform,
-                child: Align(
-                    alignment: titleAlignment,
-                    child: DefaultTextStyle(
-                      style: titleStyle,
-                      child: title,
-                    )
-                )
-            )
-        ));
-      }
+      children.add(
+        titleHolder,
+      );
     }
 
-    return ClipRect(child: Stack(children: children));
+    return ClipRect(
+      child: Stack(
+        children: children,
+      ),
+    );
   }
 }
 
