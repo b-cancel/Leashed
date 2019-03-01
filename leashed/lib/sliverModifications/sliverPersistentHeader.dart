@@ -44,14 +44,31 @@ class _FloatingAppBarState extends State<_FloatingAppBar> {
   void _isScrollingListener() {
     if (_position == null)
       return;
+    else{
+      // When a scroll stops, then maybe snap the appbar into view.
+      // Similarly, when a scroll starts, then maybe stop the snap animation.
+      final RenderSliverFloatingPersistentHeader header = _headerRenderer();
+      if (_position.isScrollingNotifier.value)
+        header?.maybeStopSnapAnimation(_position.userScrollDirection);
+      else
+        header?.maybeStartSnapAnimation(_position.userScrollDirection);
+    }
+  }
 
-    // When a scroll stops, then maybe snap the appbar into view.
-    // Similarly, when a scroll starts, then maybe stop the snap animation.
+  @override
+  void initState() {
+    startMinimized();
+
+    // TODO: implement initState
+    super.initState();
+  }
+
+  startMinimized() async{
+    await Future.delayed(Duration(seconds: 1));
     final RenderSliverFloatingPersistentHeader header = _headerRenderer();
-    if (_position.isScrollingNotifier.value)
-      header?.maybeStopSnapAnimation(_position.userScrollDirection);
-    else
-      header?.maybeStartSnapAnimation(_position.userScrollDirection);
+    if(header == null) print("null");
+    else print("not null");
+    header?.maybeStartSnapAnimation(ScrollDirection.forward);
   }
 
   @override

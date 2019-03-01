@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'dart:math' as math;
+
 import 'package:leashed/sliverModifications/sliverPersistentHeader.dart' as sliverPersistentHeader;
 import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSpaceBar;
 
@@ -23,8 +25,126 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
   double warningThickness = 40;
   double alignmentPush = 50;
   Color introOverlay = Color.fromARGB(128, 0, 0, 0);
-  Color bottomOfIntroImage = Color.fromARGB(155, 248, 215, 218);
-  Color topOfIntroImage = Color.fromARGB(255, 141, 140, 140);
+  Color topOfIntroImage = Color.fromARGB(255, 146, 204, 241);
+  Color bottomOfIntroImage = Color.fromARGB(255, 141, 140, 140);
+
+  final deviceCount = ValueNotifier<int>(0);
+
+  @override
+  Widget build(BuildContext context) {
+    return new AnimatedBuilder(
+      animation: deviceCount,
+      builder: (context, child){
+        if(deviceCount.value == 0){
+          return NoDevices(
+            topOfIntroImage: topOfIntroImage,
+            bottomOfIntroImage: bottomOfIntroImage,
+            deviceCount: deviceCount,
+          );
+        }
+        else{
+          return Devices(
+            warningThickness: warningThickness,
+            introOverlay: introOverlay,
+            bottomOfIntroImage: bottomOfIntroImage,
+            alignmentPush: alignmentPush,
+            deviceCount: deviceCount,
+          );
+        }
+      },
+    );
+  }
+}
+
+class NoDevices extends StatelessWidget {
+  const NoDevices({
+    Key key,
+    @required this.bottomOfIntroImage,
+    @required this.topOfIntroImage,
+    this.deviceCount,
+  }) : super(key: key);
+
+  final Color bottomOfIntroImage;
+  final Color topOfIntroImage;
+  final ValueNotifier<int> deviceCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: new AppBar(
+        titleSpacing: 0,
+        backgroundColor: Colors.blueGrey[900],
+        title: NavBar(
+          warningThickness: 40,
+          deviceCount: deviceCount,
+        ),
+      ),
+      body: new Container(
+        color: Colors.red,
+        child: new OrientationBuilder(
+          builder: (context, orientation) {
+            if(orientation == Orientation.portrait){
+              return Column(
+                children: <Widget>[
+                  Expanded(
+                    child: Container(
+                      color: topOfIntroImage,
+                    ),
+                  ),
+                  Image.asset(
+                    'assets/pngs/intro2.png',
+                    fit: BoxFit.fitWidth,
+                  ),
+                  Expanded(
+                    child: Container(
+                      color: bottomOfIntroImage,
+                    ),
+                  ),
+                ],
+              );
+            }
+            else{
+              return Container(
+                color: topOfIntroImage,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Image.asset(
+                      'assets/pngs/introLeftPanel.png',
+                      fit: BoxFit.fitHeight,
+                    ),
+                    Image.asset(
+                      'assets/pngs/intro2.png',
+                      fit: BoxFit.fitHeight,
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
+
+class Devices extends StatelessWidget {
+  const Devices({
+    Key key,
+    @required this.bottomOfIntroImage,
+    @required this.warningThickness,
+    @required this.alignmentPush,
+    @required this.introOverlay,
+    this.deviceCount,
+  }) : super(key: key);
+
+  final Color bottomOfIntroImage;
+  final double warningThickness;
+  final double alignmentPush;
+  final Color introOverlay;
+
+  final ValueNotifier<int> deviceCount;
 
   @override
   Widget build(BuildContext context) {
@@ -90,36 +210,9 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
                     //---------Nav Bar (24 size, with 8 padding on both sides)
-                    Container(
-                      height: warningThickness,
-                      width: MediaQuery.of(context).size.width,
-                      child: new Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          IconButton(
-                            icon: Icon(
-                              Icons.add_to_photos,
-                              color: Colors.white,
-                            ),
-                            onPressed: () => print("adding device"),
-                          ),
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            child: new Image.asset(
-                                'assets/pngs/leashedWhite.png',
-                                fit: BoxFit.fitHeight,
-                              ),
-
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.settings,
-                              color: Colors.white,
-                            ),
-                            onPressed: () => print("going to settings"),
-                          )
-                        ],
-                      ),
+                    NavBar(
+                      warningThickness: 40,
+                      deviceCount: deviceCount,
                     ),
                     //----------ERROR
                     Container(
@@ -152,72 +245,120 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
           ),
           new SliverList(
             delegate: new SliverChildListDelegate([
-              new Container(
-                color: Colors.pink,
-                height: 250,
-                child: new Text("hi"),
-              ),
-              new Container(
-                color: Colors.cyan,
-                height: 250,
-                child: new Text("hi"),
-              ),
-              new Container(
-                color: Colors.pink,
-                height: 250,
-                child: new Text("hi"),
-              ),
-              new Container(
-                color: Colors.cyan,
-                height: 250,
-                child: new Text("hi"),
-              ),
-              new Container(
-                color: Colors.pink,
-                height: 250,
-                child: new Text("hi"),
-              ),
-              Container(
-                color: Colors.green,
-                height: 250,
-                child: OverflowBox(
-                  alignment: Alignment.bottomCenter,
-                  maxHeight: 1000,
-                  child: new Container(
-                    alignment: Alignment.bottomCenter,
-                    height: 750,
-                    color: Colors.pink,
-                    child: new Image.asset(
-                      'assets/pngs/intro.png',
-                      fit: BoxFit.fitWidth,
-                    ),
-                  ),
-                ),
-              ),
-              new Container(
-                color: Colors.cyan,
-                height: 250,
-                child: new Text("hi"),
-              ),
-            ]),
+              device(context, "laptop.jpg", "Laptop", "In Range: 3m away"),
+              device(context, "keys.jpg", "Keys", "Last Seen: 2/28/19"),
+              device(context, "wallet.jpg", "Wallet", "Waiting at: 1322 Cage St."),
+              device(context, "headphones.jpg", "Headphones", "Turned off: on 2/14/19"),
+              device(context, "backpack.jpg", "Backpack", "In Range: 1m away"),
 
-            /*      new SliverChildBuilderDelegate((context, index){
-              return new Container(
-                child: new Text("hi"),
-              );
-            }),
-    */
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Widget device(BuildContext context, String image, String name, String status){
+
+  image = "assets/placeholders/" + image; //TODO... change this to no longer work with placeholders
+
+  double width = MediaQuery.of(context).size.width / 4;
+  double height = MediaQuery.of(context).size.height / 4;
+  double imageSize = math.min(width, height);
+
+  return Column(
+    children: <Widget>[
+      ListTile(
+        isThreeLine: true,
+        contentPadding: EdgeInsets.all(16.0),
+        leading: new Container(
+          color: Colors.blueGrey,
+          width: imageSize,
+          height: imageSize,
+          child: new Image.asset(
+            image,
+            fit: BoxFit.cover,
+          ),
+        ),
+        title: new Text(
+          name,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: new Text(
+          status,
+          style: TextStyle(
+            fontSize: 18,
+          ),
+        ),
+      ),
+      Container(
+        padding: EdgeInsets.only(right: (imageSize * 4) * (1/10)),
+        child: Divider(
+          color: Colors.blueGrey[900],
+          height: 2,
+        ),
+      )
+    ],
+  );
+
+
+}
+
+class NavBar extends StatelessWidget {
+  const NavBar({
+    Key key,
+    @required this.warningThickness,
+    this.deviceCount,
+  }) : super(key: key);
+
+  final double warningThickness;
+
+  final ValueNotifier<int> deviceCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: warningThickness,
+      width: MediaQuery.of(context).size.width,
+      child: new Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.add_to_photos,
+              color: Colors.white,
+            ),
+            onPressed: () => deviceCount.value = deviceCount.value + 1,
+          ),
+          Container(
+            padding: EdgeInsets.all(8),
+            child: new Image.asset(
+                'assets/pngs/leashedWhite.png',
+                fit: BoxFit.fitHeight,
+              ),
+
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.settings,
+              color: Colors.white,
+            ),
+            onPressed: () => deviceCount.value = deviceCount.value - 1,
           )
         ],
       ),
     );
   }
-  
-  double calcMaxExtent(BuildContext context){
-    double screenHeight = MediaQuery.of(context).size.height;
-    double halfHeight = screenHeight / 2;
-    // half is a good size cuz that is realistically what most can access
-    // but at the same time just having the image on half the screen isn't going to look great
-    return (halfHeight - (halfHeight * .25));
-  }
+}
+
+double calcMaxExtent(BuildContext context){
+  double screenHeight = MediaQuery.of(context).size.height;
+  double halfHeight = screenHeight / 2;
+  // half is a good size cuz that is realistically what most can access
+  // but at the same time just having the image on half the screen isn't going to look great
+  return (halfHeight - (halfHeight * (1/5)));
 }
