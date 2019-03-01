@@ -210,9 +210,7 @@ class _MyFlexibleSpaceBarState extends State<MyFlexibleSpaceBar> {
         transform: Matrix4.identity(),
         child: Align(
           alignment: titleAlignment,
-          child: SafeArea(
-            child: title,
-          ),
+          child: title,
         ),
       );
 

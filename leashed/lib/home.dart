@@ -20,46 +20,136 @@ class Home extends StatefulWidget{
 }
 
 class HomeState extends State<Home>  with TickerProviderStateMixin {
+  double warningThickness = 40;
+  double alignmentPush = 50;
+  Color introOverlay = Color.fromARGB(128, 0, 0, 0);
+  Color bottomOfIntroImage = Color.fromARGB(155, 248, 215, 218);
+  Color topOfIntroImage = Color.fromARGB(255, 141, 140, 140);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
         slivers: <Widget>[
           sliverPersistentHeader.MySliverPersistentHeader(
+            //---behavior settings
             snap: true,
             pinned: true,
             floating: true,
-            expandedHeight: 250,
-            centerTitle: true,
-            backgroundColor: Colors.red,
+            //---size settings
+            maxExtent: calcMaxExtent(context),
+            minExtentAddition:  40, //NOTE: found by simply trying out the app
+            //---background that shows up on min
+            backgroundColor: Colors.grey[900],
+            //---background that shows up on max
             flexibleSpace: flexibleSpaceBar.MyFlexibleSpaceBar(
-              background: Container(
-                color: Colors.green,
-                child: new Text("pink\ndslkjflksdf\n\asdfa\nasdfsadf\nas\n\n\n\nasdas\nasd\nasd\nasd\nasd\nasd\nasd\nasd\n\asdfadsf"),
+              background: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  Container(
+                    color: bottomOfIntroImage,
+                  ),
+                  Transform.translate(
+                    offset: Offset(0, -warningThickness -alignmentPush),
+                    child: OverflowBox(
+                      alignment: Alignment.bottomCenter,
+                      maxHeight: 1000,
+                      child: new Container(
+                        alignment: Alignment.bottomCenter,
+                        height: 1000,
+                        color: Colors.pink,
+                        child: new Image.asset(
+                          'assets/pngs/intro2.png',
+                          fit: BoxFit.fitWidth,
+                        ),
+                      ),
+                    ),
+                  ),
+                  new Container(
+                    color: introOverlay,
+                  ),
+                  new Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.black,
+                        ],
+                        stops: [0.0, 1.0],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        tileMode: TileMode.repeated,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               collapseMode: flexibleSpaceBar.CollapseMode.pin,
-              title: Container(
-                //color: Colors.red,
-                child: new Text("space bar"),
+              title: SafeArea(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    //---------Nav Bar (24 size, with 8 padding on both sides)
+                    Container(
+                      height: warningThickness,
+                      width: MediaQuery.of(context).size.width,
+                      child: new Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          IconButton(
+                            icon: Icon(
+                              Icons.add_to_photos,
+                              color: Colors.white,
+                            ),
+                            onPressed: () => print("adding device"),
+                          ),
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            child: new Image.asset(
+                                'assets/pngs/leashedWhite.png',
+                                fit: BoxFit.fitHeight,
+                              ),
+
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.settings,
+                              color: Colors.white,
+                            ),
+                            onPressed: () => print("going to settings"),
+                          )
+                        ],
+                      ),
+                    ),
+                    //----------ERROR
+                    Container(
+                      color: Colors.red,
+                      child: FlatButton(
+                        onPressed: () => print("open up bluetooth"),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Icon(
+                                Icons.warning,
+                              ),
+                            ),
+                            new Text(
+                              "Please Tap Here To Turn On Your Bluetooth",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          /*
-          SliverPersistentHeader(
-            //---settings
-            /// NOTE: both true causes the top bar to shift from the top in IOS [GROSS]
-            //TRUE the app bar should be immediately visible when the user starts scrolling towards the top
-            floating: false,
-            //NOTE: always TRUE since this bar also tells you to turn on bluetooth
-            //that should always be onscreen when it is required
-            pinned: true,
-
-            delegate: PersistentHeader(
-              minExtent: 50,
-              maxExtent: 350
-            ),
-          ),
-          */
           new SliverList(
             delegate: new SliverChildListDelegate([
               new Container(
@@ -87,6 +177,23 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
                 height: 250,
                 child: new Text("hi"),
               ),
+              Container(
+                color: Colors.green,
+                height: 250,
+                child: OverflowBox(
+                  alignment: Alignment.bottomCenter,
+                  maxHeight: 1000,
+                  child: new Container(
+                    alignment: Alignment.bottomCenter,
+                    height: 750,
+                    color: Colors.pink,
+                    child: new Image.asset(
+                      'assets/pngs/intro.png',
+                      fit: BoxFit.fitWidth,
+                    ),
+                  ),
+                ),
+              ),
               new Container(
                 color: Colors.cyan,
                 height: 250,
@@ -104,5 +211,13 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+  
+  double calcMaxExtent(BuildContext context){
+    double screenHeight = MediaQuery.of(context).size.height;
+    double halfHeight = screenHeight / 2;
+    // half is a good size cuz that is realistically what most can access
+    // but at the same time just having the image on half the screen isn't going to look great
+    return (halfHeight - (halfHeight * .25));
   }
 }

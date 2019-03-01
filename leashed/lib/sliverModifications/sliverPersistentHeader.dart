@@ -81,6 +81,10 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     @required this.floating,
     @required this.pinned,
     @required this.snapConfiguration,
+    this.minExtentAddition,
+    this.maxExtentAddition,
+    this.ourMinExtent,
+    this.ourMaxExtent,
   }) : assert(primary || topPadding == 0.0),
         _bottomHeight = bottom?.preferredSize?.height ?? 0.0;
 
@@ -105,13 +109,19 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final bool floating;
   final bool pinned;
 
+  final minExtentAddition;
+  final maxExtentAddition;
+
+  final ourMinExtent;
+  final ourMaxExtent;
+
   final double _bottomHeight;
 
   @override
-  double get minExtent => 0.0; //collapsedHeight ?? (topPadding + kToolbarHeight + _bottomHeight);
+  double get minExtent => ourMinExtent ?? collapsedHeight ?? (topPadding + kToolbarHeight + _bottomHeight) + minExtentAddition ?? 0;
 
   @override
-  double get maxExtent => math.max(topPadding + (expandedHeight ?? kToolbarHeight + _bottomHeight), minExtent);
+  double get maxExtent => ourMaxExtent ?? math.max(topPadding + (expandedHeight ?? kToolbarHeight + _bottomHeight), minExtent) + maxExtentAddition ?? 0;
 
   @override
   final FloatingHeaderSnapConfiguration snapConfiguration;
@@ -252,6 +262,12 @@ class MySliverPersistentHeader extends StatefulWidget {
     this.floating = false,
     this.pinned = false,
     this.snap = false,
+
+    this.minExtentAddition,
+    this.maxExtentAddition,
+
+    this.minExtent,
+    this.maxExtent,
   }) : assert(automaticallyImplyLeading != null),
         assert(forceElevated != null),
         assert(primary != null),
@@ -437,6 +453,12 @@ class MySliverPersistentHeader extends StatefulWidget {
   /// appears at the top of its scroll view.
   final bool snap;
 
+  final minExtentAddition;
+  final maxExtentAddition;
+
+  final minExtent;
+  final maxExtent;
+
   @override
   _MySliverPersistentHeaderState createState() => _MySliverPersistentHeaderState();
 }
@@ -506,6 +528,12 @@ class _MySliverPersistentHeaderState extends State<MySliverPersistentHeader> wit
           floating: widget.floating,
           pinned: widget.pinned,
           snapConfiguration: _snapConfiguration,
+
+          minExtentAddition: widget.minExtentAddition,
+          maxExtentAddition: widget.maxExtentAddition,
+
+          ourMinExtent: widget.minExtent,
+          ourMaxExtent: widget.maxExtent,
         ),
       ),
     );
