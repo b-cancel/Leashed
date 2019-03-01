@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'sliverPersistentHeader.dart' as sliverPersistentHeader;
-import 'flexibleSpaceBar.dart' as flexibleSpaceBar;
+import 'package:leashed/sliverModifications/sliverPersistentHeader.dart' as sliverPersistentHeader;
+import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSpaceBar;
 
 class HomeStateLess extends StatelessWidget {
   @override
@@ -29,6 +29,7 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
             snap: true,
             pinned: true,
             floating: true,
+            expandedHeight: 250,
             flexibleSpace: flexibleSpaceBar.MyFlexibleSpaceBar(
               background: Container(
                 color: Colors.pink,
@@ -40,7 +41,6 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
                 child: new Text("space bar"),
               ),
             ),
-            title: new Text("celskdjflksdf"),
           ),
           /*
           SliverPersistentHeader(

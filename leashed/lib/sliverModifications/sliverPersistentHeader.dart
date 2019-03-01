@@ -4,7 +4,7 @@ import 'package:flutter/rendering.dart';
 
 import 'dart:math' as math;
 
-import 'package:leashed/flexibleSpaceBar.dart';
+import 'package:leashed/sliverModifications/flexibleSpaceBar.dart';
 
 class _FloatingAppBar extends StatefulWidget {
   const _FloatingAppBar({ Key key, this.child }) : super(key: key);

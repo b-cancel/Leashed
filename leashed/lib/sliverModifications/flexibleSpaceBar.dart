@@ -197,7 +197,7 @@ class _MyFlexibleSpaceBarState extends State<MyFlexibleSpaceBar> {
       }
 
       final ThemeData theme = Theme.of(context);
-      final double opacity = settings.toolbarOpacity;
+      double opacity = 1.0;
       if (opacity > 0.0) {
         TextStyle titleStyle = theme.primaryTextTheme.title;
 
