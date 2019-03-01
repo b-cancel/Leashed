@@ -1,24 +1,63 @@
 import 'package:flutter/material.dart';
-import 'persistentHeaderDelegate.dart';
 
-class Home extends StatelessWidget {
+import 'sliverPersistentHeader.dart' as sliverPersistentHeader;
+import 'flexibleSpaceBar.dart' as flexibleSpaceBar;
 
+class HomeStateLess extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Home();
+  }
+}
+
+
+class Home extends StatefulWidget{
+
+  @override
+  HomeState createState() {
+    return new HomeState();
+  }
+}
+
+class HomeState extends State<Home>  with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
         slivers: <Widget>[
+          sliverPersistentHeader.MySliverPersistentHeader(
+            snap: true,
+            pinned: true,
+            floating: true,
+            flexibleSpace: flexibleSpaceBar.MyFlexibleSpaceBar(
+              background: Container(
+                color: Colors.pink,
+                child: new Text("pink"),
+              ),
+              collapseMode: flexibleSpaceBar.CollapseMode.none,
+              title: Container(
+                //color: Colors.red,
+                child: new Text("space bar"),
+              ),
+            ),
+            title: new Text("celskdjflksdf"),
+          ),
+          /*
           SliverPersistentHeader(
             //---settings
+            /// NOTE: both true causes the top bar to shift from the top in IOS [GROSS]
             //TRUE the app bar should be immediately visible when the user starts scrolling towards the top
-            floating: true,
-            //FALSE lets the bar be scroll away when scrolling to far from view
+            floating: false,
+            //NOTE: always TRUE since this bar also tells you to turn on bluetooth
+            //that should always be onscreen when it is required
             pinned: true,
+
             delegate: PersistentHeader(
-              minExtent: 100,
-              maxExtent: 200,
+              minExtent: 50,
+              maxExtent: 350
             ),
           ),
+          */
           new SliverList(
             delegate: new SliverChildListDelegate([
               new Container(
@@ -64,7 +103,4 @@ class Home extends StatelessWidget {
       ),
     );
   }
-
-  //functions within class
-
 }

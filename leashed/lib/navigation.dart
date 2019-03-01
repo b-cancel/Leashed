@@ -29,7 +29,7 @@ class Navigation extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData.light(), //TODO... be able to dynamically change theme in settings
       onGenerateRoute: appRouter.generator,
-      home: new Home(),
+      home: new HomeStateLess(),
     );
   }
 
