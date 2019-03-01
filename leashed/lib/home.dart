@@ -31,10 +31,11 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
             floating: true,
             expandedHeight: 250,
             centerTitle: true,
+            backgroundColor: Colors.red,
             flexibleSpace: flexibleSpaceBar.MyFlexibleSpaceBar(
               background: Container(
                 color: Colors.green,
-                child: new Text("pink"),
+                child: new Text("pink\ndslkjflksdf\n\asdfa\nasdfsadf\nas\n\n\n\nasdas\nasd\nasd\nasd\nasd\nasd\nasd\nasd\n\asdfadsf"),
               ),
               collapseMode: flexibleSpaceBar.CollapseMode.pin,
               title: Container(
