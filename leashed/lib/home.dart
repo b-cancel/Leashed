@@ -332,7 +332,9 @@ class NavBar extends StatelessWidget {
               Icons.add_to_photos,
               color: Colors.white,
             ),
-            onPressed: () => deviceCount.value = deviceCount.value + 1,
+            onPressed: (){
+              router.navigateTo(context, "/users/1234", transition: TransitionType.fadeIn);
+            },//() => deviceCount.value = deviceCount.value + 1,
           ),
           Container(
             padding: EdgeInsets.all(8),
