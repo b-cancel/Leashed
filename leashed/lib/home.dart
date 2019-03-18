@@ -333,7 +333,7 @@ class NavBar extends StatelessWidget {
               color: Colors.white,
             ),
             onPressed: (){
-              router.navigateTo(context, "/users/1234", transition: TransitionType.fadeIn);
+              //router.navigateTo(context, "/users/1234", transition: TransitionType.fadeIn);
             },//() => deviceCount.value = deviceCount.value + 1,
           ),
           Container(
