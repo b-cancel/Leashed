@@ -29,7 +29,7 @@ class _AddDeviceState extends State<AddDevice> {
   //starts and stops scan depending on bluetooth connection
   bool isScanning = false; //must start FALSE
   //lets user change scan mode (primarily for testing)
-  int scanMode = ScanMode.lowPower.value;
+  int scanMode = ScanMode.lowLatency.value;
 
   ///-------------------------Functions-------------------------
 
@@ -109,12 +109,12 @@ class _AddDeviceState extends State<AddDevice> {
       String alternatingChar = "";
       if(scanTime == dtZero){
         scanTime = DateTime.now();
-        alternatingChar = ")(";
+        alternatingChar = " )(";
       }
       else{
         scanDuration = (DateTime.now()).difference(scanTime);
         scanTime = dtZero;
-        alternatingChar = "()";
+        alternatingChar = " ()";
       }
 
       //a list of all the tiles that will be shown in the list view
@@ -155,33 +155,33 @@ class _AddDeviceState extends State<AddDevice> {
             Container(
               padding: EdgeInsets.fromLTRB(16,8,16,8),
               width: MediaQuery.of(context).size.width,
-              child: DropdownButton<String>(
-                value: scanMode.toString(),
-                onChanged: (String newValue) {
+              child: DropdownButton<int>(
+                value: scanMode,
+                onChanged: (int newValue) {
                   //trigger functional change
                   _stopScan();
 
                   //trigger visual UI change
                   setState(() {
-                    scanMode = int.parse(newValue);
+                    scanMode = newValue;
                     //NOTE: this will also start the scan
                   });
                 },
                 items: [
-                  DropdownMenuItem<String>(
-                      value: "0",
+                  DropdownMenuItem<int>(
+                      value: 0,
                       child: Text("Low Power"),
                   ),
-                  DropdownMenuItem<String>(
-                      value: "1",
+                  DropdownMenuItem<int>(
+                      value: 1,
                       child: Text("Balanced"),
                   ),
-                  DropdownMenuItem<String>(
-                      value: "2",
+                  DropdownMenuItem<int>(
+                      value: 2,
                       child: Text("Low Latency"),
                   ),
-                  DropdownMenuItem<String>(
-                      value: "-1",
+                  DropdownMenuItem<int>(
+                      value: -1,
                       child: Text("Opportunistic"),
                   ),
                 ],
