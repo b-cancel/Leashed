@@ -12,23 +12,31 @@ class AddDevice extends StatefulWidget {
 }
 
 class _AddDeviceState extends State<AddDevice> {
-  Map<DeviceIdentifier, DeviceDetails> devices = new Map<DeviceIdentifier, DeviceDetails>();
+  Map<String, DeviceDetails> devices = new Map<String, DeviceDetails>();
 
- ///-------------------------Variables-------------------------
+  ///-------------------------Variables-------------------------
 
+  ///-------------------------Flutter Blue
+  
   FlutterBlue _flutterBlue = FlutterBlue.instance;
   StreamSubscription _scanSubscription;
   Map<DeviceIdentifier, ScanResult> scanResults = new Map(); 
   StreamSubscription _stateSubscription;
   BluetoothState bluetoothState = BluetoothState.unknown;
-  bool isScanning = false;
+
+  ///-------------------------Other
+  
+  //starts and stops scan depending on bluetooth connection
+  bool isScanning = false; //must start FALSE
+  //lets user change scan mode (primarily for testing)
+  ScanMode scanMode = ScanMode.lowLatency;
 
   ///-------------------------Functions-------------------------
 
   _startScan() {
     isScanning = true;
     _scanSubscription = _flutterBlue.scan(
-      scanMode: ScanMode.lowLatency,
+      scanMode: scanMode,
     ).listen((scanResult) {
       isScanning = true;
       setState(() {
@@ -63,8 +71,7 @@ class _AddDeviceState extends State<AddDevice> {
       });
     });
 
-    // start scan (continues until stopped)
-    _startScan();
+    //NOTE: in the build method scanning start automatically
   }
 
   @override
@@ -79,6 +86,7 @@ class _AddDeviceState extends State<AddDevice> {
   static DateTime dtZero = DateTime.fromMicrosecondsSinceEpoch(0);
   DateTime scanTime = DateTime.fromMicrosecondsSinceEpoch(0);
   Duration scanDuration = Duration.zero;
+  String dropdownValue = "1"; //Default selection
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +94,7 @@ class _AddDeviceState extends State<AddDevice> {
     if (bluetoothState != BluetoothState.on) {
       //stop scanning cuz well... bluetooth is off
       //NOTE: I assume this should happen automatically
+      //this is just in case it doesn't (I didn't code flutterblue)
       if(isScanning) _stopScan();
 
       //display error and link to repair location
@@ -109,11 +118,12 @@ class _AddDeviceState extends State<AddDevice> {
       //a list of all the tiles that will be shown in the list view
       updateDeviceList();
       int count = getWithNameCount(devices);
-      List deviceIDs = sortResults(devices); 
+      List<String> deviceIDs = sortResults(devices); 
 
       //our main widget to return
       return new Scaffold(
         appBar: AppBar(
+          titleSpacing: 0,
           centerTitle: false,
           title: Container(
             padding: EdgeInsets.all(8),
@@ -124,45 +134,82 @@ class _AddDeviceState extends State<AddDevice> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     new Text(
-                      deviceIDs.toList().length.toString() + ' found',
+                      devices.keys.toList().length.toString() 
+                      + ' (' 
+                      + count.toString() 
+                      + ') found',
                     ),
                     new Text(
-                      durationPrint(scanTime),
+                      durationPrint(scanDuration),
                     ),
                   ],
-                ),
-                new Text(
-                  count.toString() + " have names",
                 ),
               ],
             ),
           ),
         ),
-        body: new Stack(
+        body: new Column(
           children: <Widget>[
-            ListView.builder(
-              padding: EdgeInsets.all(8.0),
-              itemCount: deviceIDs.length,
-              itemBuilder: (BuildContext context, int index) {
-                DeviceIdentifier deviceID = deviceIDs[index];
-                DeviceDetails device = devices[deviceID];
+            Container(
+              padding: EdgeInsets.fromLTRB(16,8,16,8),
+              width: MediaQuery.of(context).size.width,
+              child: DropdownButton<String>(
+                value: dropdownValue,
+                onChanged: (String newValue) {
+                  //trigger functional change
+                  _stopScan();
 
-                return InkWell(
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ValueDisplay(
-                          device: device,
-                        ),
-                      ),
-                    );
-                  },
-                  child: DeviceTile(
-                    device: device,
+                  //trigger visual UI change
+                  setState(() {
+                    dropdownValue = newValue;
+                    //NOTE: this will also start the scan
+                  });
+                },
+                items: [
+                  DropdownMenuItem<String>(
+                      value: "0",
+                      child: Text("Low Power"),
                   ),
-                );
-              },
+                  DropdownMenuItem<String>(
+                      value: "1",
+                      child: Text("Balanced"),
+                  ),
+                  DropdownMenuItem<String>(
+                      value: "2",
+                      child: Text("Low Latency"),
+                  ),
+                  DropdownMenuItem<String>(
+                      value: "-1",
+                      child: Text("Opportunistic"),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.all(8.0),
+                itemCount: deviceIDs.length,
+                itemBuilder: (BuildContext context, int index) {
+                  String deviceID = deviceIDs[index];
+                  DeviceDetails device = devices[deviceID];
+
+                  return InkWell(
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ValueDisplay(
+                            device: device,
+                          ),
+                        ),
+                      );
+                    },
+                    child: DeviceTile(
+                      device: device,
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -173,27 +220,39 @@ class _AddDeviceState extends State<AddDevice> {
   //"scanResults" stores all the results of this current scan
   //"devices" stores all the results of all scans since we started
   void updateDeviceList(){
+    //print("a;lskdfja;lsdfj;lakdsjf;lksajf;lksadjf;lksadjf;lkasjf;lksajdf---START");
+
     //if new device in "scanResults" we should add it to our "devices"
-    List keysFromScan = scanResults.keys.toList();
+    List<DeviceIdentifier> keysFromScan = scanResults.keys.toList();
     for(int i = 0; i < keysFromScan.length; i++){
       //get device ID
       DeviceIdentifier thisID = keysFromScan[i];
+      String thisName = scanResults[thisID].device.name;
       
-      //add new
-      if(devices.containsKey(thisID) == false){ 
-        String thisName = scanResults[thisID].device.name;
+      //add new or update name(maybe possible)
+      if(devices.containsKey(thisID) == false){ //add new
+        //print("**********NEW DEVICE");
         thisName = (thisName == null) ? "" : thisName;
         BluetoothDeviceType thisType = scanResults[thisID].device.type;
-        devices[thisID] = DeviceDetails(thisID, thisName, thisType);
+        devices[thisID.toString()] = DeviceDetails(thisID.toString(), thisName, thisType);
+      }
+      else{ //update name?
+        if(devices[thisID].name != thisName){
+          print("---------------NAME CHANGED " + devices[thisID].name + " => " + thisName);
+          if(devices[thisID].name == ""){
+            print("---------UPDATED NAME");
+            devices[thisID].name = thisName;
+          }
+        }
       }
     }
     
     //if a device in "devices" is not in "scanResults" then it was disconnected
     //on disconnect we say it has an RSSI of -1000
-    List keysFromDevices = devices.keys.toList();
+    List<String> keysFromDevices = devices.keys.toList();
     for(int i = 0; i < keysFromDevices.length; i++){
       //get device ID
-      DeviceIdentifier thisID = keysFromDevices[i];
+      DeviceIdentifier thisID = DeviceIdentifier(keysFromDevices[i]);
 
       //update OLD or NEW device
       int thisRSSI = -1000; //disconnected
@@ -203,13 +262,14 @@ class _AddDeviceState extends State<AddDevice> {
       }
       
       //update RSSI of this device
-      devices[thisID].newRSSI(thisRSSI);
+      devices[thisID.toString()].newRSSI(thisRSSI);
     }
-    
+
+    //print("a;lskdfja;lsdfj;lakdsjf;lksajf;lksadjf;lksadjf;lkasjf;lksajdf---END");
   }
 }
 
-int getWithNameCount(Map<DeviceIdentifier, DeviceDetails> devices){
+int getWithNameCount(Map<String, DeviceDetails> devices){
   int count = 0;
   List keys = devices.keys.toList();
   for(int i = 0; i < keys.length; i++){
@@ -219,34 +279,20 @@ int getWithNameCount(Map<DeviceIdentifier, DeviceDetails> devices){
   return count;
 }
 
-List<DeviceIdentifier> sortResults(Map<DeviceIdentifier, DeviceDetails> devices){
-  //get all DeviceIdentifier keys
-  List keys = devices.keys.toList();
+List<String> sortResults(Map<String, DeviceDetails> devices){
+  //sort by ID
+  List<String> deviceIDs = devices.keys.toList();
+  deviceIDs.sort();
 
-  //sort our RSSIs
-  Map<int, DeviceIdentifier> rssiToKey = new Map<int, DeviceIdentifier>();
-  for(int i = 0; i < keys.length; i++){
-    DeviceIdentifier thisKey = keys[i];
-    int thisRSSI = devices[thisKey].allRSSIs.last.rssi;
-    rssiToKey[thisRSSI] = thisKey;
-  }
-  List sortedRSSIs = rssiToKey.keys.toList()..sort();
-
-  //create both maps we will return
-  List<DeviceIdentifier> withName = new List<DeviceIdentifier>();
-  List<DeviceIdentifier> withoutName = new List<DeviceIdentifier>();
-
-  //sort our map given our sorted RSSI
-  for(int i = 0; i < sortedRSSIs.length; i++){
-    int thisRSSI = sortedRSSIs[i];
-    DeviceIdentifier thisID = rssiToKey[thisRSSI];
-    DeviceDetails thisDevice = devices[thisID];
-    String thisName = thisDevice.name;
-
-    if(thisName == ""){
-      withoutName.add(thisID);
+  //sort all devices by Name
+  List<String> withName = new List<String>();
+  List<String> withoutName = new List<String>();
+  for(int i = 0; i < devices.length; i++){
+    String deviceID = deviceIDs[i];
+    if(devices[deviceID].name != ""){
+      withName.add(deviceID);
     }
-    else withName.add(thisID);
+    else withoutName.add(deviceID);
   }
 
   return ([]..addAll(withName))..addAll(withoutName);

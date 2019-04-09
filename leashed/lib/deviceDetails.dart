@@ -28,9 +28,9 @@ class DeviceDetails{
 
   //---permanently filled vars
   //set once and done
-  DeviceIdentifier id;
+  String id;
   String name; //MIGHT be blank
-  BluetoothDeviceType  type;
+  BluetoothDeviceType type;
 
   //set multiple times
   int minObservedRSSI;
@@ -39,7 +39,7 @@ class DeviceDetails{
   //---temporarily filled vars
   List<Signal> allRSSIs;
 
-  DeviceDetails(DeviceIdentifier initID, String initName, BluetoothDeviceType initType){
+  DeviceDetails(String initID, String initName, BluetoothDeviceType initType){
     id = initID;
     name = initName;
     type = initType;
@@ -48,6 +48,7 @@ class DeviceDetails{
 
   newRSSI(int val){
     if(allRSSIs.length == 0){
+      //print("-----FIRST RSSI");
       //add initial signal
       allRSSIs.add(new Signal(val));
 
@@ -96,28 +97,52 @@ class ValueDisplay extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: new Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            new Text(device.name),
+            new Text(device.name + " " + device.type.toString()),
             new Text(device.id.toString()),
-            new Text(device.type.toString()),
           ],
         ),
       ),
-      body: ListView.builder(
-        padding: EdgeInsets.all(8.0),
-        itemCount: device.allRSSIs.length,
-        itemBuilder: (BuildContext context, int index) {
-          return Container(
-            padding: EdgeInsets.all(8),
-            child: Row(
-              children: <Widget>[
-                new Text(device.allRSSIs[index].rssi.toString()),
-                new Text(" for "),
-                new Text(durationPrint(device.allRSSIs[index].dtOrDur)),
-              ],
+      body: Column(
+        children: <Widget>[
+          DefaultTextStyle(
+            style: TextStyle(
+              color: Colors.white,
             ),
-          );
-        },
+            child: Container(
+              color: Colors.blue,
+              padding: EdgeInsets.all(16),
+              child: new Row(
+                children: <Widget>[
+                  Expanded(child: new Text("Min: " + device.minObservedRSSI.toString())),
+                  Expanded(child: new Text("Max: " + device.maxObservedRSSI.toString())),
+                  Expanded(child: new Text("Dif: " + (device.maxObservedRSSI - device.minObservedRSSI).toString())),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.all(8.0),
+              itemCount: device.allRSSIs.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Container(
+                  padding: EdgeInsets.all(8),
+                  child: Row(
+                    children: <Widget>[
+                      new Text(device.allRSSIs[index].rssi.toString()),
+                      new Text(" for "),
+                      new Text(durationPrint(device.allRSSIs[index].dtOrDur)),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
