@@ -12,24 +12,24 @@ class AddDevice extends StatefulWidget {
 }
 
 class _AddDeviceState extends State<AddDevice> {
-  Map<String, DeviceDetails> devices = new Map<String, DeviceDetails>();
+  Map<String, DeviceDetails> devices;
 
   ///-------------------------Variables-------------------------
 
   ///-------------------------Flutter Blue
   
-  FlutterBlue _flutterBlue = FlutterBlue.instance;
+  FlutterBlue _flutterBlue;
   StreamSubscription _scanSubscription;
-  Map<DeviceIdentifier, ScanResult> scanResults = new Map(); 
+  Map<DeviceIdentifier, ScanResult> scanResults; 
   StreamSubscription _stateSubscription;
-  BluetoothState bluetoothState = BluetoothState.unknown;
+  BluetoothState bluetoothState;
 
   ///-------------------------Other
   
   //starts and stops scan depending on bluetooth connection
-  bool isScanning = false; //must start FALSE
+  bool isScanning; //must start FALSE
   //lets user change scan mode (primarily for testing)
-  int scanMode = ScanMode.lowLatency.value;
+  int scanMode;
 
   ///-------------------------Functions-------------------------
 
@@ -56,6 +56,14 @@ class _AddDeviceState extends State<AddDevice> {
   @override
   void initState() {
     super.initState();
+
+    // var inits
+    devices = new Map<String, DeviceDetails>();
+    _flutterBlue = FlutterBlue.instance;
+    scanResults = new Map();
+    bluetoothState = BluetoothState.unknown;
+    isScanning = false;
+    scanMode = ScanMode.lowLatency.value;
 
     // Immediately get the state of FlutterBlue
     _flutterBlue.state.then((s) {
@@ -222,28 +230,26 @@ class _AddDeviceState extends State<AddDevice> {
   //"scanResults" stores all the results of this current scan
   //"devices" stores all the results of all scans since we started
   void updateDeviceList(){
-    //print("a;lskdfja;lsdfj;lakdsjf;lksajf;lksadjf;lksadjf;lkasjf;lksajdf---START");
-
     //if new device in "scanResults" we should add it to our "devices"
     List<DeviceIdentifier> keysFromScan = scanResults.keys.toList();
     for(int i = 0; i < keysFromScan.length; i++){
       //get device ID
-      DeviceIdentifier thisID = keysFromScan[i];
-      String thisName = scanResults[thisID].device.name;
+      DeviceIdentifier thisIDdi = keysFromScan[i];
+      String thisIDstr = thisIDdi.toString();
+      String thisName = scanResults[thisIDdi].device.name;
       
       //add new or update name(maybe possible)
-      if(devices.containsKey(thisID) == false){ //add new
-        //print("**********NEW DEVICE");
+      if(devices.containsKey(thisIDstr) == false){ //add new
         thisName = (thisName == null) ? "" : thisName;
-        BluetoothDeviceType thisType = scanResults[thisID].device.type;
-        devices[thisID.toString()] = DeviceDetails(thisID.toString(), thisName, thisType);
+        BluetoothDeviceType thisType = scanResults[thisIDdi].device.type;
+        devices[thisIDstr] = DeviceDetails(thisIDstr, thisName, thisType);
       }
       else{ //update name?
-        if(devices[thisID].name != thisName){
-          print("---------------NAME CHANGED " + devices[thisID].name + " => " + thisName);
-          if(devices[thisID].name == ""){
+        if(devices[thisIDstr].name != thisName){
+          print("---------------NAME CHANGED " + devices[thisIDstr].name + " => " + thisName);
+          if(devices[thisIDstr].name == ""){
             print("---------UPDATED NAME");
-            devices[thisID].name = thisName;
+            devices[thisIDstr].name = thisName;
           }
         }
       }
@@ -254,20 +260,19 @@ class _AddDeviceState extends State<AddDevice> {
     List<String> keysFromDevices = devices.keys.toList();
     for(int i = 0; i < keysFromDevices.length; i++){
       //get device ID
-      DeviceIdentifier thisID = DeviceIdentifier(keysFromDevices[i]);
+      DeviceIdentifier thisIDdi = DeviceIdentifier(keysFromDevices[i]);
+      String thisIDstr = thisIDdi.toString();
 
       //update OLD or NEW device
       int thisRSSI = -1000; //disconnected
-      if(scanResults.containsKey(thisID)){
+      if(scanResults.containsKey(thisIDdi)){
         //connected RSSI
-        thisRSSI = scanResults[thisID].rssi;
+        thisRSSI = scanResults[thisIDdi].rssi;
       }
       
       //update RSSI of this device
-      devices[thisID.toString()].newRSSI(thisRSSI);
+      devices[thisIDstr].newRSSI(thisRSSI);
     }
-
-    //print("a;lskdfja;lsdfj;lakdsjf;lksajf;lksadjf;lksadjf;lkasjf;lksajdf---END");
   }
 }
 

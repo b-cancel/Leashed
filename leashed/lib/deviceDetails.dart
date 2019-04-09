@@ -48,7 +48,6 @@ class DeviceDetails{
 
   newRSSI(int val){
     if(allRSSIs.length == 0){
-      //print("-----FIRST RSSI");
       //add initial signal
       allRSSIs.add(new Signal(val));
 
@@ -117,9 +116,24 @@ class ValueDisplay extends StatelessWidget {
               padding: EdgeInsets.all(16),
               child: new Row(
                 children: <Widget>[
-                  Expanded(child: new Text("Min: " + device.minObservedRSSI.toString())),
-                  Expanded(child: new Text("Max: " + device.maxObservedRSSI.toString())),
-                  Expanded(child: new Text("Dif: " + (device.maxObservedRSSI - device.minObservedRSSI).toString())),
+                  Expanded(
+                    child: new Text(
+                      "Min: " + device.minObservedRSSI.toString(), 
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Expanded(
+                    child: new Text(
+                      "Max: " + device.maxObservedRSSI.toString(), 
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Expanded(
+                    child: new Text(
+                      "Dif: " + (device.maxObservedRSSI - device.minObservedRSSI).toString(), 
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ],
               ),
             ),
