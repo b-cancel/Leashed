@@ -3,6 +3,7 @@ import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/addDevice.dart';
 
 class Signal{
+  //NOTE: an rssi of -1000 is a disconnected device
   int rssi;
   //initially its a "date time"
   //after a new signal is received it becomes a "duration"
@@ -19,44 +20,62 @@ class Signal{
 }
 
 class DeviceDetails{
-  //TODO... lets us remove already added devices 
+  //TODO... 
+  //1. lets us remove already added devices 
   //from the add new devices list
+  //2. lets us display a device name when it doesnt have a friendly one
   String assignedName;
 
   //---permanently filled vars
+  //set once and done
   DeviceIdentifier id;
   String name; //MIGHT be blank
   BluetoothDeviceType  type;
+
+  //set multiple times
   int minObservedRSSI;
   int maxObservedRSSI;
   
   //---temporarily filled vars
   List<Signal> allRSSIs;
 
-  DeviceDetails(DeviceIdentifier id){
+  DeviceDetails(DeviceIdentifier initID, String initName, BluetoothDeviceType initType){
+    id = initID;
+    name = initName;
+    type = initType;
     allRSSIs = new List();
   }
 
   newRSSI(int val){
-    //conclude previous signal if possible
-    if(allRSSIs.length >= 1){
-      //saves how long we had this signal
-      allRSSIs.last.newSignalReceived();
+    if(allRSSIs.length == 0){
+      //add initial signal
+      allRSSIs.add(new Signal(val));
+
+      //set min/max
+      minObservedRSSI = val;
+      maxObservedRSSI = val;
     }
-
-    //add new signal with zero duration
-    allRSSIs.add(new Signal(val));
-
-    // new min?
-    if(minObservedRSSI == null) minObservedRSSI = val;
     else{
-      minObservedRSSI = (minObservedRSSI < val) ? minObservedRSSI : val;
-    }
+      if(val != allRSSIs.last.rssi){
+        //saves how long we had this signal
+        allRSSIs.last.newSignalReceived();
 
-    // new max?
-    if(maxObservedRSSI == null) maxObservedRSSI = val;
-    else{
-      maxObservedRSSI = (maxObservedRSSI > val) ? maxObservedRSSI : val;
+        //add new signal with zero duration
+        allRSSIs.add(new Signal(val));
+
+        // new min?
+        if(minObservedRSSI == null) minObservedRSSI = val;
+        else{
+          minObservedRSSI = (minObservedRSSI < val) ? minObservedRSSI : val;
+        }
+
+        // new max?
+        if(maxObservedRSSI == null) maxObservedRSSI = val;
+        else{
+          maxObservedRSSI = (maxObservedRSSI > val) ? maxObservedRSSI : val;
+        }
+      }
+      //ELSE... nothing changes
     }
   }  
 
@@ -92,9 +111,9 @@ class ValueDisplay extends StatelessWidget {
             padding: EdgeInsets.all(8),
             child: Row(
               children: <Widget>[
-                //new Text(device.allRSSIs[index].rssi.toString()),
+                new Text(device.allRSSIs[index].rssi.toString()),
                 new Text(" for "),
-                //new Text(durationPrint(device.allRSSIs[index].dtOrDur)),
+                new Text(durationPrint(device.allRSSIs[index].dtOrDur)),
               ],
             ),
           );
