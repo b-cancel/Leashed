@@ -2,9 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:leashed/deviceDetails.dart';
 import 'package:system_setting/system_setting.dart';
-
-import 'package:leashed/bleTESTwidgets.dart';
 
 class AddDevice extends StatefulWidget {
 
@@ -13,53 +12,35 @@ class AddDevice extends StatefulWidget {
 }
 
 class _AddDeviceState extends State<AddDevice> {
+  Map<DeviceIdentifier, DeviceDetails> devices = new Map<DeviceIdentifier, DeviceDetails>();
+
  ///-------------------------Variables-------------------------
 
-  /// Creating instance of flutter blue
   FlutterBlue _flutterBlue = FlutterBlue.instance;
-
-  /// Scanning
   StreamSubscription _scanSubscription;
-
   Map<DeviceIdentifier, ScanResult> scanResults = new Map(); 
-  bool isScanning = false; 
-  /// State of Our Bluetooth Adapter
   StreamSubscription _stateSubscription;
-
   BluetoothState bluetoothState = BluetoothState.unknown;
+  bool isScanning = false;
 
   ///-------------------------Functions-------------------------
 
   _startScan() {
-    print("started scan");
-    //tell the UI we stopped scanning
-    setState(() {
-      isScanning = true;
-    });
-
-    //start scanning
+    isScanning = true;
     _scanSubscription = _flutterBlue.scan(
       scanMode: ScanMode.lowLatency,
     ).listen((scanResult) {
+      isScanning = true;
       setState(() {
         scanResults[scanResult.device.id] = scanResult;
-        isScanning = false; //tell the UI we stopped scanning
       });
     }, onDone: _stopScan);
   }
 
   _stopScan() {
-    print("stopped scan");
-    //TODO... also remove all data from BLE Devices (hinting at scanning not being on)
-
-    //tell the UI we stopped scanning
-    setState(() {
-      isScanning = false;
-    });
-
-    //stop scanning
     _scanSubscription?.cancel();
     _scanSubscription = null;
+    isScanning = false;
   }
 
   ///-------------------------Overrides-------------------------
@@ -81,6 +62,9 @@ class _AddDeviceState extends State<AddDevice> {
         bluetoothState = s;
       });
     });
+
+    // start scan (continues until stopped)
+    _startScan();
   }
 
   @override
@@ -100,15 +84,18 @@ class _AddDeviceState extends State<AddDevice> {
   Widget build(BuildContext context) {
     //if our bluetooth isn't on then there is problem
     if (bluetoothState != BluetoothState.on) {
+      //stop scanning cuz well... bluetooth is off
+      //NOTE: I assume this should happen automatically
+      if(isScanning) _stopScan();
+
+      //display error and link to repair location
       return BluetoothProblem(
         state: bluetoothState,
       );
     }
     else{
-      //start the scan if it isnt
-      if(isScanning == false){
-        _startScan();
-      }
+      //start scanning if that bluetooth was just turned on
+      if(isScanning == false) _startScan();
 
       //record how long each scan has take
       if(scanTime == dtZero){
@@ -120,37 +107,117 @@ class _AddDeviceState extends State<AddDevice> {
       }
 
       //a list of all the tiles that will be shown in the list view
-      var tiles = new List<Widget>();
-      tiles.addAll(_buildScanResultTiles());
+      int count = getWithNameCount(scanResults);
+      List deviceIDs = sortResults(scanResults); 
+      updateDets(scanResults);
 
       //our main widget to return
       return new Scaffold(
         appBar: AppBar(
           centerTitle: false,
-          title: new Text(
-            tiles.toList().length.toString() + ' found in ' + durationPrint(scanDuration),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new Text(
+                deviceIDs.toList().length.toString() + ' found in ' + durationPrint(scanDuration),
+              ),
+              new Text(
+                count.toString() + " have names",
+              ),
+            ],
           ),
         ),
         body: new Stack(
           children: <Widget>[
-            (isScanning) ? new LinearProgressIndicator() : new Container(),
-            new ListView(
-              children: tiles,
-            )
+            ListView.builder(
+              padding: EdgeInsets.all(8.0),
+              itemCount: deviceIDs.length,
+              itemBuilder: (BuildContext context, int index) {
+                ScanResult result = scanResults[deviceIDs[index]];
+
+                return InkWell(
+                  onTap: (){
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ValueDisplay(
+                          device: devices[result.device.id],
+                        ),
+                      ),
+                    );
+                  },
+                  child: DeviceTile(
+                    //devices has the strings in order as desired
+                    result: scanResults[deviceIDs[index]],
+                  ),
+                );
+              },
+            ),
           ],
         ),
       );
     }
   }
 
-  ///-------------------------Widgets-------------------------
+  void updateDets(Map<DeviceIdentifier, ScanResult> scanResults){
+    List keys = scanResults.keys.toList();
+    for(int i = 0; i < keys.length; i++){
+      DeviceIdentifier thisID = keys[i];
+      int thisRSSI = scanResults[thisID].rssi;
 
-  _buildScanResultTiles() {
-    return scanResults.values.map((r) => ScanResultTile(
-      result: r,
-      //onTap: () => r.device.id, r.device.name, r.device.type,
-    )).toList();
+      //add new
+      if(devices.containsKey(keys[i]) == false){ 
+        DeviceDetails newDD = new DeviceDetails(thisID);
+        devices[thisID] = newDD;
+      }
+
+      devices[thisID].newRSSI(thisRSSI);
+    }
   }
+}
+
+int getWithNameCount(Map<DeviceIdentifier, ScanResult> scanResults){
+  int count = 0;
+  List keys = scanResults.keys.toList();
+  for(int i = 0; i < keys.length; i++){
+    String thisName = scanResults[keys[i]].device.name;
+    if(thisName == "" || thisName == null) count = count;
+    else count += 1;
+  }
+  return count;
+}
+
+List<DeviceIdentifier> sortResults(Map<DeviceIdentifier, ScanResult> scanResults){
+  //get all DeviceIdentifier keys
+  List keys = scanResults.keys.toList();
+
+  //sort our RSSIs
+  Map<int, DeviceIdentifier> rssiToKey = new Map<int, DeviceIdentifier>();
+  for(int i = 0; i < keys.length; i++){
+    DeviceIdentifier thisKey = keys[i];
+    int thisRSSI = scanResults[thisKey].rssi;
+    rssiToKey[thisRSSI] = thisKey;
+  }
+  List sortedRSSIs = rssiToKey.keys.toList()..sort();
+
+  //create both maps we will return
+  List<DeviceIdentifier> withName = new List<DeviceIdentifier>();
+  List<DeviceIdentifier> withoutName = new List<DeviceIdentifier>();
+
+  //sort our map given our sorted RSSI
+  for(int i = 0; i < sortedRSSIs.length; i++){
+    int thisRSSI = sortedRSSIs[i];
+    DeviceIdentifier thisID = rssiToKey[thisRSSI];
+    ScanResult thisScanResult = scanResults[thisID];
+    String thisName = thisScanResult.device.name;
+
+    if(thisName == "" || thisName == null){
+      withoutName.add(thisID);
+    }
+    else withName.add(thisID);
+  }
+
+  return []..addAll(withName)..addAll(withoutName);
 }
 
 class BluetoothProblem extends StatelessWidget {
@@ -162,26 +229,37 @@ class BluetoothProblem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: (){
-        SystemSetting.goto(SettingTarget.BLUETOOTH);
-      },
-      child: Scaffold(
-        body: new Container(
-          color: Colors.redAccent,
-          child: Column(
-            children: <Widget>[
-              new Icon(
-                Icons.error,
-                color: Theme.of(context).primaryTextTheme.subhead.color,
-                size: 32,
+    return Scaffold(
+      body: InkWell(
+        onTap: (){
+          SystemSetting.goto(SettingTarget.BLUETOOTH);
+        },
+        child: Scaffold(
+          body: new Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            color: Colors.redAccent,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  new Icon(
+                    Icons.error,
+                    color: Theme.of(context).primaryTextTheme.subhead.color,
+                    size: 200,
+                  ),
+                  new Text(
+                    'The Bluetooth Adapter Is ${state.toString().substring(15)}',
+                    style: Theme.of(context).primaryTextTheme.subhead,
+                  ),
+                  new Text(
+                    'Tap To Go Into Bluetooth Settings',
+                    style: Theme.of(context).primaryTextTheme.subhead,
+                  ),
+                ],
               ),
-              new Text(
-                'The Bluetooth Adapter Is ${state.toString().substring(15)}\n'
-                + 'Tap To Go Into Bluetooth Settings',
-                style: Theme.of(context).primaryTextTheme.subhead,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -203,4 +281,65 @@ String durationPrint(Duration dur){
   else if(seconds !=0) return "$seconds second(s)";
   else if(milliseconds != 0) return "$milliseconds millisec(s)";
   else return "$microseconds microsec(s)";
+}
+
+class DeviceTile extends StatelessWidget {
+  const DeviceTile({
+    this.result
+  });
+
+  final ScanResult result;
+
+  Widget _buildTitle(BuildContext context) {
+    var name = result.device.name.toString();
+    bool nameNotFound = (name == "" || name == null);
+    var id = result.device.id.toString();
+    //unknown, classic, le, dual
+    var type = (result.device.type != BluetoothDeviceType.unknown) ? result.device.type.toString() : "?";
+    var rssi = result.rssi.toString();
+
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Container(
+            padding: EdgeInsets.all(8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                new Text(
+                  nameNotFound ? "NO NAME" : name,
+                  style: TextStyle(
+                    color: nameNotFound ? Colors.black : Colors.blue,
+                    fontSize: nameNotFound ? 12 : 22,
+                  ),
+                ),
+                new Text("ID: " + id),
+                new Text("TYPE: " + type),
+              ],
+            ),
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.all(8),
+          child: Column(
+            children: <Widget>[
+              new Text("RSSI"),
+              new Text(rssi),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        _buildTitle(context),
+        Divider(),
+      ],
+    );
+  }
 }
