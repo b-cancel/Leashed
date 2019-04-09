@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:leashed/addDevice.dart';
 
 import 'dart:math' as math;
 
@@ -14,7 +15,6 @@ class HomeStateLess extends StatelessWidget {
 
 
 class Home extends StatefulWidget{
-
   @override
   HomeState createState() {
     return new HomeState();
@@ -127,7 +127,6 @@ class NoDevices extends StatelessWidget {
     );
   }
 }
-
 
 class Devices extends StatelessWidget {
   const Devices({
@@ -245,29 +244,70 @@ class Devices extends StatelessWidget {
           ),
           new SliverList(
             delegate: new SliverChildListDelegate([
-              device(context, "laptop.jpg", "Laptop", "In Range: 3m away"),
-              device(context, "keys.jpg", "Keys", "Last Seen: 2/28/19"),
-              device(context, "wallet.jpg", "Wallet", "Waiting at: 1322 Cage St."),
-              device(context, "headphones.jpg", "Headphones", "Turned off: on 2/14/19"),
-              device(context, "backpack.jpg", "Backpack", "In Range: 1m away"),
-
+              Device(
+                image: "laptop.jpg", 
+                name: "Laptop", 
+                status:"In Range: 3m away",
+              ),
+              Device(
+                image: "keys.jpg", 
+                name: "Keys", 
+                status: "Last Seen: 2/28/19",
+              ),
+              Device(
+                image: "wallet.jpg", 
+                name: "Wallet", 
+                status: "Waiting at: 1322 Cage St.",
+              ),
+              Device(
+                image: "headphones.jpg", 
+                name: "Headphones", 
+                status: "Turned off: on 2/14/19",
+              ),
+              Device(
+                image: "backpack.jpg", 
+                name: "Backpack", 
+                status: "In Range: 1m away",
+              ),
             ]),
           ),
+          new SliverPadding(
+            padding: EdgeInsets.all(16),
+          )
         ],
       ),
     );
   }
 }
 
-Widget device(BuildContext context, String image, String name, String status){
+class Device extends StatefulWidget {
+  final String image;
+  final String name;
+  final String status;
 
-  image = "assets/placeholders/" + image; //TODO... change this to no longer work with placeholders
+  Device({
+    Key key, 
+    this.image,
+    this.name,
+    this.status,
+  }) : super(key: key);
 
-  double width = MediaQuery.of(context).size.width / 4;
-  double height = MediaQuery.of(context).size.height / 4;
-  double imageSize = math.min(width, height);
+  _DeviceState createState() => _DeviceState();
+}
 
-  return Column(
+//String image, String name, String status
+class _DeviceState extends State<Device> {
+
+  @override
+  Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width / 4;
+    double height = MediaQuery.of(context).size.height / 4;
+    double imageSize = math.min(width, height);
+
+    //TODO... change this to no longer work with placeholders
+    String image = "assets/placeholders/" + widget.image;
+
+    return Column(
     children: <Widget>[
       ListTile(
         isThreeLine: true,
@@ -282,14 +322,14 @@ Widget device(BuildContext context, String image, String name, String status){
           ),
         ),
         title: new Text(
-          name,
+          widget.name,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
         ),
         subtitle: new Text(
-          status,
+          widget.status,
           style: TextStyle(
             fontSize: 18,
           ),
@@ -304,8 +344,7 @@ Widget device(BuildContext context, String image, String name, String status){
       )
     ],
   );
-
-
+  }
 }
 
 class NavBar extends StatelessWidget {
@@ -333,8 +372,14 @@ class NavBar extends StatelessWidget {
               color: Colors.white,
             ),
             onPressed: (){
-              //router.navigateTo(context, "/users/1234", transition: TransitionType.fadeIn);
-            },//() => deviceCount.value = deviceCount.value + 1,
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddDevice(),
+                ),
+              );
+              //deviceCount.value = deviceCount.value + 1;
+            },//
           ),
           Container(
             padding: EdgeInsets.all(8),
@@ -342,14 +387,15 @@ class NavBar extends StatelessWidget {
                 'assets/pngs/leashedWhite.png',
                 fit: BoxFit.fitHeight,
               ),
-
           ),
           IconButton(
             icon: Icon(
               Icons.settings,
               color: Colors.white,
             ),
-            onPressed: () => deviceCount.value = deviceCount.value - 1,
+            onPressed: (){
+              //=> deviceCount.value = deviceCount.value - 1
+            },
           )
         ],
       ),

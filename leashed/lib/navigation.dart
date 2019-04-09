@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
 import 'package:leashed/home.dart';
 
-
-
 ///This Exists Exclusively to
 ///(1) create a top level Material App that can be used by the rest of the widgets for navigation
 ///(2) define a global Route that can be used by the rest of widgets for navigation
