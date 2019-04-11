@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/deviceDetails.dart';
+import 'package:leashed/utils.dart';
 import 'package:system_setting/system_setting.dart';
 
 class AddDevice extends StatefulWidget {
@@ -12,7 +14,7 @@ class AddDevice extends StatefulWidget {
 }
 
 class _AddDeviceState extends State<AddDevice> {
-  Map<String, DeviceDetails> devices;
+  Map<String, DeviceData> devices;
 
   ///-------------------------Variables-------------------------
 
@@ -31,6 +33,10 @@ class _AddDeviceState extends State<AddDevice> {
   //lets user change scan mode (primarily for testing)
   int scanMode;
 
+  ///-------------------------Tests
+
+  List<Duration> updateCycleLengths;
+
   ///-------------------------Functions-------------------------
 
   _startScan() {
@@ -38,9 +44,10 @@ class _AddDeviceState extends State<AddDevice> {
     _scanSubscription = _flutterBlue.scan(
       scanMode: ScanMode(scanMode),
     ).listen((scanResult) {
-      isScanning = true;
+      //NOTE: this is a SINGLE result
       setState(() {
         scanResults[scanResult.device.id] = scanResult;
+        updateDevice(scanResult.device.id);
       });
     }, onDone: _stopScan);
   }
@@ -58,12 +65,15 @@ class _AddDeviceState extends State<AddDevice> {
     super.initState();
 
     // var inits
-    devices = new Map<String, DeviceDetails>();
+    devices = new Map<String, DeviceData>();
     _flutterBlue = FlutterBlue.instance;
     scanResults = new Map();
     bluetoothState = BluetoothState.unknown;
     isScanning = false;
     scanMode = ScanMode.lowLatency.value;
+
+    // test var init
+    updateCycleLengths = new List<Duration>();
 
     // Immediately get the state of FlutterBlue
     _flutterBlue.state.then((s) {
@@ -113,7 +123,8 @@ class _AddDeviceState extends State<AddDevice> {
       //start scanning if that bluetooth was just turned on
       if(isScanning == false) _startScan();
 
-      //record how long each scan has take
+      //record how long each scan has taken
+      //NOTE: this is possible because after every scan setState is called
       String alternatingChar = "";
       if(scanTime == dtZero){
         scanTime = DateTime.now();
@@ -123,12 +134,11 @@ class _AddDeviceState extends State<AddDevice> {
         scanDuration = (DateTime.now()).difference(scanTime);
         scanTime = dtZero;
         alternatingChar = " ()";
+        updateCycleLengths.add(scanDuration);
       }
 
       //a list of all the tiles that will be shown in the list view
-      updateDeviceList();
-      int count = getWithNameCount(devices);
-      List<String> deviceIDs = sortResults(devices); 
+      List<String> deviceIDs = sortResults(); 
 
       //our main widget to return
       return new Scaffold(
@@ -144,10 +154,7 @@ class _AddDeviceState extends State<AddDevice> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     new Text(
-                      devices.keys.toList().length.toString() 
-                      + ' (' 
-                      + count.toString() 
-                      + ') found',
+                      devices.keys.toList().length.toString() + ' Found',
                     ),
                     new Text(
                       (durationPrint(scanDuration) + alternatingChar),
@@ -158,135 +165,136 @@ class _AddDeviceState extends State<AddDevice> {
             ),
           ),
         ),
-        body: new Column(
-          children: <Widget>[
-            Container(
-              padding: EdgeInsets.fromLTRB(16,8,16,8),
-              width: MediaQuery.of(context).size.width,
-              child: DropdownButton<int>(
-                value: scanMode,
-                onChanged: (int newValue) {
-                  //trigger functional change
-                  _stopScan();
-
-                  //trigger visual UI change
-                  setState(() {
-                    scanMode = newValue;
-                    //NOTE: this will also start the scan
-                  });
-                },
-                items: [
-                  DropdownMenuItem<int>(
-                      value: 0,
-                      child: Text("Low Power"),
-                  ),
-                  DropdownMenuItem<int>(
-                      value: 1,
-                      child: Text("Balanced"),
-                  ),
-                  DropdownMenuItem<int>(
-                      value: 2,
-                      child: Text("Low Latency"),
-                  ),
-                  DropdownMenuItem<int>(
-                      value: -1,
-                      child: Text("Opportunistic"),
-                  ),
-                ],
+        body: DefaultTextStyle(
+          style: TextStyle(
+            color: Colors.white
+          ),
+          child: new Column(
+            children: <Widget>[
+              Container(
+                color: Colors.blue,
+                padding: EdgeInsets.fromLTRB(16,8,16,8),
+                alignment: Alignment.centerRight,
+                child: new Text(
+                  "avg of " + updateCycleLengths.length.toString() + " scans: " + durationPrint(calcAvg()),
+                  textAlign: TextAlign.right,
+                ),
               ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.all(8.0),
-                itemCount: deviceIDs.length,
-                itemBuilder: (BuildContext context, int index) {
-                  String deviceID = deviceIDs[index];
-                  DeviceDetails device = devices[deviceID];
+              Container(
+                padding: EdgeInsets.fromLTRB(16,8,16,8),
+                width: MediaQuery.of(context).size.width,
+                child: DropdownButton<int>(
+                  value: scanMode,
+                  onChanged: (int newValue) {
+                    //trigger functional change
+                    _stopScan();
 
-                  return InkWell(
-                    onTap: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ValueDisplay(
-                            device: device,
-                          ),
+                    //trigger visual UI change
+                    setState(() {
+                      scanMode = newValue;
+                      //NOTE: this will also start the scan
+                    });
+                  },
+                  items: [
+                    DropdownMenuItem<int>(
+                        value: 0,
+                        child: Text("Low Power"),
+                    ),
+                    DropdownMenuItem<int>(
+                        value: 1,
+                        child: Text("Balanced"),
+                    ),
+                    DropdownMenuItem<int>(
+                        value: 2,
+                        child: Text("Low Latency"),
+                    ),
+                    DropdownMenuItem<int>(
+                        value: -1,
+                        child: Text("Opportunistic"),
+                    ),
+                  ],
+                ),
+              ),
+              DefaultTextStyle(
+                style: TextStyle(
+                  color: Colors.black
+                ),
+                child: Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.all(8.0),
+                    itemCount: deviceIDs.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      String deviceID = deviceIDs[index];
+                      DeviceData device = devices[deviceID];
+
+                      return InkWell(
+                        onTap: (){
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ValueDisplay(
+                                device: device,
+                              ),
+                            ),
+                          );
+                        },
+                        child: DeviceTile(
+                          device: device,
                         ),
                       );
                     },
-                    child: DeviceTile(
-                      device: device,
-                    ),
-                  );
-                },
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
   }
 
-  //"scanResults" stores all the results of this current scan
-  //"devices" stores all the results of all scans since we started
-  void updateDeviceList(){
-    //if new device in "scanResults" we should add it to our "devices"
-    List<DeviceIdentifier> keysFromScan = scanResults.keys.toList();
-    for(int i = 0; i < keysFromScan.length; i++){
-      //get device ID
-      DeviceIdentifier thisIDdi = keysFromScan[i];
-      String thisIDstr = thisIDdi.toString();
-      String thisName = scanResults[thisIDdi].device.name;
-      
-      //add new or update name(maybe possible)
-      if(devices.containsKey(thisIDstr) == false){ //add new
-        thisName = (thisName == null) ? "" : thisName;
-        BluetoothDeviceType thisType = scanResults[thisIDdi].device.type;
-        devices[thisIDstr] = DeviceDetails(thisIDstr, thisName, thisType);
-      }
-      else{ //update name?
-        if(devices[thisIDstr].name != thisName){
-          print("---------------NAME CHANGED " + devices[thisIDstr].name + " => " + thisName);
-          if(devices[thisIDstr].name == ""){
-            print("---------UPDATED NAME");
-            devices[thisIDstr].name = thisName;
-          }
+  void updateDevice(DeviceIdentifier deviceID){
+    String deviceIDstr = deviceID.toString();
+    String thisName = scanResults[deviceID].device.name;
+
+    //-----Adding or Updating the Name of a Device (from Scanned)
+    if(devices.containsKey(deviceIDstr) == false){ //add new device
+      thisName = (thisName == null) ? "" : thisName;
+      BluetoothDeviceType thisType = scanResults[deviceID].device.type;
+      devices[deviceIDstr] = DeviceData(deviceIDstr, thisName, thisType);
+    }
+    else{ //update name?
+      //TODO... check if this is ever needed
+      //NOTE: we have this under the assumption that the name might not always be received
+      if(devices[deviceIDstr].name != thisName){
+        print("---------------NAME CHANGED " + devices[deviceIDstr].name + " => " + thisName);
+        if(devices[deviceIDstr].name == ""){
+          print("---------UPDATED NAME");
+          devices[deviceIDstr].name = thisName;
+          sleep(const Duration(seconds:5));
         }
       }
     }
-    
-    //if a device in "devices" is not in "scanResults" then it was disconnected
-    //on disconnect we say it has an RSSI of -1000
-    List<String> keysFromDevices = devices.keys.toList();
-    for(int i = 0; i < keysFromDevices.length; i++){
-      //get device ID
-      DeviceIdentifier thisIDdi = DeviceIdentifier(keysFromDevices[i]);
-      String thisIDstr = thisIDdi.toString();
 
-      //update OLD or NEW device
-      int thisRSSI = -1000; //disconnected
-      if(scanResults.containsKey(thisIDdi)){
-        //connected RSSI
-        thisRSSI = scanResults[thisIDdi].rssi;
+    //-----Update Device Values
+    //NOTE: our scanresults DOES NOT CLEAR so if a device disconnects we will just have the last recieved RSSI
+    var newRSSI = scanResults[deviceID].rssi;
+    devices[deviceIDstr].scans.add(newRSSI);
+  }
+
+  Duration calcAvg(){
+    Duration total = Duration.zero;
+    int cycles = updateCycleLengths.length;
+    if(cycles == 0) return Duration.zero;
+    else{
+      for(int i = 0; i < cycles; i++){
+        total += updateCycleLengths[i];
       }
-      
-      //update RSSI of this device
-      devices[thisIDstr].newRSSI(thisRSSI);
+      return Duration(microseconds: (total.inMicroseconds ~/ cycles));
     }
   }
-}
 
-int getWithNameCount(Map<String, DeviceDetails> devices){
-  int count = 0;
-  List keys = devices.keys.toList();
-  for(int i = 0; i < keys.length; i++){
-    String thisName = devices[keys[i]].name;
-    if(thisName != "") count += 1;
-  }
-  return count;
-}
-
-List<String> sortResults(Map<String, DeviceDetails> devices){
+  List<String> sortResults(){
   //sort by ID
   List<String> deviceIDs = devices.keys.toList();
   deviceIDs.sort();
@@ -303,6 +311,7 @@ List<String> sortResults(Map<String, DeviceDetails> devices){
   }
 
   return ([]..addAll(withName))..addAll(withoutName);
+}
 }
 
 class BluetoothProblem extends StatelessWidget {
@@ -352,36 +361,12 @@ class BluetoothProblem extends StatelessWidget {
   }
 }
 
-String durationPrint(dynamic dtOrDur){
-  //if we pass a datetime we assume
-  //we use this time to get a duration
-  if(dtOrDur is DateTime){
-    dtOrDur = (DateTime.now()).difference(dtOrDur);
-  }
-
-  //get all individual values
-  int days = dtOrDur.inDays;
-  int hours = dtOrDur.inHours;
-  int minutes = dtOrDur.inMinutes;
-  int seconds = dtOrDur.inSeconds;
-  int milliseconds = dtOrDur.inMilliseconds;
-  int microseconds = dtOrDur.inMicroseconds;
-
-  //print the largest value
-  if(days != 0) return "$days day(s)";
-  else if(hours != 0) return "$hours hour(s)";
-  else if(minutes != 0) return "$minutes minute(s)";
-  else if(seconds !=0) return "$seconds second(s)";
-  else if(milliseconds != 0) return "$milliseconds millisec(s)";
-  else return "$microseconds microsec(s)";
-}
-
 class DeviceTile extends StatelessWidget {
   const DeviceTile({
     this.device
   });
 
-  final DeviceDetails device;
+  final DeviceData device;
 
   Widget _buildTitle(BuildContext context) {
     var name = device.name.toString();
@@ -389,37 +374,60 @@ class DeviceTile extends StatelessWidget {
     var id = device.id.toString();
     //unknown, classic, le, dual
     var type = (device.type != BluetoothDeviceType.unknown) ? device.type.toString() : "?";
-    var rssi = device.allRSSIs.last.rssi.toString();
+
+    //updated ever so often
+    var range = device.scans.minRSSI.toString() + " -> " + device.scans.maxRSSI.toString();
+    var mode = device.scans.mode.toString();
+    var median = device.scans.median.toString();
+    var mean = device.scans.mean.toString();
+
+    //updated every frame
+    var rssi = device.scans.last().rssi.toString();
+    var time = durationPrint(device.scans.last().timeBeforeNewScan());
 
     return Row(
       children: <Widget>[
-        Expanded(
-          child: Container(
-            padding: EdgeInsets.all(8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                new Text(
-                  nameNotFound ? "NO NAME" : name,
-                  style: TextStyle(
-                    color: nameNotFound ? Colors.black : Colors.blue,
-                    fontSize: nameNotFound ? 12 : 22,
-                  ),
-                ),
-                new Text("ID: " + id),
-                new Text("TYPE: " + type),
-              ],
-            ),
-          ),
-        ),
         Container(
           padding: EdgeInsets.all(8),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              new Text("RSSI"),
-              new Text(rssi),
+              new Text(
+                nameNotFound ? "NO NAME" : name,
+                style: TextStyle(
+                  color: nameNotFound ? Colors.black : Colors.blue,
+                  fontSize: nameNotFound ? 12 : 22,
+                ),
+              ),
+              new Text("ID: " + id),
+              new Text("TYPE: " + type),
+              new Text("RANGE: " + range),
+              new Text("MODE: " + mode),
+              new Text("MEDIAN: " + median),
+              new Text("MEAN " + mean),
+              /*
+              new Text("Peaks: " + device.peakCount.toString()),
+              new Text("Drops: " + device.dropCount.toString()),
+              */
             ],
+          ),
+        ),
+        Expanded(
+          child: Container(
+            alignment: Alignment.centerRight,
+            padding: EdgeInsets.all(8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                new Text("RSSI"),
+                new Text(rssi),
+                new Text("Time"),
+                new Text(time),
+              ],
+            ),
           ),
         ),
       ],

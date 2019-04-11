@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/addDevice.dart';
+import 'package:leashed/data.dart';
+import 'package:leashed/utils.dart';
 
+/*
 class Signal{
   //NOTE: an rssi of -1000 is a disconnected device
   int rssi;
@@ -18,35 +23,49 @@ class Signal{
     dtOrDur = (DateTime.now()).difference(dtOrDur);
   }
 }
+*/
 
-class DeviceDetails{
-  //TODO... 
-  //1. lets us remove already added devices 
-  //from the add new devices list
-  //2. lets us display a device name when it doesnt have a friendly one
-  String assignedName;
-
-  //---permanently filled vars
+class DeviceData{
   //set once and done
   String id;
   String name; //MIGHT be blank
   BluetoothDeviceType type;
+  DateTime spawntime;
 
+  //updated every time
+  Scans scans;
+
+/*
   //set multiple times
   int minObservedRSSI;
   int maxObservedRSSI;
   
   //---temporarily filled vars
   List<Signal> allRSSIs;
+  List<int> change;
+  int peakCount;
+  int dropCount;
+  */
 
-  DeviceDetails(String initID, String initName, BluetoothDeviceType initType){
+  DeviceData(String initID, String initName, BluetoothDeviceType initType){
     id = initID;
     name = initName;
     type = initType;
+    spawntime = DateTime.now();
+
+    scans = new Scans();
+
+/*
     allRSSIs = new List();
+    change = new List();
+    peakCount = 0;
+    dropCount = 0;
+    */
   }
 
-  newRSSI(int val){
+  ns(int rssi){
+    
+    /*
     if(allRSSIs.length == 0){
       //add initial signal
       allRSSIs.add(new Signal(val));
@@ -56,8 +75,9 @@ class DeviceDetails{
       maxObservedRSSI = val;
     }
     else{
+      //ENSURE we dont store the same signal twice
       if(val != allRSSIs.last.rssi){
-        //saves how long we had this signal
+        //saves how long we had the previous signal
         allRSSIs.last.newSignalReceived();
 
         //add new signal with zero duration
@@ -74,18 +94,41 @@ class DeviceDetails{
         else{
           maxObservedRSSI = (maxObservedRSSI > val) ? maxObservedRSSI : val;
         }
+
+        //add new change
+        if(allRSSIs.length > 1){
+          int thisIndex = allRSSIs.length - 1;
+          int prevValue = allRSSIs[thisIndex - 1].rssi;
+          int currValue = allRSSIs[thisIndex].rssi;
+          change.add(currValue - prevValue);
+          
+          //add new drop or peak
+          if(change.length > 1){
+            int thisChangeIndex = change.length - 1;
+            int prevChangeValue = change[thisChangeIndex - 1];
+            int currChangeValue = change[thisChangeIndex];
+            bool prevPos = (prevChangeValue >= 0);
+            bool currPos = (currChangeValue >= 0);
+            if(prevPos != currPos){
+              if(prevPos && currPos == false){
+                peakCount += 1;
+              }
+              else dropCount += 1;
+            } 
+            //ELSE... we are still rising or till falling
+          }
+          //ELSE... we dont have enought change data to detect a peak/drop
+        } 
+        //ELSE... we dont have enough RSSI data to detect a change
       }
       //ELSE... nothing changes
     }
+    */
   }  
-
-  clearRSSIs(){
-    allRSSIs.clear();
-  }
 }
 
 class ValueDisplay extends StatelessWidget {
-  final DeviceDetails device;
+  final DeviceData device;
 
   ValueDisplay({
     this.device,
@@ -107,6 +150,7 @@ class ValueDisplay extends StatelessWidget {
       ),
       body: Column(
         children: <Widget>[
+          /*
           DefaultTextStyle(
             style: TextStyle(
               color: Colors.white,
@@ -138,18 +182,20 @@ class ValueDisplay extends StatelessWidget {
               ),
             ),
           ),
+          */
           Expanded(
             child: ListView.builder(
               padding: EdgeInsets.all(8.0),
-              itemCount: device.allRSSIs.length,
+              itemCount: device.scans.length(),
               itemBuilder: (BuildContext context, int index) {
                 return Container(
                   padding: EdgeInsets.all(8),
                   child: Row(
                     children: <Widget>[
-                      new Text(device.allRSSIs[index].rssi.toString()),
-                      new Text(" for "),
-                      new Text(durationPrint(device.allRSSIs[index].dtOrDur)),
+                      new Text(device.scans[index].rssi.toString() + " : "),
+                      new Text(durationPrint(device.scans[index].timeBeforeNewScan())),
+                      //new Text(" for "),
+                      //new Text(durationPrint(device.allRSSIs[index].dtOrDur)),
                     ],
                   ),
                 );
