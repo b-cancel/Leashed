@@ -1,6 +1,8 @@
 //Keep track of all the classes that keep track of all the data that can then be analyzed to locate a pattern
 import 'dart:collection';
 
+import 'package:leashed/utils.dart';
+
 //NOTE: I know for a fact given that I update a list of lastestScans (contains the latest data for each device)
 //when a device disconnects
 // - we dont receive any new updates
@@ -23,30 +25,35 @@ class Scans{
   //so it's guaranteed to skew our data in a direction we know to be incorrect
 
   //TODO... this might vary depending on how many devices are currently connected
-  List<Duration> timesBeforeNewScan;
-
-/*
-  int mode; //most occuring
-  Map<int,int> rssiToOccurences; //supporting object
-  
-  double median; //middle value
-
-  double mean; //average
-  */
+  List<DurationBeforeNewScan> durationsBeforeNewScan;
+  Duration mean;
 
   Scans(){
     _scans = new List<Scan>();
-    /*
-    rssiToOccurences = new Map<int,int>();
-    mean = 0;
-    */
+    durationsBeforeNewScan = new List<DurationBeforeNewScan>();
+    mean = Duration.zero;
   }
 
-  void add(int newRSSI){
-    //close previous scan if it exists(to record time until new scan [time until this scan])
+  void add(int newRSSI, int currDevicesConnected){
+    //we need atleast 2 scans to have a duration between them
+   
     if(_scans.length != 0){
+      //record the duration between the last scan and this one
       int lastIndex = _scans.length - 1;
       _scans[lastIndex].newScan();
+      Duration newDuration = _scans[lastIndex].durationBeforeNewScan();
+
+      //IF we did not disconnect after a the last point
+      if(_scans[lastIndex].connected){
+        //maintain a running average
+        mean = newDurationAverage(mean, durationsBeforeNewScan.length, newDuration);
+
+        //record it seperately so we can find an average to detect a disconnect
+        durationsBeforeNewScan.add(DurationBeforeNewScan(
+          duration: newDuration,
+          devicesConnected: currDevicesConnected,
+        ));
+      }
     }
 
     //add new scan
@@ -61,41 +68,6 @@ class Scans{
       minRSSI = (minRSSI < newRSSI) ? minRSSI : newRSSI;
       maxRSSI = (maxRSSI > newRSSI) ? maxRSSI : newRSSI;
     }
-
-    /*
-    //maintain structure that maintains mode
-    if(rssiToOccurences.containsKey(newRSSI) == false){
-      rssiToOccurences[newRSSI] = 0;
-    }
-    rssiToOccurences[newRSSI] += 1;
-
-    //find new mode (TODO: improve)
-    List<int> allRSSIs = rssiToOccurences.keys.toList();
-    int keyWithMax = 0; //the first key (guaranteed to exist)
-    int max = rssiToOccurences[allRSSIs[keyWithMax]]; //the first value
-    for(int i = 1; i < allRSSIs.length; i++){ //start at second value
-      int thisKey = allRSSIs[i];
-      int thisValue = rssiToOccurences[thisKey];
-      if(thisValue > max){
-        keyWithMax = i;
-        max = thisValue;
-      }
-    }
-    mode = allRSSIs[keyWithMax];
-
-    //find new median
-    allRSSIs.sort();
-    int mid = (allRSSIs.length ~/2);
-    int firstRSSI = allRSSIs[mid];
-    if(allRSSIs.length % 2 == 0){
-      median = (firstRSSI + allRSSIs[mid - 1])/2;
-    }
-    else median = firstRSSI.toDouble();
-
-    //maintain average
-    int countBefore = _scans.length - 1;
-    mean = (newRSSI + (mean * countBefore)) / _scans.length;
-    */
   }
 
   operator [](int i) => _scans[i]; 

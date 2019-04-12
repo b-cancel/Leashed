@@ -32,13 +32,15 @@ class _AddDeviceState extends State<AddDevice> {
   bool isScanning; //must start FALSE
   //lets user change scan mode (primarily for testing)
   int scanMode;
+  int connectedDevices;
 
   ///-------------------------Tests
 
   //NOTE: can only update data that has been recieved
   //no need to worry about devices that have disconnected
   //the scanner will simply not pick them up
-  List<Duration> updateCycleLengths;
+  List<Duration> scanDurations;
+  Duration scanDurationsAverage;
 
   ///-------------------------Functions-------------------------
 
@@ -72,11 +74,14 @@ class _AddDeviceState extends State<AddDevice> {
     _flutterBlue = FlutterBlue.instance;
     scanResults = new Map();
     bluetoothState = BluetoothState.unknown;
+
     isScanning = false;
     scanMode = ScanMode.lowLatency.value;
+    connectedDevices = 0;
 
     // test var init
-    updateCycleLengths = new List<Duration>();
+    scanDurations = new List<Duration>();
+    scanDurationsAverage = Duration.zero;
 
     // Immediately get the state of FlutterBlue
     _flutterBlue.state.then((s) {
@@ -120,8 +125,6 @@ class _AddDeviceState extends State<AddDevice> {
     else{
       //start scanning if that bluetooth was just turned on
       if(isScanning == false) _startScan();
-
-      checkForDisconnects();
     }
 
     //a list of all the tiles that will be shown in the list view
@@ -138,8 +141,16 @@ class _AddDeviceState extends State<AddDevice> {
       scanDuration = (DateTime.now()).difference(scanTime);
       scanTime = dtZero;
       alternatingChar = " ()";
-      updateCycleLengths.add(scanDuration);
+
+      scanDurationsAverage = newDurationAverage(scanDurationsAverage, scanDurations.length, scanDuration);
+      scanDurations.add(scanDuration);
     }
+
+    //updates devices
+    checkForDisconnects();
+
+    //checks devices
+    connectedDevices = countOfConnectedDevices();
 
     //our main widget to return
     return new Scaffold(
@@ -155,7 +166,7 @@ class _AddDeviceState extends State<AddDevice> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   new Text(
-                    devices.keys.toList().length.toString() + ' Found',
+                    devices.keys.toList().length.toString() + ' Found ' + '(' + connectedDevices.toString() + ')',
                   ),
                   new Text(
                     (durationPrint(scanDuration) + alternatingChar),
@@ -177,7 +188,7 @@ class _AddDeviceState extends State<AddDevice> {
               padding: EdgeInsets.fromLTRB(16,8,16,8),
               alignment: Alignment.centerRight,
               child: new Text(
-                "avg of " + updateCycleLengths.length.toString() + " scans: " + durationPrint(durationAverage(updateCycleLengths)),
+                "avg of " + scanDurations.length.toString() + " scans: " + durationPrint(scanDurationsAverage),
                 textAlign: TextAlign.right,
               ),
             ),
@@ -277,6 +288,18 @@ class _AddDeviceState extends State<AddDevice> {
     );
   }
 
+  int countOfConnectedDevices(){
+    List<String> keys = devices.keys.toList();
+    int newCount = 0;
+    for(int i = 0; i < keys.length; i++){
+      String thisKey = keys[i];
+      if(devices[thisKey].scans.last().connected){
+        newCount += 1;
+      }
+    }
+    return newCount;
+  }
+
   void updateDevice(DeviceIdentifier deviceID){
     String deviceIDstr = deviceID.toString();
     String thisName = scanResults[deviceID].device.name;
@@ -303,7 +326,7 @@ class _AddDeviceState extends State<AddDevice> {
     //-----Update Device Values
     //NOTE: our scanresults DOES NOT CLEAR so if a device disconnects we will just have the last recieved RSSI
     var newRSSI = scanResults[deviceID].rssi;
-    devices[deviceIDstr].scans.add(newRSSI);
+    devices[deviceIDstr].scans.add(newRSSI, connectedDevices);
   }
 
   void checkForDisconnects(){

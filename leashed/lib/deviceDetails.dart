@@ -189,7 +189,9 @@ class ValueDisplay extends StatelessWidget {
               itemCount: device.scans.length(),
               itemBuilder: (BuildContext context, int index) {
                 return Container(
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.all(8)
+                  
+                  ,
                   child: Row(
                     children: <Widget>[
                       new Text(device.scans[index].rssi.toString() + " : "),

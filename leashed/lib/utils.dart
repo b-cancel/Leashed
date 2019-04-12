@@ -38,6 +38,7 @@ Duration durationAverage(List<Duration> durations){
   }
 }
 
+//get new average BEFORE adding newDuration
 Duration newDurationAverage(Duration currentAverage, int lastCount, Duration newDuration){
   Duration sum = currentAverage * lastCount;
   sum += newDuration;
