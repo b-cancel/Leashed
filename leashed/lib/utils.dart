@@ -45,11 +45,55 @@ Duration newDurationAverage(Duration currentAverage, int lastCount, Duration new
   return Duration(microseconds: (sum.inMicroseconds ~/ (lastCount + 1)));
 }
 
-Duration deviations(Duration val, Duration mean, Duration stdDev){
-  if(stdDev == Duration.zero) return Duration.zero;
+double deviation(Duration val, Duration mean, Duration stdDev){
+  if(stdDev == Duration.zero) return 0;
   else{
     Duration valMinusMean = val - mean;
-    int dev = valMinusMean.inMicroseconds ~/ stdDev.inMicroseconds;
-    return Duration(microseconds: dev);
+    double dev = valMinusMean.inMicroseconds / stdDev.inMicroseconds;
+    return dev;
   }
+}
+
+String nDigitsBehind(double number, int nDigits){
+  String str = number.toString();
+
+  //remove negative
+  if(number < 0) str = str.substring(1);
+
+  //remove uneeded precision
+  int decIndex = str.indexOf(".");
+  if(decIndex != -1){
+    String before = str.substring(0, decIndex);
+    String after = str.substring(decIndex, str.length - 1);
+
+    //remove or add digits
+    int digitsAfter = after.length - 1; //after includes .
+    if(digitsAfter != nDigits){
+      if(digitsAfter < nDigits){ //add digits
+        int digitsNeeded = nDigits - digitsAfter;
+        while(digitsNeeded > 0){
+          str += "0";
+          digitsNeeded--;
+        }
+      }
+      else{ //remove digits
+        after = after.substring(0, nDigits + 1);
+        str = before + after;
+      }
+    }
+    //ELSE... our string is already of the perfect size
+  }
+
+  //add negative
+  if(number < 0) return "-" + str;
+  else return str;
+}
+
+String atleastLengthOfn(int num, int minLength) {
+  String numStr = num.toString();
+  int added0s = minLength - numStr.length;
+  if(num < 0) numStr = numStr.substring(1); //remove the negative sign
+  for (int i = added0s; i > 0; i--) numStr = "0" + numStr;
+  if(num >= 0) return numStr;
+  else return ("-" + numStr);
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:leashed/addDevice.dart';
+import 'package:leashed/dataAnalyzer.dart';
 
 import 'dart:math' as math;
 
@@ -123,6 +123,17 @@ class NoDevices extends StatelessWidget {
             }
           },
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: (){
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DataAnalyzer(),
+            ),
+          );
+        },
+        child: new Icon(Icons.search),
       ),
     );
   }
@@ -372,14 +383,8 @@ class NavBar extends StatelessWidget {
               color: Colors.white,
             ),
             onPressed: (){
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddDevice(),
-                ),
-              );
-              //deviceCount.value = deviceCount.value + 1;
-            },//
+              deviceCount.value = deviceCount.value + 1;
+            },
           ),
           Container(
             padding: EdgeInsets.all(8),
@@ -394,7 +399,7 @@ class NavBar extends StatelessWidget {
               color: Colors.white,
             ),
             onPressed: (){
-              //=> deviceCount.value = deviceCount.value - 1
+              deviceCount.value = deviceCount.value - 1;
             },
           )
         ],

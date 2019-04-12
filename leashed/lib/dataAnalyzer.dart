@@ -4,17 +4,18 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:leashed/data.dart';
 import 'package:leashed/deviceDetails.dart';
 import 'package:leashed/utils.dart';
 import 'package:system_setting/system_setting.dart';
 
-class AddDevice extends StatefulWidget {
+class DataAnalyzer extends StatefulWidget {
 
   @override
-  _AddDeviceState createState() => _AddDeviceState();
+  _DataAnalyzerState createState() => _DataAnalyzerState();
 }
 
-class _AddDeviceState extends State<AddDevice> {
+class _DataAnalyzerState extends State<DataAnalyzer> {
   Map<String, DeviceData> devices;
 
   ///-------------------------Variables-------------------------
@@ -33,7 +34,6 @@ class _AddDeviceState extends State<AddDevice> {
   bool isScanning; //must start FALSE
   //lets user change scan mode (primarily for testing)
   int scanMode;
-  int connectedDevices;
 
   ///-------------------------Tests
 
@@ -78,7 +78,6 @@ class _AddDeviceState extends State<AddDevice> {
 
     isScanning = false;
     scanMode = ScanMode.lowLatency.value;
-    connectedDevices = 0;
 
     // test var init
     scanDurations = new List<Duration>();
@@ -147,12 +146,6 @@ class _AddDeviceState extends State<AddDevice> {
       scanDurations.add(scanDuration);
     }
 
-    //updates devices
-    checkForDisconnects();
-
-    //checks devices
-    connectedDevices = countOfConnectedDevices();
-
     //our main widget to return
     return new Scaffold(
       appBar: AppBar(
@@ -167,7 +160,7 @@ class _AddDeviceState extends State<AddDevice> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   new Text(
-                    devices.keys.toList().length.toString() + ' Found ' + '(' + connectedDevices.toString() + ')',
+                    devices.keys.toList().length.toString() + ' Found',
                   ),
                   new Text(
                     (durationPrint(scanDuration) + alternatingChar),
@@ -289,49 +282,21 @@ class _AddDeviceState extends State<AddDevice> {
     );
   }
 
-  int countOfConnectedDevices(){
-    List<String> keys = devices.keys.toList();
-    int newCount = 0;
-    for(int i = 0; i < keys.length; i++){
-      String thisKey = keys[i];
-      if(devices[thisKey].scans.last().connected){
-        newCount += 1;
-      }
-    }
-    return newCount;
-  }
-
   void updateDevice(DeviceIdentifier deviceID){
     String deviceIDstr = deviceID.toString();
     String thisName = scanResults[deviceID].device.name;
 
-    //-----Adding or Updating the Name of a Device (from Scanned)
+    //-----Adding New Device
     if(devices.containsKey(deviceIDstr) == false){ //add new device
       thisName = (thisName == null) ? "" : thisName;
       BluetoothDeviceType thisType = scanResults[deviceID].device.type;
       devices[deviceIDstr] = DeviceData(deviceIDstr, thisName, thisType);
     }
-    else{ //update name?
-      //TODO... check if this is ever needed
-      //NOTE: we have this under the assumption that the name might not always be received
-      if(devices[deviceIDstr].name != thisName){
-        print("---------------NAME CHANGED " + devices[deviceIDstr].name + " => " + thisName);
-        if(devices[deviceIDstr].name == ""){
-          print("---------UPDATED NAME");
-          devices[deviceIDstr].name = thisName;
-          sleep(const Duration(seconds:5));
-        }
-      }
-    }
 
     //-----Update Device Values
     //NOTE: our scanresults DOES NOT CLEAR so if a device disconnects we will just have the last recieved RSSI
     var newRSSI = scanResults[deviceID].rssi;
-    devices[deviceIDstr].scans.add(newRSSI, connectedDevices);
-  }
-
-  void checkForDisconnects(){
-
+    devices[deviceIDstr].add(newRSSI);
   }
 
   List<String> sortResults(){
@@ -369,14 +334,12 @@ class DeviceTile extends StatelessWidget {
     var type = (device.type != BluetoothDeviceType.unknown) ? device.type.toString() : "?";
 
     //updated ever so often
-    var range = device.scans.minRSSI.toString() + " -> " + device.scans.maxRSSI.toString();
-    var mean = device.scans.mean;
-    var stdDev = device.scans.standardDeviation;
 
     //updated every frame
-    var rssi = device.scans.last().rssi.toString();
-    var time = device.scans.last().durationBeforeNewScan();
-    var devsAway = deviations(time, mean, stdDev);
+    var rssi = device.scanData.allRSSIs.last;
+    List durs = device.scanData.durationsBetweenUpdates;
+    durs[durs.length - 1] = (DateTime.now()).difference(device.scanData.lastDateTime);
+    var time = device.scanData.durationsBetweenUpdates.last;
 
     return Row(
       children: <Widget>[
@@ -395,13 +358,6 @@ class DeviceTile extends StatelessWidget {
               ),
               new Text("ID: " + id),
               new Text("TYPE: " + type),
-              new Text("RANGE: " + range),
-              new Text("MEAN: " + durationPrint(mean)),
-              new Text("STD DEV: " + durationPrint(stdDev)),
-              /*
-              new Text("Peaks: " + device.peakCount.toString()),
-              new Text("Drops: " + device.dropCount.toString()),
-              */
             ],
           ),
         ),
@@ -415,11 +371,9 @@ class DeviceTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
                 new Text("RSSI"),
-                new Text(rssi),
+                new Text(rssi.toString()),
                 new Text("Time"),
                 new Text(durationPrint(time)),
-                new Text("Devs"),
-                new Text(durationPrint(devsAway)),
               ],
             ),
           ),
