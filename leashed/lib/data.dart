@@ -1,5 +1,6 @@
 //Keep track of all the classes that keep track of all the data that can then be analyzed to locate a pattern
 import 'dart:collection';
+import 'dart:math';
 
 import 'package:leashed/utils.dart';
 
@@ -24,14 +25,17 @@ class Scans{
   //since you disconnected we don't have an accurate "timeBeforeNewScan"
   //so it's guaranteed to skew our data in a direction we know to be incorrect
 
-  //TODO... this might vary depending on how many devices are currently connected
+  //NOTE: because we track how many devices we have we can caculate that average if desired
   List<DurationBeforeNewScan> durationsBeforeNewScan;
-  Duration mean;
-
+  Duration mean; //arithmetic mean (average)
+  //both use mean as the "measure of central tendency"
+  Duration standardDeviation;
+  
   Scans(){
     _scans = new List<Scan>();
     durationsBeforeNewScan = new List<DurationBeforeNewScan>();
     mean = Duration.zero;
+    standardDeviation = Duration.zero;
   }
 
   void add(int newRSSI, int currDevicesConnected){
@@ -53,6 +57,15 @@ class Scans{
           duration: newDuration,
           devicesConnected: currDevicesConnected,
         ));
+
+        //calc standard deviation
+        int sum = 0;
+        int length = durationsBeforeNewScan.length;
+        for(int i = 0; i < length; i++){
+          Duration valMinusMean = durationsBeforeNewScan[i].duration - mean;
+          sum += pow(valMinusMean.inMicroseconds, 2);
+        }
+        standardDeviation = Duration(microseconds: sqrt(sum / length).toInt());
       }
     }
 

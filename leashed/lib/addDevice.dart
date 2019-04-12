@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
@@ -369,13 +370,13 @@ class DeviceTile extends StatelessWidget {
 
     //updated ever so often
     var range = device.scans.minRSSI.toString() + " -> " + device.scans.maxRSSI.toString();
-    var mode = "mode"; //device.scans.mode.toString();
-    var median = "med" ; //device.scans.median.toString();
-    var mean = "mean"; //device.scans.mean.toString();
+    var mean = device.scans.mean;
+    var stdDev = device.scans.standardDeviation;
 
     //updated every frame
     var rssi = device.scans.last().rssi.toString();
-    var time = durationPrint(device.scans.last().durationBeforeNewScan());
+    var time = device.scans.last().durationBeforeNewScan();
+    var devsAway = deviations(time, mean, stdDev);
 
     return Row(
       children: <Widget>[
@@ -395,9 +396,8 @@ class DeviceTile extends StatelessWidget {
               new Text("ID: " + id),
               new Text("TYPE: " + type),
               new Text("RANGE: " + range),
-              new Text("MODE: " + mode),
-              new Text("MEDIAN: " + median),
-              new Text("MEAN " + mean),
+              new Text("MEAN: " + durationPrint(mean)),
+              new Text("STD DEV: " + durationPrint(stdDev)),
               /*
               new Text("Peaks: " + device.peakCount.toString()),
               new Text("Drops: " + device.dropCount.toString()),
@@ -417,7 +417,9 @@ class DeviceTile extends StatelessWidget {
                 new Text("RSSI"),
                 new Text(rssi),
                 new Text("Time"),
-                new Text(time),
+                new Text(durationPrint(time)),
+                new Text("Devs"),
+                new Text(durationPrint(devsAway)),
               ],
             ),
           ),

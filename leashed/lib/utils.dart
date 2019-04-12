@@ -44,3 +44,12 @@ Duration newDurationAverage(Duration currentAverage, int lastCount, Duration new
   sum += newDuration;
   return Duration(microseconds: (sum.inMicroseconds ~/ (lastCount + 1)));
 }
+
+Duration deviations(Duration val, Duration mean, Duration stdDev){
+  if(stdDev == Duration.zero) return Duration.zero;
+  else{
+    Duration valMinusMean = val - mean;
+    int dev = valMinusMean.inMicroseconds ~/ stdDev.inMicroseconds;
+    return Duration(microseconds: dev);
+  }
+}
