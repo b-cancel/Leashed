@@ -35,6 +35,9 @@ class _AddDeviceState extends State<AddDevice> {
 
   ///-------------------------Tests
 
+  //NOTE: can only update data that has been recieved
+  //no need to worry about devices that have disconnected
+  //the scanner will simply not pick them up
   List<Duration> updateCycleLengths;
 
   ///-------------------------Functions-------------------------
@@ -113,144 +116,165 @@ class _AddDeviceState extends State<AddDevice> {
       //NOTE: I assume this should happen automatically
       //this is just in case it doesn't (I didn't code flutterblue)
       if(isScanning) _stopScan();
-
-      //display error and link to repair location
-      return BluetoothProblem(
-        state: bluetoothState,
-      );
     }
     else{
       //start scanning if that bluetooth was just turned on
       if(isScanning == false) _startScan();
 
-      //record how long each scan has taken
-      //NOTE: this is possible because after every scan setState is called
-      String alternatingChar = "";
-      if(scanTime == dtZero){
-        scanTime = DateTime.now();
-        alternatingChar = " )(";
-      }
-      else{
-        scanDuration = (DateTime.now()).difference(scanTime);
-        scanTime = dtZero;
-        alternatingChar = " ()";
-        updateCycleLengths.add(scanDuration);
-      }
+      checkForDisconnects();
+    }
 
-      //a list of all the tiles that will be shown in the list view
-      List<String> deviceIDs = sortResults(); 
+    //a list of all the tiles that will be shown in the list view
+    List<String> deviceIDs = sortResults(); 
 
-      //our main widget to return
-      return new Scaffold(
-        appBar: AppBar(
-          titleSpacing: 0,
-          centerTitle: false,
-          title: Container(
-            padding: EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    new Text(
-                      devices.keys.toList().length.toString() + ' Found',
-                    ),
-                    new Text(
-                      (durationPrint(scanDuration) + alternatingChar),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        body: DefaultTextStyle(
-          style: TextStyle(
-            color: Colors.white
-          ),
-          child: new Column(
+    //record how long each scan has taken
+    //NOTE: this is possible because after every scan setState is called
+    String alternatingChar = "";
+    if(scanTime == dtZero){
+      scanTime = DateTime.now();
+      alternatingChar = " )(";
+    }
+    else{
+      scanDuration = (DateTime.now()).difference(scanTime);
+      scanTime = dtZero;
+      alternatingChar = " ()";
+      updateCycleLengths.add(scanDuration);
+    }
+
+    //our main widget to return
+    return new Scaffold(
+      appBar: AppBar(
+        titleSpacing: 0,
+        centerTitle: false,
+        title: Container(
+          padding: EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Container(
-                color: Colors.blue,
-                padding: EdgeInsets.fromLTRB(16,8,16,8),
-                alignment: Alignment.centerRight,
-                child: new Text(
-                  "avg of " + updateCycleLengths.length.toString() + " scans: " + durationPrint(calcAvg()),
-                  textAlign: TextAlign.right,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.fromLTRB(16,8,16,8),
-                width: MediaQuery.of(context).size.width,
-                child: DropdownButton<int>(
-                  value: scanMode,
-                  onChanged: (int newValue) {
-                    //trigger functional change
-                    _stopScan();
-
-                    //trigger visual UI change
-                    setState(() {
-                      scanMode = newValue;
-                      //NOTE: this will also start the scan
-                    });
-                  },
-                  items: [
-                    DropdownMenuItem<int>(
-                        value: 0,
-                        child: Text("Low Power"),
-                    ),
-                    DropdownMenuItem<int>(
-                        value: 1,
-                        child: Text("Balanced"),
-                    ),
-                    DropdownMenuItem<int>(
-                        value: 2,
-                        child: Text("Low Latency"),
-                    ),
-                    DropdownMenuItem<int>(
-                        value: -1,
-                        child: Text("Opportunistic"),
-                    ),
-                  ],
-                ),
-              ),
-              DefaultTextStyle(
-                style: TextStyle(
-                  color: Colors.black
-                ),
-                child: Expanded(
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(8.0),
-                    itemCount: deviceIDs.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      String deviceID = deviceIDs[index];
-                      DeviceData device = devices[deviceID];
-
-                      return InkWell(
-                        onTap: (){
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ValueDisplay(
-                                device: device,
-                              ),
-                            ),
-                          );
-                        },
-                        child: DeviceTile(
-                          device: device,
-                        ),
-                      );
-                    },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  new Text(
+                    devices.keys.toList().length.toString() + ' Found',
                   ),
-                ),
+                  new Text(
+                    (durationPrint(scanDuration) + alternatingChar),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-      );
-    }
+      ),
+      body: DefaultTextStyle(
+        style: TextStyle(
+          color: Colors.white
+        ),
+        child: new Column(
+          children: <Widget>[
+            Container(
+              color: Colors.blue,
+              padding: EdgeInsets.fromLTRB(16,8,16,8),
+              alignment: Alignment.centerRight,
+              child: new Text(
+                "avg of " + updateCycleLengths.length.toString() + " scans: " + durationPrint(durationAverage(updateCycleLengths)),
+                textAlign: TextAlign.right,
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.fromLTRB(16,8,16,8),
+              width: MediaQuery.of(context).size.width,
+              child: DropdownButton<int>(
+                value: scanMode,
+                onChanged: (int newValue) {
+                  //trigger functional change
+                  _stopScan();
+
+                  //trigger visual UI change
+                  setState(() {
+                    scanMode = newValue;
+                    //NOTE: this will also start the scan
+                  });
+                },
+                items: [
+                  DropdownMenuItem<int>(
+                      value: 0,
+                      child: Text("Low Power"),
+                  ),
+                  DropdownMenuItem<int>(
+                      value: 1,
+                      child: Text("Balanced"),
+                  ),
+                  DropdownMenuItem<int>(
+                      value: 2,
+                      child: Text("Low Latency"),
+                  ),
+                  DropdownMenuItem<int>(
+                      value: -1,
+                      child: Text("Opportunistic"),
+                  ),
+                ],
+              ),
+            ),
+            (bluetoothState != BluetoothState.on)
+            ? InkWell(
+              onTap: (){
+                SystemSetting.goto(SettingTarget.BLUETOOTH);
+              },
+              child: Container(
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                width: MediaQuery.of(context).size.width,
+                color: Colors.redAccent,
+                child: Row(
+                  children: <Widget>[
+                    new Icon(
+                      Icons.error,
+                      color: Theme.of(context).primaryTextTheme.subhead.color,
+                    ),
+                    new Text(
+                      'The Bluetooth Adapter Is ${bluetoothState.toString().substring(15)}',
+                      style: Theme.of(context).primaryTextTheme.subhead,
+                    ),
+                  ],
+                ),
+              ),
+            )
+            : Container(),
+            DefaultTextStyle(
+              style: TextStyle(
+                color: Colors.black
+              ),
+              child: Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.all(8.0),
+                  itemCount: deviceIDs.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    String deviceID = deviceIDs[index];
+                    DeviceData device = devices[deviceID];
+
+                    return InkWell(
+                      onTap: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ValueDisplay(
+                              device: device,
+                            ),
+                          ),
+                        );
+                      },
+                      child: DeviceTile(
+                        device: device,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void updateDevice(DeviceIdentifier deviceID){
@@ -282,82 +306,27 @@ class _AddDeviceState extends State<AddDevice> {
     devices[deviceIDstr].scans.add(newRSSI);
   }
 
-  Duration calcAvg(){
-    Duration total = Duration.zero;
-    int cycles = updateCycleLengths.length;
-    if(cycles == 0) return Duration.zero;
-    else{
-      for(int i = 0; i < cycles; i++){
-        total += updateCycleLengths[i];
-      }
-      return Duration(microseconds: (total.inMicroseconds ~/ cycles));
-    }
+  void checkForDisconnects(){
+
   }
 
   List<String> sortResults(){
   //sort by ID
-  List<String> deviceIDs = devices.keys.toList();
-  deviceIDs.sort();
+    List<String> deviceIDs = devices.keys.toList();
+    deviceIDs.sort();
 
-  //sort all devices by Name
-  List<String> withName = new List<String>();
-  List<String> withoutName = new List<String>();
-  for(int i = 0; i < devices.length; i++){
-    String deviceID = deviceIDs[i];
-    if(devices[deviceID].name != ""){
-      withName.add(deviceID);
+    //sort all devices by Name
+    List<String> withName = new List<String>();
+    List<String> withoutName = new List<String>();
+    for(int i = 0; i < devices.length; i++){
+      String deviceID = deviceIDs[i];
+      if(devices[deviceID].name != ""){
+        withName.add(deviceID);
+      }
+      else withoutName.add(deviceID);
     }
-    else withoutName.add(deviceID);
-  }
 
-  return ([]..addAll(withName))..addAll(withoutName);
-}
-}
-
-class BluetoothProblem extends StatelessWidget {
-  final BluetoothState state;
-
-  BluetoothProblem({
-    this.state,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: InkWell(
-        onTap: (){
-          SystemSetting.goto(SettingTarget.BLUETOOTH);
-        },
-        child: Scaffold(
-          body: new Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            color: Colors.redAccent,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  new Icon(
-                    Icons.error,
-                    color: Theme.of(context).primaryTextTheme.subhead.color,
-                    size: 200,
-                  ),
-                  new Text(
-                    'The Bluetooth Adapter Is ${state.toString().substring(15)}',
-                    style: Theme.of(context).primaryTextTheme.subhead,
-                  ),
-                  new Text(
-                    'Tap To Go Into Bluetooth Settings',
-                    style: Theme.of(context).primaryTextTheme.subhead,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    return ([]..addAll(withName))..addAll(withoutName);
   }
 }
 
@@ -377,13 +346,13 @@ class DeviceTile extends StatelessWidget {
 
     //updated ever so often
     var range = device.scans.minRSSI.toString() + " -> " + device.scans.maxRSSI.toString();
-    var mode = device.scans.mode.toString();
-    var median = device.scans.median.toString();
-    var mean = device.scans.mean.toString();
+    var mode = "mode"; //device.scans.mode.toString();
+    var median = "med" ; //device.scans.median.toString();
+    var mean = "mean"; //device.scans.mean.toString();
 
     //updated every frame
     var rssi = device.scans.last().rssi.toString();
-    var time = durationPrint(device.scans.last().timeBeforeNewScan());
+    var time = durationPrint(device.scans.last().durationBeforeNewScan());
 
     return Row(
       children: <Widget>[

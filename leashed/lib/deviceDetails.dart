@@ -193,7 +193,7 @@ class ValueDisplay extends StatelessWidget {
                   child: Row(
                     children: <Widget>[
                       new Text(device.scans[index].rssi.toString() + " : "),
-                      new Text(durationPrint(device.scans[index].timeBeforeNewScan())),
+                      new Text(durationPrint(device.scans[index].durationBeforeNewScan())),
                       //new Text(" for "),
                       //new Text(durationPrint(device.allRSSIs[index].dtOrDur)),
                     ],

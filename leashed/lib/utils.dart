@@ -21,3 +21,25 @@ String durationPrint(dynamic dtOrDur, {bool short = false}){
   else if(milliseconds != 0) return (short) ? "${milliseconds}l" : "$milliseconds millisec(s)";
   else return (short) ? "${microseconds}i" : "$microseconds microsec(s)";
 }
+
+Duration durationAverage(List<Duration> durations){
+  int count = durations.length;
+  if(count == 0) return Duration.zero;
+  else{
+    //NOTE: depends on total being able to hold all the microseconds
+    Duration sum = Duration.zero;
+    //get sum
+    for(int i = 0; i < count; i++){
+      sum += durations[i];
+    }
+    //truncations occurs
+    //a fraction of a MICROsecond isn't going to make a difference for most applications
+    return Duration(microseconds: (sum.inMicroseconds ~/ count));
+  }
+}
+
+Duration newDurationAverage(Duration currentAverage, int lastCount, Duration newDuration){
+  Duration sum = currentAverage * lastCount;
+  sum += newDuration;
+  return Duration(microseconds: (sum.inMicroseconds ~/ (lastCount + 1)));
+}

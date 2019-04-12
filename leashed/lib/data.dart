@@ -7,22 +7,39 @@ import 'dart:collection';
 // - we are just left with whatever the last RSSI value was
 
 class Scans{
-  List<Scan> _scans;
-
   int minRSSI;
   int maxRSSI;
+  List<Scan> _scans;
 
+  //NOTE: taking averages for RSSIs at this level does not tell us much
+  //to eliminate noise we dont care about averages at a global level
+  //since RSSI values can vary heavily
+  //we care more about how the value is changing (rate and all)
+
+  //-----Average Tracking for "timeBeforeNewScan"
+  //NOTE: we don't want to consider points taken BEFORE disconnecting
+  //this is because although technically they were received
+  //since you disconnected we don't have an accurate "timeBeforeNewScan"
+  //so it's guaranteed to skew our data in a direction we know to be incorrect
+
+  //TODO... this might vary depending on how many devices are currently connected
+  List<Duration> timesBeforeNewScan;
+
+/*
   int mode; //most occuring
   Map<int,int> rssiToOccurences; //supporting object
   
   double median; //middle value
 
   double mean; //average
+  */
 
   Scans(){
     _scans = new List<Scan>();
+    /*
     rssiToOccurences = new Map<int,int>();
     mean = 0;
+    */
   }
 
   void add(int newRSSI){
@@ -35,12 +52,6 @@ class Scans{
     //add new scan
     _scans.add(Scan(newRSSI));
 
-    //maintain structure that maintains mode
-    if(rssiToOccurences.containsKey(newRSSI) == false){
-      rssiToOccurences[newRSSI] = 0;
-    }
-    rssiToOccurences[newRSSI] += 1;
-
     //maintain min and max
     if(_scans.length == 1){
       minRSSI = newRSSI;
@@ -50,6 +61,13 @@ class Scans{
       minRSSI = (minRSSI < newRSSI) ? minRSSI : newRSSI;
       maxRSSI = (maxRSSI > newRSSI) ? maxRSSI : newRSSI;
     }
+
+    /*
+    //maintain structure that maintains mode
+    if(rssiToOccurences.containsKey(newRSSI) == false){
+      rssiToOccurences[newRSSI] = 0;
+    }
+    rssiToOccurences[newRSSI] += 1;
 
     //find new mode (TODO: improve)
     List<int> allRSSIs = rssiToOccurences.keys.toList();
@@ -77,6 +95,7 @@ class Scans{
     //maintain average
     int countBefore = _scans.length - 1;
     mean = (newRSSI + (mean * countBefore)) / _scans.length;
+    */
   }
 
   operator [](int i) => _scans[i]; 
@@ -90,22 +109,35 @@ class Scans{
   }
 }
 
+class DurationBeforeNewScan{
+  //uses the assumed value
+  //IF it hasn't been confirmed that a device is disconnected then its considered connected
+  int devicesConnected;
+  Duration duration;
+  DurationBeforeNewScan({
+    this.devicesConnected,
+    this.duration,
+  });
+}
+
 //NOTE: device.state IS NOT useful to determine whether a device is connected
 class Scan{
   int rssi;
   dynamic _dtOrDur;
-  bool connected; //TODO: make this work
+  bool connected; 
   
   Scan(int initRSSI){
     rssi = initRSSI;
     _dtOrDur  = DateTime.now();
+    //innocent until proven guilty
+    connected = true;
   }
 
   newScan(){
-    _dtOrDur = timeBeforeNewScan();
+    _dtOrDur = durationBeforeNewScan();
   }
 
-  Duration timeBeforeNewScan(){
+  Duration durationBeforeNewScan(){
     if(_dtOrDur is DateTime){ //we have not yet been given a new value
       return (DateTime.now()).difference(_dtOrDur);
     }
