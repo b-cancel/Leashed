@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
 import 'package:leashed/home.dart';
+import 'package:leashed/settings.dart';
 
 ///This Exists Exclusively to
 ///(1) create a top level Material App that can be used by the rest of the widgets for navigation
@@ -11,6 +12,7 @@ import 'package:leashed/home.dart';
 
 class Navigation extends StatelessWidget {
   static final appRouter = new Router();
+  static final Color appGrey = Colors.blueGrey[900];
 
   //-------------------------Overrides-------------------------
 
@@ -43,14 +45,21 @@ class Navigation extends StatelessWidget {
 
     //-----define the different routes within the router
     router.define("home", handler: homeHandler); //TODO... define TransitionType IF needed
+    router.define("settings", handler: settingsHandler);
   }
 
   //---------------------Router Handlers--------------------
   /// NOTE: with Fluro you can pass parameters between routes like you do with Ruby
 
-  var homeHandler = new Handler(
+  final homeHandler = new Handler(
     handlerFunc: (BuildContext context, Map<String, List<String>> params) {
       return new Home();
+    },
+  );
+
+  final settingsHandler = new Handler(
+    handlerFunc: (BuildContext context, Map<String, List<String>> params) {
+      return new Settings();
     },
   );
 }

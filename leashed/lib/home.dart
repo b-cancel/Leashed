@@ -1,5 +1,7 @@
+import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
-import 'package:leashed/dataAnalyzer.dart';
+import 'package:leashed/navigation.dart';
+import 'package:leashed/searchNew.dart';
 
 import 'dart:math' as math;
 
@@ -73,7 +75,7 @@ class NoDevices extends StatelessWidget {
     return Scaffold(
       appBar: new AppBar(
         titleSpacing: 0,
-        backgroundColor: Colors.blueGrey[900],
+        backgroundColor: Navigation.appGrey,
         title: NavBar(
           warningThickness: 40,
           deviceCount: deviceCount,
@@ -123,17 +125,6 @@ class NoDevices extends StatelessWidget {
             }
           },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DataAnalyzer(),
-            ),
-          );
-        },
-        child: new Icon(Icons.search),
       ),
     );
   }
@@ -289,6 +280,14 @@ class Devices extends StatelessWidget {
       ),
     );
   }
+
+  double calcMaxExtent(BuildContext context){
+    double screenHeight = MediaQuery.of(context).size.height;
+    double halfHeight = screenHeight / 2;
+    // half is a good size cuz that is realistically what most can access
+    // but at the same time just having the image on half the screen isn't going to look great
+    return (halfHeight - (halfHeight * (1/5)));
+  }
 }
 
 class Device extends StatefulWidget {
@@ -324,7 +323,7 @@ class _DeviceState extends State<Device> {
         isThreeLine: true,
         contentPadding: EdgeInsets.all(16.0),
         leading: new Container(
-          color: Colors.blueGrey,
+          color: Navigation.appGrey,
           width: imageSize,
           height: imageSize,
           child: new Image.asset(
@@ -383,7 +382,16 @@ class NavBar extends StatelessWidget {
               color: Colors.white,
             ),
             onPressed: (){
-              deviceCount.value = deviceCount.value + 1;
+              /*
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddDevice(),
+                ),
+              );
+              */ 
+              print("go to add device");
+              //deviceCount.value = deviceCount.value + 1;
             },
           ),
           Container(
@@ -399,19 +407,12 @@ class NavBar extends StatelessWidget {
               color: Colors.white,
             ),
             onPressed: (){
-              deviceCount.value = deviceCount.value - 1;
+              Navigation.appRouter.navigateTo(context, "settings", transition: TransitionType.inFromBottom);
+              //deviceCount.value = deviceCount.value - 1;
             },
           )
         ],
       ),
     );
   }
-}
-
-double calcMaxExtent(BuildContext context){
-  double screenHeight = MediaQuery.of(context).size.height;
-  double halfHeight = screenHeight / 2;
-  // half is a good size cuz that is realistically what most can access
-  // but at the same time just having the image on half the screen isn't going to look great
-  return (halfHeight - (halfHeight * (1/5)));
 }

@@ -1,3 +1,6 @@
+//check
+import 'dart:math';
+
 String durationPrint(dynamic dtOrDur, {bool short = false}){
   //if we pass a datetime we assume
   //we use this time to get a duration
@@ -45,6 +48,16 @@ Duration newDurationAverage(Duration currentAverage, int lastCount, Duration new
   return Duration(microseconds: (sum.inMicroseconds ~/ (lastCount + 1)));
 }
 
+Duration durationStandardDeviation(List<Duration> durations, Duration mean){
+  int sum = 0;
+  int length = durations.length;
+  for(int i = 0; i < length; i++){
+    Duration valMinusMean = durations[i] - mean;
+    sum += pow(valMinusMean.inMicroseconds, 2);
+  }
+  return Duration(microseconds: sqrt(sum / length).toInt());
+}
+
 double deviation(Duration val, Duration mean, Duration stdDev){
   if(stdDev == Duration.zero) return 0;
   else{
@@ -87,13 +100,4 @@ String nDigitsBehind(double number, int nDigits){
   //add negative
   if(number < 0) return "-" + str;
   else return str;
-}
-
-String atleastLengthOfn(int num, int minLength) {
-  String numStr = num.toString();
-  int added0s = minLength - numStr.length;
-  if(num < 0) numStr = numStr.substring(1); //remove the negative sign
-  for (int i = added0s; i > 0; i--) numStr = "0" + numStr;
-  if(num >= 0) return numStr;
-  else return ("-" + numStr);
 }

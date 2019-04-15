@@ -4,18 +4,19 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
-import 'package:leashed/data.dart';
-import 'package:leashed/deviceDetails.dart';
+import 'package:leashed/structs.dart';
 import 'package:leashed/utils.dart';
 import 'package:system_setting/system_setting.dart';
 
-class DataAnalyzer extends StatefulWidget {
+/*
+
+class SearchNew extends StatefulWidget {
 
   @override
-  _DataAnalyzerState createState() => _DataAnalyzerState();
+  _SearchNewState createState() => _SearchNewState();
 }
 
-class _DataAnalyzerState extends State<DataAnalyzer> {
+class _SearchNewState extends State<SearchNew> {
   Map<String, DeviceData> devices;
 
   ///-------------------------Variables-------------------------
@@ -32,23 +33,28 @@ class _DataAnalyzerState extends State<DataAnalyzer> {
   
   //starts and stops scan depending on bluetooth connection
   bool isScanning; //must start FALSE
-  //lets user change scan mode (primarily for testing)
-  int scanMode;
 
   ///-------------------------Tests
 
   //NOTE: can only update data that has been recieved
   //no need to worry about devices that have disconnected
   //the scanner will simply not pick them up
+  DateTime firstScanDT;
+
   List<Duration> scanDurations;
   Duration scanDurationsAverage;
+  Duration scanDurationsStandardDeviation;
+
+  DateTime lastTapTime;
+  List<Duration> timeBetweenTaps;
+  List<int> tapValues;
 
   ///-------------------------Functions-------------------------
 
   _startScan() {
     isScanning = true;
     _scanSubscription = _flutterBlue.scan(
-      scanMode: ScanMode(scanMode),
+      scanMode: ScanMode.lowLatency,
     ).listen((scanResult) {
       //NOTE: this is a SINGLE result
       setState(() {
@@ -77,11 +83,17 @@ class _DataAnalyzerState extends State<DataAnalyzer> {
     bluetoothState = BluetoothState.unknown;
 
     isScanning = false;
-    scanMode = ScanMode.lowLatency.value;
 
     // test var init
+    firstScanDT = DateTime.now();
+
     scanDurations = new List<Duration>();
     scanDurationsAverage = Duration.zero;
+    scanDurationsStandardDeviation = Duration.zero;
+
+    lastTapTime = firstScanDT;
+    timeBetweenTaps = new List<Duration>();
+    tapValues = new List<int>();
 
     // Immediately get the state of FlutterBlue
     _flutterBlue.state.then((s) {
@@ -144,6 +156,7 @@ class _DataAnalyzerState extends State<DataAnalyzer> {
 
       scanDurationsAverage = newDurationAverage(scanDurationsAverage, scanDurations.length, scanDuration);
       scanDurations.add(scanDuration);
+      scanDurationsStandardDeviation = durationStandardDeviation(scanDurations, scanDurationsAverage);
     }
 
     //our main widget to return
@@ -178,45 +191,24 @@ class _DataAnalyzerState extends State<DataAnalyzer> {
         child: new Column(
           children: <Widget>[
             Container(
+              padding: EdgeInsets.all(8),
               color: Colors.blue,
-              padding: EdgeInsets.fromLTRB(16,8,16,8),
-              alignment: Alignment.centerRight,
-              child: new Text(
-                "avg of " + scanDurations.length.toString() + " scans: " + durationPrint(scanDurationsAverage),
-                textAlign: TextAlign.right,
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.fromLTRB(16,8,16,8),
-              width: MediaQuery.of(context).size.width,
-              child: DropdownButton<int>(
-                value: scanMode,
-                onChanged: (int newValue) {
-                  //trigger functional change
-                  _stopScan();
-
-                  //trigger visual UI change
-                  setState(() {
-                    scanMode = newValue;
-                    //NOTE: this will also start the scan
-                  });
-                },
-                items: [
-                  DropdownMenuItem<int>(
-                      value: 0,
-                      child: Text("Low Power"),
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: new Text(
+                      "avg of " + scanDurations.length.toString() + " scans: " + durationPrint(scanDurationsAverage),
+                      textAlign: TextAlign.right,
+                    ),
                   ),
-                  DropdownMenuItem<int>(
-                      value: 1,
-                      child: Text("Balanced"),
-                  ),
-                  DropdownMenuItem<int>(
-                      value: 2,
-                      child: Text("Low Latency"),
-                  ),
-                  DropdownMenuItem<int>(
-                      value: -1,
-                      child: Text("Opportunistic"),
+                  Divider(),
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: new Text(
+                      "with std dev: " + durationPrint(scanDurationsStandardDeviation),
+                      textAlign: TextAlign.right,
+                    ),
                   ),
                 ],
               ),
@@ -256,7 +248,6 @@ class _DataAnalyzerState extends State<DataAnalyzer> {
                   itemBuilder: (BuildContext context, int index) {
                     String deviceID = deviceIDs[index];
                     DeviceData device = devices[deviceID];
-
                     return InkWell(
                       onTap: (){
                         Navigator.push(
@@ -279,6 +270,37 @@ class _DataAnalyzerState extends State<DataAnalyzer> {
           ],
         ),
       ),
+      floatingActionButton: new FloatingActionButton(
+        onPressed: (){
+          _showDialog();
+        },
+        child: new Icon(Icons.gradient),
+      ),
+    );
+  }
+
+  void _showDialog() {
+    // flutter defined function
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          content: Table(
+            children: [
+              TableRow(
+
+              ),
+              TableRow(
+
+              ),
+              TableRow(
+
+              ),
+            ],
+          )
+        );
+      },
     );
   }
 
@@ -290,7 +312,7 @@ class _DataAnalyzerState extends State<DataAnalyzer> {
     if(devices.containsKey(deviceIDstr) == false){ //add new device
       thisName = (thisName == null) ? "" : thisName;
       BluetoothDeviceType thisType = scanResults[deviceID].device.type;
-      devices[deviceIDstr] = DeviceData(deviceIDstr, thisName, thisType);
+      devices[deviceIDstr] = DeviceData(deviceIDstr, thisName, thisType, firstScanDT);
     }
 
     //-----Update Device Values
@@ -338,7 +360,13 @@ class DeviceTile extends StatelessWidget {
     //updated every frame
     var rssi = device.scanData.allRSSIs.last;
     List durs = device.scanData.durationsBetweenUpdates;
-    durs[durs.length - 1] = (DateTime.now()).difference(device.scanData.lastDateTime);
+    Duration durationSoFar = (DateTime.now()).difference(device.scanData.lastDateTime);
+    if(durs.length != 0){ //update last duration (IF present)
+      durs[durs.length - 1] = durationSoFar;
+    }
+    else{
+      durs.add(durationSoFar);
+    }
     var time = device.scanData.durationsBetweenUpdates.last;
 
     return Row(
@@ -358,6 +386,7 @@ class DeviceTile extends StatelessWidget {
               ),
               new Text("ID: " + id),
               new Text("TYPE: " + type),
+              new Text("Since First " + durationPrint(device.timeSinceScanStart))
             ],
           ),
         ),
@@ -392,3 +421,5 @@ class DeviceTile extends StatelessWidget {
     );
   }
 }
+
+*/
