@@ -34,22 +34,16 @@ class NewDeviceTile extends StatelessWidget {
                 children: <Widget>[
                   Container(
                     padding: EdgeInsets.all(10),
-                    child: Icon(
-                      FontAwesomeIcons.solidHeart,
-                      color: Colors.redAccent, //Navigation.blueGrey, //Colors.redAccent,
-                      size: 45,
+                    child: new AutoUpdatingHeart(
+                      device: device,
                     ),
                   ),
                   Positioned.fill(
                       child: Container(
                         alignment: Alignment.center,
-                        child: new Text(
-                        "120",
-                        style: TextStyle(
-                          color: Colors.white,
-                          shadows: textStroke(.25, Colors.black)
+                        child: new AutoUpdatingRSSI(
+                          device: device,
                         ),
-                    ),
                       ),
                   ),
                 ],
@@ -68,7 +62,9 @@ class NewDeviceTile extends StatelessWidget {
                       ),
                     ),
                     new Text(id + " | " + type),
-                    new Text("Last Pulse: " + durationPrint(Duration(milliseconds: 542)) + " ago"),
+                    new AutoUpdatingTimeSince(
+                      device: device,
+                    ),
                   ],
                 ),
               ),
@@ -77,6 +73,132 @@ class NewDeviceTile extends StatelessWidget {
           Divider(),
         ],
       ),
+    );
+  }
+}
+
+class AutoUpdatingTimeSince extends StatefulWidget {
+  final DeviceData device;
+  final Duration interval;
+
+  const AutoUpdatingTimeSince({
+    this.device,
+    this.interval: const Duration(milliseconds: 250),
+  });
+
+  @override
+  _AutoUpdatingTimeSinceState createState() => _AutoUpdatingTimeSinceState();
+}
+
+class _AutoUpdatingTimeSinceState extends State<AutoUpdatingTimeSince> {
+  @override
+  void initState() {
+    update(); //start cyclical update
+    super.initState();
+  }
+
+  void update() async{
+    await Future.delayed(widget.interval);
+    if(mounted){
+      setState(() {});
+      update();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    DateTime lastScan = widget.device.scanData.rssiUpdateDateTimes.last;
+    Duration timeSince = (DateTime.now()).difference(lastScan);
+
+    return new Text("Last Pulse: " + durationPrint(timeSince) + " ago");
+  }
+}
+
+class AutoUpdatingRSSI extends StatefulWidget {
+  final DeviceData device;
+  final Duration interval;
+
+  const AutoUpdatingRSSI({
+    this.device,
+    this.interval: const Duration(milliseconds: 250),
+  });
+
+  @override
+  _AutoUpdatingRSSIState createState() => _AutoUpdatingRSSIState();
+}
+
+class _AutoUpdatingRSSIState extends State<AutoUpdatingRSSI> {
+  @override
+  void initState() {
+    update(); //start cyclical update
+    super.initState();
+  }
+
+  void update() async{
+    await Future.delayed(widget.interval);
+    if(mounted){
+      setState(() {});
+      update();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    int lastRSSI = widget.device.scanData.rssiUpdates.last;
+    int signalStrength = rssiToAdjustedRssi(lastRSSI);
+
+    return new Text(
+      signalStrength.toString(),
+      style: TextStyle(
+        color: Colors.white,
+        shadows: textStroke(.25, Colors.black)
+      ),
+    );
+  }
+}
+
+class AutoUpdatingHeart extends StatefulWidget {
+  final DeviceData device;
+  final Duration interval;
+
+  const AutoUpdatingHeart({
+    this.device,
+    this.interval: const Duration(milliseconds: 250),
+  });
+
+  @override
+  _AutoUpdatingHeartState createState() => _AutoUpdatingHeartState();
+}
+
+class _AutoUpdatingHeartState extends State<AutoUpdatingHeart> {
+  @override
+  void initState() {
+    update(); //start cyclical update
+    super.initState();
+  }
+
+  void update() async{
+    await Future.delayed(widget.interval);
+    if(mounted){
+      setState(() {});
+      update();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Duration averageInterval = widget.device.scanData.averageIntervalDuration;
+
+    DateTime lastScan = widget.device.scanData.rssiUpdateDateTimes.last;
+    Duration timeSince = (DateTime.now()).difference(lastScan);
+
+    //if timeSince == averageInterval => Navigation.blueGrey
+    //else Navigation.redAccent
+
+    return Icon(
+      FontAwesomeIcons.solidHeart,
+      color: Color.lerp(Colors.redAccent, Navigation.blueGrey, .5),
+      size: 45,
     );
   }
 }
