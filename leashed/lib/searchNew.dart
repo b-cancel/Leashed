@@ -141,11 +141,9 @@ class _SearchNewState extends State<SearchNew> {
                   String deviceID = deviceIDs[index];
                   DeviceData device = allDevicesFound[deviceID];
                   return NewDeviceTile(
-                    scaffoldContext: context,
                     scanDateTimes: scanDateTimes,
                     devices: allDevicesFound,
                     device: device,
-                    updatedThisFrame: true,
                   );
                 },
               ),

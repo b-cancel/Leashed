@@ -419,3 +419,42 @@ String nDigitsBehind(double number, int nDigits){
   if(number < 0) return "-" + str;
   else return str;
 }
+
+String shortBDT(BluetoothDeviceType type){
+  if(type == BluetoothDeviceType.classic) return 'Classic';
+  else if(type == BluetoothDeviceType.dual) return 'Dual';
+  else if(type == BluetoothDeviceType.le) return 'Low Energy';
+  else return 'Unknown';
+}
+
+//INPUT: -25 -> -125
+//OUTPUT: 100 -> 0
+int rssiToAdjustedRssi(int rssi){
+  int newRssi = rssi + 125;
+  //upper bound
+  newRssi = (newRssi > 100) ? 100 : newRssi;
+  //lower bound
+  newRssi = (newRssi < 0) ? 0 : newRssi;
+  return newRssi;
+}
+
+List<Shadow> textStroke(double thickness, Color color){
+  return [
+    Shadow( // bottomLeft
+      offset: Offset(-thickness, -thickness),
+      color: color,
+    ),
+    Shadow( // bottomRight
+      offset: Offset(thickness, -thickness),
+      color: color,
+    ),
+    Shadow( // topRight
+      offset: Offset(thickness, thickness),
+      color: color,
+    ),
+    Shadow( // topLeft
+      offset: Offset(-thickness, thickness),
+      color: color,
+    ),
+  ];
+}
