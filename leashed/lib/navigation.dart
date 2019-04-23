@@ -56,9 +56,6 @@ class Navigation extends StatelessWidget {
     router.define("home", handler: homeHandler);
     router.define("settings", handler: settingsHandler);
     router.define("searchNew", handler: searchNewHandler);
-    router.define("phoneDown", handler: phoneDownHandler);
-    router.define("bleGrab", handler: bleGrabHandler);
-    router.define("blePattern", handler: blePatternHandler);
     router.define("addNew", handler: addNewHandler);
   }
 
@@ -80,24 +77,6 @@ class Navigation extends StatelessWidget {
   final searchNewHandler = new Handler(
     handlerFunc: (BuildContext context, Map<String, List<String>> params) {
       return new SearchNew();
-    }
-  );
-
-  final phoneDownHandler = new Handler(
-    handlerFunc: (BuildContext context, Map<String, List<String>> params)  {
-      return new PhoneDown();
-    }
-  );
-
-  final bleGrabHandler = new Handler(
-    handlerFunc: (BuildContext context, Map<String, List<String>> params)  {
-      return new BleGrab();
-    }
-  );
-
-  final blePatternHandler = new Handler(
-    handlerFunc: (BuildContext context, Map<String, List<String>> params)  {
-      return new BlePattern();
     }
   );
 

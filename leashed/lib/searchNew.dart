@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/navigation.dart';
+import 'package:leashed/pattern/phoneDown.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:leashed/widgets/newDeviceTile.dart';
 import 'package:system_setting/system_setting.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:page_transition/page_transition.dart';
 
 import 'dart:async';
 
@@ -24,12 +26,6 @@ import 'dart:async';
 //2. the last seen updates as often as [1]
 
 class SearchNew extends StatefulWidget {
-  final Map<String, DeviceData> allDevicesFound;
-
-  SearchNew({
-    this.allDevicesFound,
-  });
-
   @override
   _SearchNewState createState() => _SearchNewState();
 }
@@ -60,12 +56,7 @@ class _SearchNewState extends State<SearchNew> {
 
     // main init
     scanResults = new Map<DeviceIdentifier, ScanResult>();
-    if(widget.allDevicesFound == null){
-      allDevicesFound = new Map<String, DeviceData>();
-    }
-    else{
-      allDevicesFound = widget.allDevicesFound;
-    }
+    allDevicesFound = new Map<String, DeviceData>();
     isScanning = false;
     firstStart = true;
     scanDateTimes = new List<DateTime>();
@@ -166,11 +157,14 @@ class _SearchNewState extends State<SearchNew> {
       //----------We Are Scanning
       ? FloatingActionButton.extended(
         onPressed: (){
-          Navigation.appRouter.navigateTo(
-            context, 
-            "phoneDown", 
-            transition: TransitionType.inFromBottom,
-          );
+          Navigator.pushReplacement(context, PageTransition(
+            type: PageTransitionType.fade,
+            duration: Duration.zero, 
+            child: PhoneDown(
+              allDevicesFound: allDevicesFound,
+              scanDateTimes: scanDateTimes,
+            ),
+          ));
         },
         icon: new Icon(
           FontAwesomeIcons.questionCircle,
@@ -197,6 +191,8 @@ class _SearchNewState extends State<SearchNew> {
       : Container(),
     );
   }
+
+  //------------------------------Scanning Functions(same in multiple)------------------------------
 
   void restartScan(){
     /*
