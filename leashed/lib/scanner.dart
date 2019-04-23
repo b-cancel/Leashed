@@ -1,147 +1,71 @@
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/helper/structs.dart';
-import 'package:leashed/navigation.dart';
-import 'package:leashed/pattern/phoneDown.dart';
-import 'package:leashed/widgets/bluetoothOffBanner.dart';
-import 'package:leashed/widgets/newDeviceTile.dart';
-import 'package:system_setting/system_setting.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:page_transition/page_transition.dart';
-
+import 'package:leashed/home.dart';
 import 'dart:async';
+
+//NOTE: this widget is specifically meant to 
+//manage our the static variables in "ScannerStaticVars"
+//these are then read throughout the entire app
 
 //NOTE: in order to make it possible to mess with the bluetooth setting without messing with the app
 //1. IF we start with bluetooth on... if it gets turned off... [3]
 //2. IF we start with buetooth off... [3]
 //3. the moments its turned on again we reload the page (ideally automatically)
-/*
-class Scanner extends StatefulWidget {
-  @override
-  _ScannerState createState() => _ScannerState();
-}
 
-class _ScannerState extends State<Scanner> {
-  ///-------------------------Variables-------------------------
-
-  ///-------------------------Other
-
-  Map<DeviceIdentifier, ScanResult> scanResults; 
-  Map<String, DeviceData> allDevicesFound;
-  ValueNotifier<bool> isScanning; 
-  ValueNotifier<bool> firstStart; 
-  List<DateTime> scanDateTimes;
-  ValueNotifier<bool> showBluetoothDisconnectBanner;
-  ValueNotifier<bool> showManualRestartButton;
-
-  ///-------------------------Bluetooth
-  
-  FlutterBlue flutterBlue;
-  BluetoothState bluetoothState;
-  StreamSubscription stateSubscription;
-  StreamSubscription scanSubscription;
-
-  ///-------------------------Overrides-------------------------
-
-  @override
-  void initState() {
-    super.initState();
-
-    // main init
-    scanResults = new Map<DeviceIdentifier, ScanResult>();
-    allDevicesFound = new Map<String, DeviceData>();
-    isScanning = false;
-    firstStart = true;
-    scanDateTimes = new List<DateTime>();
-
-    // first values in lists (the only false value)
-    scanDateTimes.add(DateTime.now());
-
-    // bluetooth init
-    flutterBlue = FlutterBlue.instance;
-
-    bluetoothState = BluetoothState.unknown;
-
-    flutterBlue.state.then((s) {
-      setState(() {
-        bluetoothState = s;
-      });
-    });
-
-    stateSubscription = flutterBlue.onStateChanged().listen((s) {
-      setState(() {
-        bluetoothState = s;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    stateSubscription?.cancel();
-    stateSubscription = null;
-    scanSubscription?.cancel();
-    scanSubscription = null;
-    super.dispose();
-  }
+class Scanner extends StatelessWidget {
+  //------------------------------Overrides------------------------------
 
   @override
   Widget build(BuildContext context) {
-    //managing very annoying bluetooth toggles
-    bool bluetoothOn = (bluetoothState == BluetoothState.on);
+    // main init
+    ScannerStaticVars.scanResults = new Map<DeviceIdentifier, ScanResult>();
+    ScannerStaticVars.allDevicesFound = new Map<String, DeviceData>();
+    ScannerStaticVars.isScanning = new ValueNotifier(false);
+    ScannerStaticVars.firstStart = new ValueNotifier(true);
+    ScannerStaticVars.scanDateTimes = new List<DateTime>();
+    ScannerStaticVars.showManualRestartButton = new ValueNotifier(false);
+
+    // first value in list (the only false value)
+    ScannerStaticVars.scanDateTimes.add(DateTime.now());
+
+    // bluetooth init
+    ScannerStaticVars.flutterBlue = FlutterBlue.instance;
+    ScannerStaticVars.bluetoothState = BluetoothState.unknown;
+    ScannerStaticVars.bluetoothOn = new ValueNotifier(false);
+    ScannerStaticVars.flutterBlue.state.then((s) {
+      updateBluetoothState(s);
+    });
+    ScannerStaticVars.stateSubscription = ScannerStaticVars.flutterBlue.onStateChanged().listen((s) {
+      updateBluetoothState(s);
+    });
+
+    //build actual app
+    return HomeStateLess();
+  }
+
+  //------------------------------Functions------------------------------
+
+  updateBluetoothState(BluetoothState newState){
+    ScannerStaticVars.bluetoothState = newState;
+    if(newState == BluetoothState.on) ScannerStaticVars.bluetoothOn.value = true;
+    else ScannerStaticVars.bluetoothOn.value = false;
     
-    if(bluetoothOn && isScanning == false){
-      if(firstStart) startScan();
+    bool bluetoothOn = ScannerStaticVars.bluetoothOn.value;
+    bool isScanning = ScannerStaticVars.isScanning.value;
+    if(bluetoothOn == true && isScanning == false){
+      ScannerStaticVars.showManualRestartButton.value = true;
+
+      if(ScannerStaticVars.firstStart.value) startScan();
       else restartScan();
     }
-    if(bluetoothOn == false && isScanning) stopScan();
-
-    //our main widget to return
-    return new Scaffold(
-      appBar: 
-      body: 
-      floatingActionButton: (bluetoothOn)
-      //-----Bluetooth Is On
-      ? (isScanning) 
-      //----------We Are Scanning
-      ? FloatingActionButton.extended(
-        onPressed: (){
-          Navigator.pushReplacement(context, PageTransition(
-            type: PageTransitionType.fade,
-            duration: Duration.zero, 
-            child: PhoneDown(
-              allDevicesFound: allDevicesFound,
-              scanDateTimes: scanDateTimes,
-            ),
-          ));
-        },
-        icon: new Icon(
-          FontAwesomeIcons.questionCircle,
-          size: 18,
-        ),
-        label: new Text(
-          "Can't Identify Your Device?",
-          style: TextStyle(
-            fontSize: 12,
-          ),
-        ),
-      )
-      //----------We Are Not Scanning
-      : FloatingActionButton.extended(
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.black,
-        onPressed: (){
-          startScan();
-        },
-        icon: new Icon(Icons.refresh),
-        label: new Text("Re-Start Scan"),
-      )
-      //-----Bluetooth Is Off
-      : Container(),
-    );
+    else ScannerStaticVars.showManualRestartButton.value = false;
+    
+    if(bluetoothOn == false && isScanning == true) stopScan();
   }
 
   void restartScan(){
+    print("-----RESTARTING SCANNER");
     /*
     WidgetsBinding.instance.addPostFrameCallback((_) async{
       print("---------------auto restart");
@@ -153,49 +77,47 @@ class _ScannerState extends State<Scanner> {
 
   void startScan(){
     //NOTE: on error isn't being called when an error occurs
-    scanSubscription = flutterBlue.scan(
+    ScannerStaticVars.scanSubscription = ScannerStaticVars.flutterBlue.scan(
       scanMode: ScanMode.lowLatency,
     ).listen((scanResult) {
-      if(isScanning == false){
-        isScanning = true;
-        firstStart = false;
+      if(ScannerStaticVars.isScanning.value == false){
+        ScannerStaticVars.isScanning.value = true;
+        ScannerStaticVars.firstStart.value = false;
       }
-      scanDateTimes.add(DateTime.now());
-      setState(() {
-        scanResults[scanResult.device.id] = scanResult;
-        updateDevice(scanResult.device.id);
-      });
+      ScannerStaticVars.scanDateTimes.add(DateTime.now());
+      ScannerStaticVars.scanResults[scanResult.device.id] = scanResult;
+      updateDevice(scanResult.device.id);
     }, onDone: stopScan);
   }
 
   void stopScan() {
-    isScanning = false;
-    scanSubscription?.cancel();
-    scanSubscription = null;
+    ScannerStaticVars.isScanning.value = false;
+    ScannerStaticVars.scanSubscription?.cancel();
+    ScannerStaticVars.scanSubscription = null;
   }
 
   void updateDevice(DeviceIdentifier deviceID){
     String deviceIDstr = deviceID.toString();
-    String thisName = scanResults[deviceID].device.name;
+    String thisName = ScannerStaticVars.scanResults[deviceID].device.name;
     thisName = (thisName == null) ? "" : thisName;
-    BluetoothDeviceType thisType = scanResults[deviceID].device.type;
+    BluetoothDeviceType thisType = ScannerStaticVars.scanResults[deviceID].device.type;
     
     bool updateList = false;
-    if(allDevicesFound.containsKey(deviceIDstr) == false){ //-----Adding New Device
-      allDevicesFound[deviceIDstr] = DeviceData(deviceIDstr, thisName, thisType, scanDateTimes[0]);
+    if(ScannerStaticVars.allDevicesFound.containsKey(deviceIDstr) == false){ //-----Adding New Device
+      ScannerStaticVars.allDevicesFound[deviceIDstr] = DeviceData(deviceIDstr, thisName, thisType, ScannerStaticVars.scanDateTimes[0]);
       updateList = true;
     }
     else{ //-----MAYBE Update Device
-      bool matchingName = allDevicesFound[deviceIDstr].name != thisName;
+      bool matchingName = ScannerStaticVars.allDevicesFound[deviceIDstr].name != thisName;
       if(matchingName == false){
-        allDevicesFound[deviceIDstr].name = thisName;
+        ScannerStaticVars.allDevicesFound[deviceIDstr].name = thisName;
         updateList = true;
       }
       //ELSE... name update not required [expected]
 
-      bool matchingType = allDevicesFound[deviceIDstr].type != thisType;
+      bool matchingType = ScannerStaticVars.allDevicesFound[deviceIDstr].type != thisType;
       if(matchingType == false){
-        allDevicesFound[deviceIDstr].type = thisType;
+        ScannerStaticVars.allDevicesFound[deviceIDstr].type = thisType;
         updateList = true;
       }
       //ELSE... type update not required [expected]
@@ -204,24 +126,49 @@ class _ScannerState extends State<Scanner> {
     //-----Update Device Values
     //NOTE: our scanresults list DOES NOT CLEAR 
     //so if a device disconnects we will just have the last recieved RSSI
-    var newRSSI = scanResults[deviceID].rssi;
-    allDevicesFound[deviceIDstr].add(newRSSI);
+    var newRSSI = ScannerStaticVars.scanResults[deviceID].rssi;
+    ScannerStaticVars.allDevicesFound[deviceIDstr].add(newRSSI);
 
     //-----Update Our Main List
     if(updateList) setState(() {});
   }
+}
 
-  List<String> sortResults(){
+class ScannerStaticVars {
+  /*
+      ScannerStaticVars.scanResults = new Map<DeviceIdentifier, ScanResult>();
+    ScannerStaticVars.allDevicesFound = new Map<String, DeviceData>();
+    ScannerStaticVars.isScanning = new ValueNotifier(false);
+    ScannerStaticVars.firstStart = new ValueNotifier(true);
+    ScannerStaticVars.scanDateTimes = new List<DateTime>();
+    */
+  //regular
+  static Map<DeviceIdentifier, ScanResult> scanResults;
+  static Map<String, DeviceData> allDevicesFound;
+  static ValueNotifier<bool> isScanning; 
+  static ValueNotifier<bool> firstStart; 
+  static List<DateTime> scanDateTimes;
+  static ValueNotifier<bool> showManualRestartButton;
+
+  //bluetooth
+  static FlutterBlue flutterBlue;
+  static BluetoothState bluetoothState;
+  static ValueNotifier<bool> bluetoothOn; //simplification of bluetooth state
+  static StreamSubscription stateSubscription;
+  static StreamSubscription scanSubscription;
+
+  //functions
+  static List<String> sortResults(){
     //sort by ID
-    List<String> deviceIDs = allDevicesFound.keys.toList();
+    List<String> deviceIDs = ScannerStaticVars.allDevicesFound.keys.toList();
     deviceIDs.sort();
 
     //sort all devices by Name
     List<String> withName = new List<String>();
     List<String> withoutName = new List<String>();
-    for(int i = 0; i < allDevicesFound.length; i++){
+    for(int i = 0; i < ScannerStaticVars.allDevicesFound.length; i++){
       String deviceID = deviceIDs[i];
-      if(allDevicesFound[deviceID].name != ""){
+      if(ScannerStaticVars.allDevicesFound[deviceID].name != ""){
         withName.add(deviceID);
       }
       else withoutName.add(deviceID);
@@ -229,24 +176,4 @@ class _ScannerState extends State<Scanner> {
 
     return ([]..addAll(withName))..addAll(withoutName);
   }
-}
-*/
-
-class ScannerStaticVars {
-  //regular
-  static Map<DeviceIdentifier, ScanResult> scanResults;
-  static Map<String, DeviceData> allDevicesFound;
-  static ValueNotifier<bool> isScanning; 
-  static ValueNotifier<bool> firstStart; 
-  static List<DateTime> scanDateTimes;
-  /*
-  static ValueNotifier<bool> showBluetoothDisconnectBanner;
-  static ValueNotifier<bool> showManualRestartButton;
-  */
-
-  //bluetooth
-  static FlutterBlue flutterBlue;
-  static BluetoothState bluetoothState;
-  static StreamSubscription stateSubscription;
-  static StreamSubscription scanSubscription;
 }

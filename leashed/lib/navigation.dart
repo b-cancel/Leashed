@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
 import 'package:leashed/addNew.dart';
 import 'package:leashed/home.dart';
+import 'package:leashed/scanner.dart';
 import 'package:leashed/searchNew.dart';
 import 'package:leashed/settings.dart';
 
@@ -34,7 +35,7 @@ class Navigation extends StatelessWidget {
         accentColor: blueGrey,
       ), //TODO... be able to dynamically change theme in settings
       onGenerateRoute: appRouter.generator,
-      home: new HomeStateLess(),
+      home: new Scanner(),
     );
   }
 
