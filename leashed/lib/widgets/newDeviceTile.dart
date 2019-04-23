@@ -177,7 +177,7 @@ class SignalPulse extends StatelessWidget {
 
     //float affect color
     Color heartColor;
-    heartColor = Color.lerp(Colors.black, Colors.redAccent, float);
+    heartColor = Color.lerp(Navigation.blueGrey, Colors.redAccent, float);
 
     //float affect size
     double heartSize;

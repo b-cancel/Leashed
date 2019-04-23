@@ -134,18 +134,27 @@ class _SearchNewState extends State<SearchNew> {
               color: Colors.black
             ),
             child: Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.all(8.0),
-                itemCount: deviceIDs.length,
-                itemBuilder: (BuildContext context, int index) {
-                  String deviceID = deviceIDs[index];
-                  DeviceData device = allDevicesFound[deviceID];
-                  return NewDeviceTile(
-                    scanDateTimes: scanDateTimes,
-                    devices: allDevicesFound,
-                    device: device,
-                  );
-                },
+              child: ListView(
+                children: <Widget>[
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: ClampingScrollPhysics(),
+                    padding: EdgeInsets.all(8.0),
+                    itemCount: deviceIDs.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      String deviceID = deviceIDs[index];
+                      DeviceData device = allDevicesFound[deviceID];
+                      return NewDeviceTile(
+                        scanDateTimes: scanDateTimes,
+                        devices: allDevicesFound,
+                        device: device,
+                      );
+                    },
+                  ),
+                  new Container(
+                    height: 65,
+                  )
+                ],
               ),
             ),
           ),
@@ -157,11 +166,11 @@ class _SearchNewState extends State<SearchNew> {
       //----------We Are Scanning
       ? FloatingActionButton.extended(
         onPressed: (){
-          print("pattern matching");
+          Navigation.appRouter.navigateTo(context, "phoneDown", transition: TransitionType.inFromBottom);
         },
         icon: new Icon(
           FontAwesomeIcons.questionCircle,
-          size: 0,
+          size: 18,
         ),
         label: new Text(
           "Can't Identify Your Device?",

@@ -386,9 +386,10 @@ class NavBar extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(8),
             child: new Image.asset(
-                'assets/pngs/leashedWhite.png',
-                fit: BoxFit.fitHeight,
-              ),
+              'assets/pngs/leashedWhite.png',
+              fit: BoxFit.fitHeight,
+              gaplessPlayback: false,
+            ),
           ),
           IconButton(
             icon: Icon(

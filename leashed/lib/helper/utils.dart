@@ -461,5 +461,7 @@ List<Shadow> textStroke(double thickness, Color color){
 
 double lerp(double a, double b, double f)
 {
-    return a + f * (b - a);
+  f = (f < 0) ? 0 : f;
+  f = (f > 1) ? 1 : f;
+  return a + f * (b - a);
 }

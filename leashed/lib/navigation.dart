@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
 import 'package:leashed/home.dart';
+import 'package:leashed/pattern/phoneDown.dart';
 import 'package:leashed/searchNew.dart';
 import 'package:leashed/settings.dart';
 
@@ -52,6 +53,7 @@ class Navigation extends StatelessWidget {
     router.define("home", handler: homeHandler);
     router.define("settings", handler: settingsHandler);
     router.define("searchNew", handler: searchNewHandler);
+    router.define("phoneDown", handler: phoneDownHandler);
   }
 
   //---------------------Router Handlers--------------------
@@ -63,15 +65,21 @@ class Navigation extends StatelessWidget {
     },
   );
 
+  final settingsHandler = new Handler(
+    handlerFunc: (BuildContext context, Map<String, List<String>> params) {
+      return new Settings();
+    },
+  );
+
   final searchNewHandler = new Handler(
     handlerFunc: (BuildContext context, Map<String, List<String>> params) {
       return new SearchNew();
     }
   );
 
-  final settingsHandler = new Handler(
-    handlerFunc: (BuildContext context, Map<String, List<String>> params) {
-      return new Settings();
-    },
+  final phoneDownHandler = new Handler(
+    handlerFunc: (BuildContext context, Map<String, List<String>> params)  {
+      return new PhoneDown();
+    }
   );
 }
