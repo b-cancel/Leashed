@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'package:leashed/sliverModifications/sliverPersistentHeader.dart' as sliverPersistentHeader;
 import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSpaceBar;
 
+//NOTE: so Material App Works properly
 class HomeStateLess extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

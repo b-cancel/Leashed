@@ -9,13 +9,9 @@ import 'package:leashed/widgets/newDeviceTile.dart';
 import 'package:system_setting/system_setting.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:page_transition/page_transition.dart';
+import 'scanner.dart';
 
 import 'dart:async';
-
-//NOTE: in order to make it possible to mess with the bluetooth setting without messing with the app
-//1. IF we start with bluetooth on... if it gets turned off... [3]
-//2. IF we start with buetooth off... [3]
-//3. the moments its turned on again we reload the page
 
 //NOTE: in order to be able to handle large quantity of devices
 //1. we only update the main list if a new device is added
@@ -31,23 +27,6 @@ class SearchNew extends StatefulWidget {
 }
 
 class _SearchNewState extends State<SearchNew> {
-  ///-------------------------Variables-------------------------
-
-  ///-------------------------Other
-
-  Map<DeviceIdentifier, ScanResult> scanResults; 
-  Map<String, DeviceData> allDevicesFound;
-  bool isScanning; //must start FALSE
-  bool firstStart; //must start TRUE
-  List<DateTime> scanDateTimes;
-
-  ///-------------------------Bluetooth
-  
-  FlutterBlue flutterBlue;
-  BluetoothState bluetoothState;
-  StreamSubscription stateSubscription;
-  StreamSubscription scanSubscription;
-
   ///-------------------------Overrides-------------------------
 
   @override
@@ -55,57 +34,57 @@ class _SearchNewState extends State<SearchNew> {
     super.initState();
 
     // main init
-    scanResults = new Map<DeviceIdentifier, ScanResult>();
-    allDevicesFound = new Map<String, DeviceData>();
-    isScanning = false;
-    firstStart = true;
-    scanDateTimes = new List<DateTime>();
+    ScannerStaticVars.scanResults = new Map<DeviceIdentifier, ScanResult>();
+    ScannerStaticVars.allDevicesFound = new Map<String, DeviceData>();
+    ScannerStaticVars.isScanning = new ValueNotifier(false);
+    ScannerStaticVars.firstStart = new ValueNotifier(true);
+    ScannerStaticVars.scanDateTimes = new List<DateTime>();
 
     // first values in lists (the only false value)
-    scanDateTimes.add(DateTime.now());
+    ScannerStaticVars.scanDateTimes.add(DateTime.now());
 
     // bluetooth init
-    flutterBlue = FlutterBlue.instance;
+    ScannerStaticVars.flutterBlue = FlutterBlue.instance;
 
-    bluetoothState = BluetoothState.unknown;
+    ScannerStaticVars.bluetoothState = BluetoothState.unknown;
 
-    flutterBlue.state.then((s) {
+    ScannerStaticVars.flutterBlue.state.then((s) {
       setState(() {
-        bluetoothState = s;
+        ScannerStaticVars.bluetoothState = s;
       });
     });
 
-    stateSubscription = flutterBlue.onStateChanged().listen((s) {
+    ScannerStaticVars.stateSubscription = ScannerStaticVars.flutterBlue.onStateChanged().listen((s) {
       setState(() {
-        bluetoothState = s;
+        ScannerStaticVars.bluetoothState = s;
       });
     });
   }
 
   @override
   void dispose() {
-    stateSubscription?.cancel();
-    stateSubscription = null;
-    scanSubscription?.cancel();
-    scanSubscription = null;
+    ScannerStaticVars.stateSubscription?.cancel();
+    ScannerStaticVars.stateSubscription = null;
+    ScannerStaticVars.scanSubscription?.cancel();
+    ScannerStaticVars.scanSubscription = null;
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     //managing very annoying bluetooth toggles
-    bool bluetoothOn = (bluetoothState == BluetoothState.on);
+    bool bluetoothOn = (ScannerStaticVars.bluetoothState == BluetoothState.on);
     
-    if(bluetoothOn && isScanning == false){
-      if(firstStart) startScan();
+    if(bluetoothOn && ScannerStaticVars.isScanning == false){
+      if(ScannerStaticVars.firstStart.value) startScan();
       else restartScan();
     }
-    if(bluetoothOn == false && isScanning) stopScan();
+    if(bluetoothOn == false && ScannerStaticVars.isScanning.value) stopScan();
 
     //a list of all the tiles that will be shown in the list view
     List<String> deviceIDs = sortResults(); 
 
-    int deviceCount = allDevicesFound.keys.toList().length;
+    int deviceCount = ScannerStaticVars.allDevicesFound.keys.toList().length;
     String singularOrPlural = (deviceCount == 1) ? "Device" : "Devices";
 
     //our main widget to return
@@ -119,7 +98,7 @@ class _SearchNewState extends State<SearchNew> {
         children: <Widget>[
           (bluetoothOn)
           ? Container()
-          : new BluetoothOffBanner(bluetoothState: bluetoothState),
+          : new BluetoothOffBanner(bluetoothState: ScannerStaticVars.bluetoothState),
           DefaultTextStyle(
             style: TextStyle(
               color: Colors.black
@@ -134,10 +113,10 @@ class _SearchNewState extends State<SearchNew> {
                     itemCount: deviceIDs.length,
                     itemBuilder: (BuildContext context, int index) {
                       String deviceID = deviceIDs[index];
-                      DeviceData device = allDevicesFound[deviceID];
+                      DeviceData device = ScannerStaticVars.allDevicesFound[deviceID];
                       return NewDeviceTile(
-                        scanDateTimes: scanDateTimes,
-                        devices: allDevicesFound,
+                        scanDateTimes: ScannerStaticVars.scanDateTimes,
+                        devices: ScannerStaticVars.allDevicesFound,
                         device: device,
                       );
                     },
@@ -153,7 +132,7 @@ class _SearchNewState extends State<SearchNew> {
       ),
       floatingActionButton: (bluetoothOn)
       //-----Bluetooth Is On
-      ? (isScanning) 
+      ? (ScannerStaticVars.isScanning.value) 
       //----------We Are Scanning
       ? FloatingActionButton.extended(
         onPressed: (){
@@ -161,8 +140,8 @@ class _SearchNewState extends State<SearchNew> {
             type: PageTransitionType.fade,
             duration: Duration.zero, 
             child: PhoneDown(
-              allDevicesFound: allDevicesFound,
-              scanDateTimes: scanDateTimes,
+              allDevicesFound: ScannerStaticVars.allDevicesFound,
+              scanDateTimes: ScannerStaticVars.scanDateTimes,
             ),
           ));
         },
@@ -206,49 +185,49 @@ class _SearchNewState extends State<SearchNew> {
 
   void startScan(){
     //NOTE: on error isn't being called when an error occurs
-    scanSubscription = flutterBlue.scan(
+    ScannerStaticVars.scanSubscription = ScannerStaticVars.flutterBlue.scan(
       scanMode: ScanMode.lowLatency,
     ).listen((scanResult) {
-      if(isScanning == false){
-        isScanning = true;
-        firstStart = false;
+      if(ScannerStaticVars.isScanning.value == false){
+        ScannerStaticVars.isScanning.value = true;
+        ScannerStaticVars.firstStart.value = false;
       }
-      scanDateTimes.add(DateTime.now());
+      ScannerStaticVars.scanDateTimes.add(DateTime.now());
       setState(() {
-        scanResults[scanResult.device.id] = scanResult;
+        ScannerStaticVars.scanResults[scanResult.device.id] = scanResult;
         updateDevice(scanResult.device.id);
       });
     }, onDone: stopScan);
   }
 
   void stopScan() {
-    isScanning = false;
-    scanSubscription?.cancel();
-    scanSubscription = null;
+    ScannerStaticVars.isScanning.value = false;
+    ScannerStaticVars.scanSubscription?.cancel();
+    ScannerStaticVars.scanSubscription = null;
   }
 
   void updateDevice(DeviceIdentifier deviceID){
     String deviceIDstr = deviceID.toString();
-    String thisName = scanResults[deviceID].device.name;
+    String thisName = ScannerStaticVars.scanResults[deviceID].device.name;
     thisName = (thisName == null) ? "" : thisName;
-    BluetoothDeviceType thisType = scanResults[deviceID].device.type;
+    BluetoothDeviceType thisType = ScannerStaticVars.scanResults[deviceID].device.type;
     
     bool updateList = false;
-    if(allDevicesFound.containsKey(deviceIDstr) == false){ //-----Adding New Device
-      allDevicesFound[deviceIDstr] = DeviceData(deviceIDstr, thisName, thisType, scanDateTimes[0]);
+    if(ScannerStaticVars.allDevicesFound.containsKey(deviceIDstr) == false){ //-----Adding New Device
+      ScannerStaticVars.allDevicesFound[deviceIDstr] = DeviceData(deviceIDstr, thisName, thisType, ScannerStaticVars.scanDateTimes[0]);
       updateList = true;
     }
     else{ //-----MAYBE Update Device
-      bool matchingName = allDevicesFound[deviceIDstr].name != thisName;
+      bool matchingName = ScannerStaticVars.allDevicesFound[deviceIDstr].name != thisName;
       if(matchingName == false){
-        allDevicesFound[deviceIDstr].name = thisName;
+        ScannerStaticVars.allDevicesFound[deviceIDstr].name = thisName;
         updateList = true;
       }
       //ELSE... name update not required [expected]
 
-      bool matchingType = allDevicesFound[deviceIDstr].type != thisType;
+      bool matchingType = ScannerStaticVars.allDevicesFound[deviceIDstr].type != thisType;
       if(matchingType == false){
-        allDevicesFound[deviceIDstr].type = thisType;
+        ScannerStaticVars.allDevicesFound[deviceIDstr].type = thisType;
         updateList = true;
       }
       //ELSE... type update not required [expected]
@@ -257,8 +236,8 @@ class _SearchNewState extends State<SearchNew> {
     //-----Update Device Values
     //NOTE: our scanresults list DOES NOT CLEAR 
     //so if a device disconnects we will just have the last recieved RSSI
-    var newRSSI = scanResults[deviceID].rssi;
-    allDevicesFound[deviceIDstr].add(newRSSI);
+    var newRSSI = ScannerStaticVars.scanResults[deviceID].rssi;
+    ScannerStaticVars.allDevicesFound[deviceIDstr].add(newRSSI);
 
     //-----Update Our Main List
     if(updateList) setState(() {});
@@ -266,15 +245,15 @@ class _SearchNewState extends State<SearchNew> {
 
   List<String> sortResults(){
     //sort by ID
-    List<String> deviceIDs = allDevicesFound.keys.toList();
+    List<String> deviceIDs = ScannerStaticVars.allDevicesFound.keys.toList();
     deviceIDs.sort();
 
     //sort all devices by Name
     List<String> withName = new List<String>();
     List<String> withoutName = new List<String>();
-    for(int i = 0; i < allDevicesFound.length; i++){
+    for(int i = 0; i < ScannerStaticVars.allDevicesFound.length; i++){
       String deviceID = deviceIDs[i];
-      if(allDevicesFound[deviceID].name != ""){
+      if(ScannerStaticVars.allDevicesFound[deviceID].name != ""){
         withName.add(deviceID);
       }
       else withoutName.add(deviceID);
