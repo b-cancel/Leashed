@@ -429,8 +429,8 @@ String shortBDT(BluetoothDeviceType type){
 
 //INPUT: -25 -> -125
 //OUTPUT: 100 -> 0
-int rssiToAdjustedRssi(int rssi){
-  int newRssi = rssi + 125;
+num rssiToAdjustedRssi(num rssi){
+  num newRssi = rssi + 125;
   //upper bound
   newRssi = (newRssi > 100) ? 100 : newRssi;
   //lower bound
@@ -457,4 +457,9 @@ List<Shadow> textStroke(double thickness, Color color){
       color: color,
     ),
   ];
+}
+
+double lerp(double a, double b, double f)
+{
+    return a + f * (b - a);
 }

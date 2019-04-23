@@ -32,17 +32,18 @@ class NewDeviceTile extends StatelessWidget {
             children: <Widget>[
               Stack(
                 children: <Widget>[
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    child: new AutoUpdatingHeart(
-                      device: device,
+                  AutoUpdatingWidget(
+                    child: SignalPulse(
+                      scanData: device.scanData,
                     ),
                   ),
                   Positioned.fill(
                       child: Container(
                         alignment: Alignment.center,
-                        child: new AutoUpdatingRSSI(
-                          device: device,
+                        child: new AutoUpdatingWidget(
+                          child: CurrentRSSI(
+                            scanData: device.scanData,
+                          ),
                         ),
                       ),
                   ),
@@ -62,8 +63,8 @@ class NewDeviceTile extends StatelessWidget {
                       ),
                     ),
                     new Text(id + " | " + type),
-                    new AutoUpdatingTimeSince(
-                      device: device,
+                    new AutoUpdatingWidget(
+                      child: TimeSince(scanData: device.scanData),
                     ),
                   ],
                 ),
@@ -77,26 +78,20 @@ class NewDeviceTile extends StatelessWidget {
   }
 }
 
-class AutoUpdatingTimeSince extends StatefulWidget {
-  final DeviceData device;
+class AutoUpdatingWidget extends StatefulWidget {
+  final Widget child;
   final Duration interval;
 
-  const AutoUpdatingTimeSince({
-    this.device,
+  AutoUpdatingWidget({
+    @required this.child,
     this.interval: const Duration(milliseconds: 250),
   });
 
   @override
-  _AutoUpdatingTimeSinceState createState() => _AutoUpdatingTimeSinceState();
+  _AutoUpdatingWidgetState createState() => _AutoUpdatingWidgetState();
 }
 
-class _AutoUpdatingTimeSinceState extends State<AutoUpdatingTimeSince> {
-  @override
-  void initState() {
-    update(); //start cyclical update
-    super.initState();
-  }
-
+class _AutoUpdatingWidgetState extends State<AutoUpdatingWidget> {
   void update() async{
     await Future.delayed(widget.interval);
     if(mounted){
@@ -106,46 +101,49 @@ class _AutoUpdatingTimeSinceState extends State<AutoUpdatingTimeSince> {
   }
 
   @override
+  void initState() {
+    update(); //start cyclical update
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    DateTime lastScan = widget.device.scanData.rssiUpdateDateTimes.last;
+    return widget.child;
+  }
+}
+
+//------------------------------Widgets We Pass To Auto Updater
+
+class TimeSince extends StatelessWidget {
+  final ScanData scanData;
+
+  TimeSince({
+    this.scanData,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    DateTime lastScan = scanData.rssiUpdateDateTimes.last;
     Duration timeSince = (DateTime.now()).difference(lastScan);
 
     return new Text("Last Pulse: " + durationPrint(timeSince) + " ago");
   }
 }
 
-class AutoUpdatingRSSI extends StatefulWidget {
-  final DeviceData device;
-  final Duration interval;
+class CurrentRSSI extends StatelessWidget {
+  final ScanData scanData;
+  final int valuesPerAverage;
 
-  const AutoUpdatingRSSI({
-    this.device,
-    this.interval: const Duration(milliseconds: 250),
+  CurrentRSSI({
+    this.scanData,
+    this.valuesPerAverage: 7,
   });
 
   @override
-  _AutoUpdatingRSSIState createState() => _AutoUpdatingRSSIState();
-}
-
-class _AutoUpdatingRSSIState extends State<AutoUpdatingRSSI> {
-  @override
-  void initState() {
-    update(); //start cyclical update
-    super.initState();
-  }
-
-  void update() async{
-    await Future.delayed(widget.interval);
-    if(mounted){
-      setState(() {});
-      update();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    int lastRSSI = widget.device.scanData.rssiUpdates.last;
-    int signalStrength = rssiToAdjustedRssi(lastRSSI);
+    int lastIndex = scanData.rssiUpdates.length - 1;
+    num lastAverageRSSI = getAverage(scanData.rssiUpdates, lastIndex, valuesPerAverage);
+    int signalStrength = rssiToAdjustedRssi(lastAverageRSSI).toInt();
 
     return new Text(
       signalStrength.toString(),
@@ -157,48 +155,44 @@ class _AutoUpdatingRSSIState extends State<AutoUpdatingRSSI> {
   }
 }
 
-class AutoUpdatingHeart extends StatefulWidget {
-  final DeviceData device;
-  final Duration interval;
+class SignalPulse extends StatelessWidget {
+  final ScanData scanData;
 
-  const AutoUpdatingHeart({
-    this.device,
-    this.interval: const Duration(milliseconds: 250),
+  SignalPulse({
+    this.scanData,
   });
 
   @override
-  _AutoUpdatingHeartState createState() => _AutoUpdatingHeartState();
-}
-
-class _AutoUpdatingHeartState extends State<AutoUpdatingHeart> {
-  @override
-  void initState() {
-    update(); //start cyclical update
-    super.initState();
-  }
-
-  void update() async{
-    await Future.delayed(widget.interval);
-    if(mounted){
-      setState(() {});
-      update();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    Duration averageInterval = widget.device.scanData.averageIntervalDuration;
+    Duration averageInterval = scanData.averageIntervalDuration;
+    averageInterval = (averageInterval == null) ? Duration(seconds: 1) : averageInterval;
 
-    DateTime lastScan = widget.device.scanData.rssiUpdateDateTimes.last;
-    Duration timeSince = (DateTime.now()).difference(lastScan);
+    DateTime lastScan = scanData.rssiUpdateDateTimes.last;
+    Duration intervalSoFar = (DateTime.now()).difference(lastScan);
 
-    //if timeSince == averageInterval => Navigation.blueGrey
-    //else Navigation.redAccent
+    //0 -> averageInterval
+    //0 -> 1
+    Duration sub = averageInterval - intervalSoFar;
+    double float = sub.inMicroseconds / averageInterval.inMicroseconds;
 
-    return Icon(
-      FontAwesomeIcons.solidHeart,
-      color: Color.lerp(Colors.redAccent, Navigation.blueGrey, .5),
-      size: 45,
+    //float affect color
+    Color heartColor;
+    heartColor = Color.lerp(Colors.black, Colors.redAccent, float);
+
+    //float affect size
+    double heartSize;
+    heartSize = lerp(55, 45, float);
+
+    return Container(
+      width: 65,
+      height: 65,
+      child: Center(
+        child: Icon(
+          FontAwesomeIcons.solidHeart,
+          color: heartColor,
+          size: heartSize,
+        ),
+      ),
     );
   }
 }
