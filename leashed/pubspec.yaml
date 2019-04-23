@@ -66,7 +66,8 @@ flutter:
     - assets/pngs/intro.png
     - assets/pngs/intro2.png
     - assets/pngs/introLeftPanel.png
-    - assets/gifs/final/phoneOnTable.gif
+    - assets/gifs/final/phoneOnTable/phoneOnTable1.gif
+    - assets/gifs/final/phoneOnTable/phoneOnTable2.gif
 
 
   #  - images/a_dot_burr.jpeg

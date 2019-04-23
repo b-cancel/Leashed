@@ -1,45 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:leashed/navigation.dart';
-import 'package:gif_ani/gif_ani.dart';
 
-class PhoneDown extends StatefulWidget {
+class PhoneDown extends StatefulWidget{
   @override
   _PhoneDownState createState() => _PhoneDownState();
 }
 
-class _PhoneDownState extends State<PhoneDown> with SingleTickerProviderStateMixin{
-  GifController _animationCtrl;
+class _PhoneDownState extends State<PhoneDown> {
+  int imageInt;
 
   @override
   void initState() {
+    imageInt = 1;
+    super.initState();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
     //force portrait mode
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown
     ]);
 
-    //init state
-    super.initState();
-
-    //gif
-    _animationCtrl = new GifController(
-      vsync: this,
-      duration: new Duration(milliseconds: 5000),
-      frameCount: 13,
-    );
-
-    _animationCtrl.runAni();
-  }
-
-  @override
-  void dispose() {
-    _animationCtrl.dispose();
-    super.dispose();
-  }
-  
-  @override
-  Widget build(BuildContext context) {
+    //alternate between both of the exact same gifs so we can restart the gif at will
+    imageInt = (imageInt == 1) ? 2 : 1;
     
     //get size
     double imageSize = MediaQuery.of(context).size.width;
@@ -74,15 +60,18 @@ class _PhoneDownState extends State<PhoneDown> with SingleTickerProviderStateMix
                 ),
               ),
             ),
-            Container(
-              height: imageSize,
-              width: imageSize,
-              color: Colors.red,
-              child: new GifAnimation(
-                image: new AssetImage(
-                  "assets/gifs/final/phoneOnTable.gif",
+            GestureDetector(
+              onTap: (){
+                setState(() {
+                  
+                });
+              },
+              child: Container(
+                height: imageSize,
+                width: imageSize,
+                child: Image.asset(
+                  "assets/gifs/final/phoneOnTable/phoneOnTable$imageInt.gif"
                 ),
-                controller: _animationCtrl,
               ),
             ),
             Expanded(
