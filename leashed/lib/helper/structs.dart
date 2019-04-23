@@ -1,7 +1,7 @@
 import 'package:flutter_blue/flutter_blue.dart';
 
 class DeviceData{
-  //set once and done
+  //should be set once and done
   String id;
   String name; //MIGHT be blank
   BluetoothDeviceType type;

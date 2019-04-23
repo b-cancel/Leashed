@@ -23,7 +23,7 @@ class _SettingsState extends State<Settings> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Navigation.appGrey,
+        backgroundColor: Navigation.blueGrey,
         title: new Text("Settings"),
       ),
       body: Column(

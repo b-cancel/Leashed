@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
 import 'package:leashed/home.dart';
+import 'package:leashed/searchNew.dart';
 import 'package:leashed/settings.dart';
 
 ///This Exists Exclusively to
@@ -12,7 +13,7 @@ import 'package:leashed/settings.dart';
 
 class Navigation extends StatelessWidget {
   static final appRouter = new Router();
-  static final Color appGrey = Colors.blueGrey[900];
+  static final Color blueGrey = Colors.blueGrey[900];
 
   //-------------------------Overrides-------------------------
 
@@ -27,7 +28,9 @@ class Navigation extends StatelessWidget {
     return MaterialApp(
       title: 'Leashed',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(), //TODO... be able to dynamically change theme in settings
+      theme: ThemeData.light().copyWith(
+        primaryColor: blueGrey,
+      ), //TODO... be able to dynamically change theme in settings
       onGenerateRoute: appRouter.generator,
       home: new HomeStateLess(),
     );
@@ -44,8 +47,10 @@ class Navigation extends StatelessWidget {
     );
 
     //-----define the different routes within the router
-    router.define("home", handler: homeHandler); //TODO... define TransitionType IF needed
+    //NOTE: I can assign transition type here If needed
+    router.define("home", handler: homeHandler);
     router.define("settings", handler: settingsHandler);
+    router.define("searchNew", handler: searchNewHandler);
   }
 
   //---------------------Router Handlers--------------------
@@ -55,6 +60,12 @@ class Navigation extends StatelessWidget {
     handlerFunc: (BuildContext context, Map<String, List<String>> params) {
       return new Home();
     },
+  );
+
+  final searchNewHandler = new Handler(
+    handlerFunc: (BuildContext context, Map<String, List<String>> params) {
+      return new SearchNew();
+    }
   );
 
   final settingsHandler = new Handler(

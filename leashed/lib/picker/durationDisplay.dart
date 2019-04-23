@@ -219,14 +219,14 @@ class TimeUnit extends StatelessWidget {
             style: TextStyle(
               fontSize: 8.0,
               fontWeight: FontWeight.bold,
-              color: Navigation.appGrey
+              color: Navigation.blueGrey
             ),
             children: [
               new TextSpan(
                 style: TextStyle(
                   fontSize: 22.0,
                   fontWeight: FontWeight.bold,
-                  color: Navigation.appGrey
+                  color: Navigation.blueGrey
                 ),
                 text: number,
               ),

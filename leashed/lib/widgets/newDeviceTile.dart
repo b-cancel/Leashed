@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
 
-class DeviceTile extends StatelessWidget {
+class NewDeviceTile extends StatelessWidget {
   final BuildContext scaffoldContext;
   final List<DateTime> scanDateTimes;
   final List<DateTime> tapDateTimes;
@@ -12,7 +12,7 @@ class DeviceTile extends StatelessWidget {
   final DeviceData device;
   final bool updatedThisFrame;
 
-  DeviceTile({
+  NewDeviceTile({
     @required this.scaffoldContext,
     @required this.scanDateTimes,
     @required this.tapDateTimes,
@@ -67,6 +67,7 @@ class DeviceTile extends StatelessWidget {
                   ],
                 ),
               ),
+              /*
               Expanded(
                 child: Container(
                   alignment: Alignment.centerRight,
@@ -84,6 +85,7 @@ class DeviceTile extends StatelessWidget {
                   ),
                 ),
               ),
+              */
             ],
           ),
           Divider(),

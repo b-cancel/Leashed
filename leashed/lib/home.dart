@@ -1,7 +1,6 @@
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:leashed/navigation.dart';
-import 'package:leashed/searchNew.dart';
 
 import 'dart:math' as math;
 
@@ -14,7 +13,6 @@ class HomeStateLess extends StatelessWidget {
     return Home();
   }
 }
-
 
 class Home extends StatefulWidget{
   @override
@@ -75,7 +73,7 @@ class NoDevices extends StatelessWidget {
     return Scaffold(
       appBar: new AppBar(
         titleSpacing: 0,
-        backgroundColor: Navigation.appGrey,
+        backgroundColor: Navigation.blueGrey,
         title: NavBar(
           warningThickness: 40,
           deviceCount: deviceCount,
@@ -318,12 +316,12 @@ class _DeviceState extends State<Device> {
     String image = "assets/placeholders/" + widget.image;
 
     return Column(
-    children: <Widget>[
+      children: <Widget>[
       ListTile(
         isThreeLine: true,
         contentPadding: EdgeInsets.all(16.0),
         leading: new Container(
-          color: Navigation.appGrey,
+          color: Navigation.blueGrey,
           width: imageSize,
           height: imageSize,
           child: new Image.asset(
@@ -382,16 +380,7 @@ class NavBar extends StatelessWidget {
               color: Colors.white,
             ),
             onPressed: (){
-              /*
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddDevice(),
-                ),
-              );
-              */ 
-              print("go to add device");
-              //deviceCount.value = deviceCount.value + 1;
+              Navigation.appRouter.navigateTo(context, "searchNew", transition: TransitionType.inFromLeft);
             },
           ),
           Container(
@@ -408,7 +397,6 @@ class NavBar extends StatelessWidget {
             ),
             onPressed: (){
               Navigation.appRouter.navigateTo(context, "settings", transition: TransitionType.inFromBottom);
-              //deviceCount.value = deviceCount.value - 1;
             },
           )
         ],
