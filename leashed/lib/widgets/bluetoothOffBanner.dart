@@ -34,11 +34,13 @@ class BluetoothOffBanner extends StatelessWidget {
           children: <Widget>[
             new Icon(
               Icons.error,
-              color: Theme.of(context).primaryTextTheme.subhead.color,
+              color: Colors.black,
             ),
             new Text(
-              'The Bluetooth Adapter Is ' + bleStateString,
-              style: Theme.of(context).primaryTextTheme.subhead,
+              ' The Bluetooth Adapter Is ' + bleStateString,
+              style: TextStyle(
+                color: Colors.black,
+              ),
             ),
           ],
         ),

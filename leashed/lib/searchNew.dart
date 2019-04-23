@@ -6,6 +6,7 @@ import 'package:leashed/navigation.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:leashed/widgets/newDeviceTile.dart';
 import 'package:system_setting/system_setting.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'dart:async';
 
@@ -105,17 +106,8 @@ class _SearchNewState extends State<SearchNew> {
     bool bluetoothOn = (bluetoothState == BluetoothState.on);
     
     if(bluetoothOn && isScanning == false){
-      if(firstStart){
-        startScan();
-        firstStart = false;
-      }
-      else{
-        WidgetsBinding.instance.addPostFrameCallback((_) async{
-          print("---------------auto restart");
-          //await Future.delayed(Duration(milliseconds: 500));
-          startScan();
-        });
-      }
+      if(firstStart) startScan();
+      else restartScan();
     }
     if(bluetoothOn == false && isScanning) stopScan();
 
@@ -161,24 +153,59 @@ class _SearchNewState extends State<SearchNew> {
           ),
         ],
       ),
-      floatingActionButton: (isScanning == false && bluetoothOn)
-      ? FloatingActionButton(
+      floatingActionButton: (bluetoothOn)
+      //-----Bluetooth Is On
+      ? (isScanning) 
+      //----------We Are Scanning
+      ? FloatingActionButton.extended(
+        onPressed: (){
+          print("pattern matching");
+        },
+        icon: new Icon(
+          FontAwesomeIcons.questionCircle,
+          size: 0,
+        ),
+        label: new Text(
+          "Can't Identify Your Device?",
+          style: TextStyle(
+            fontSize: 12,
+          ),
+        ),
+      )
+      //----------We Are Not Scanning
+      : FloatingActionButton.extended(
+        backgroundColor: Colors.redAccent,
+        foregroundColor: Colors.black,
         onPressed: (){
           startScan();
         },
-        child: new Icon(Icons.refresh),
+        icon: new Icon(Icons.refresh),
+        label: new Text("Re-Start Scan"),
       )
+      //-----Bluetooth Is Off
       : Container(),
     );
   }
 
+  void restartScan(){
+    /*
+    WidgetsBinding.instance.addPostFrameCallback((_) async{
+      print("---------------auto restart");
+      //await Future.delayed(Duration(seconds: 1));
+      startScan();
+    });
+    */
+  }
+
   void startScan(){
-    print("----------tried to start");
+    //NOTE: on error isn't being called when an error occurs
     scanSubscription = flutterBlue.scan(
       scanMode: ScanMode.lowLatency,
     ).listen((scanResult) {
-      print("--------------started");
-      isScanning = true;
+      if(isScanning == false){
+        isScanning = true;
+        firstStart = false;
+      }
       scanDateTimes.add(DateTime.now());
       setState(() {
         scanResults[scanResult.device.id] = scanResult;
@@ -188,7 +215,6 @@ class _SearchNewState extends State<SearchNew> {
   }
 
   void stopScan() {
-    print("--------------stopped");
     isScanning = false;
     scanSubscription?.cancel();
     scanSubscription = null;
