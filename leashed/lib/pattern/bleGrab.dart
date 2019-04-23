@@ -10,7 +10,12 @@ Widget build(BuildContext context) {
       imageUrl: "assets/pngs/holdBle.png",
       lines: ["Grab Your", "Bluetooth Device"],
       onDone: (){
-        Navigation.appRouter.navigateTo(context, "blePattern", transitionDuration: Duration.zero);
+        Navigation.appRouter.navigateTo(
+          context, 
+          "blePattern", 
+          transitionDuration: Duration.zero,
+          replace: true,
+        );
       },
     );
   }

@@ -29,6 +29,7 @@ dependencies:
   charts_flutter: ^0.6.0
   font_awesome_flutter: ^8.4.0
   gif_ani: ^0.0.2
+  percent_indicator: ^1.0.15
 
 flutter_icons:
   android: "launcher_icon"
@@ -68,6 +69,7 @@ flutter:
     - assets/pngs/introLeftPanel.png
     - assets/gifs/final/phoneOnTable.gif
     - assets/pngs/holdBle.png
+    - assets/pngs/holdBleCenter.png
     - assets/pngs/bleLeftTurn.png
     - assets/pngs/bleMiddleTurn.png
     - assets/pngs/bleRightTurn.png

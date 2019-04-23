@@ -166,7 +166,11 @@ class _SearchNewState extends State<SearchNew> {
       //----------We Are Scanning
       ? FloatingActionButton.extended(
         onPressed: (){
-          Navigation.appRouter.navigateTo(context, "phoneDown", transition: TransitionType.inFromBottom);
+          Navigation.appRouter.navigateTo(
+            context, 
+            "phoneDown", 
+            transition: TransitionType.inFromBottom,
+          );
         },
         icon: new Icon(
           FontAwesomeIcons.questionCircle,

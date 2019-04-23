@@ -11,7 +11,12 @@ class PhoneDown extends StatelessWidget {
       imageUrl: "assets/gifs/final/phoneOnTable.gif",
       lines: ["Place Your Phone", "On A Flat Surface"],
       onDone: (){
-        Navigation.appRouter.navigateTo(context, "bleGrab", transitionDuration: Duration.zero);
+        Navigation.appRouter.navigateTo(
+          context, 
+          "bleGrab", 
+          transitionDuration: Duration.zero,
+          replace: true,
+        );
       },
     );
   }

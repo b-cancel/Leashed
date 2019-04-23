@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
+import 'package:leashed/addNew.dart';
 import 'package:leashed/home.dart';
 import 'package:leashed/pattern/bleGrab.dart';
 import 'package:leashed/pattern/blePattern.dart';
@@ -58,6 +59,7 @@ class Navigation extends StatelessWidget {
     router.define("phoneDown", handler: phoneDownHandler);
     router.define("bleGrab", handler: bleGrabHandler);
     router.define("blePattern", handler: blePatternHandler);
+    router.define("addNew", handler: addNewHandler);
   }
 
   //---------------------Router Handlers--------------------
@@ -96,6 +98,12 @@ class Navigation extends StatelessWidget {
   final blePatternHandler = new Handler(
     handlerFunc: (BuildContext context, Map<String, List<String>> params)  {
       return new BlePattern();
+    }
+  );
+
+  final addNewHandler = new Handler(
+    handlerFunc: (BuildContext context, Map<String, List<String>> params)  {
+      return new AddNew();
     }
   );
 }
