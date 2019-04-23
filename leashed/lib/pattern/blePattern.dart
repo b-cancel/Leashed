@@ -4,13 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/widgets/instruction.dart';
 
-class BleGrab extends StatelessWidget {
-Widget build(BuildContext context) {
+class BlePattern extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Instruction(
-      imageUrl: "assets/pngs/holdBle.png",
-      lines: ["Grab Your", "Bluetooth Device"],
+      imageUrl: "assets/pngs/bleLeftTurn.png",
+      lines: ["Hold Your Device", "To The Left", "Of Your Phone"],
       onDone: (){
-        Navigation.appRouter.navigateTo(context, "blePattern", transitionDuration: Duration.zero);
+        print("pattern running");
       },
     );
   }

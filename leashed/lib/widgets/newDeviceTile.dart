@@ -33,6 +33,7 @@ class NewDeviceTile extends StatelessWidget {
               Stack(
                 children: <Widget>[
                   AutoUpdatingWidget(
+                    interval: Duration(milliseconds: 100),
                     child: SignalPulse(
                       scanData: device.scanData,
                     ),
@@ -41,6 +42,7 @@ class NewDeviceTile extends StatelessWidget {
                       child: Container(
                         alignment: Alignment.center,
                         child: new AutoUpdatingWidget(
+                          interval: Duration(milliseconds: 500),
                           child: CurrentRSSI(
                             scanData: device.scanData,
                           ),
@@ -64,6 +66,7 @@ class NewDeviceTile extends StatelessWidget {
                     ),
                     new Text(id + " | " + type),
                     new AutoUpdatingWidget(
+                      interval: Duration(milliseconds: 500),
                       child: TimeSince(scanData: device.scanData),
                     ),
                   ],
@@ -125,6 +128,9 @@ class TimeSince extends StatelessWidget {
   Widget build(BuildContext context) {
     DateTime lastScan = scanData.rssiUpdateDateTimes.last;
     Duration timeSince = (DateTime.now()).difference(lastScan);
+
+    //round to the nearest second, its really annoying to see milliseconds
+    timeSince = (timeSince < Duration(seconds: 1)) ? Duration(seconds: 1) : timeSince;
 
     return new Text("Last Pulse: " + durationPrint(timeSince) + " ago");
   }
