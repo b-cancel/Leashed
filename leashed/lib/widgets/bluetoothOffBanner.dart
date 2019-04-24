@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:leashed/scanner.dart';
 import 'package:system_setting/system_setting.dart';
 
-class BluetoothOffBanner extends StatelessWidget {
-  const BluetoothOffBanner({
-    Key key,
-    @required this.bluetoothState,
-  }) : super(key: key);
+class BluetoothOffBanner extends StatefulWidget {
+  @override
+  _BluetoothOffBannerState createState() => _BluetoothOffBannerState();
+}
 
-  final BluetoothState bluetoothState;
+class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
+  @override
+  void initState() {
+    super.initState();
+
+    ScannerStaticVars.bluetoothState.addListener((){
+      setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    BluetoothState bleState = bluetoothState;
+    BluetoothState bleState = ScannerStaticVars.getBluetoothState();
     String bleStateString = "";
     if(bleState == BluetoothState.turningOn) bleStateString = "Turning On";
     else if(bleState == BluetoothState.turningOff) bleStateString = "Turning Off";
@@ -20,7 +28,6 @@ class BluetoothOffBanner extends StatelessWidget {
       bleStateString = bleState.toString().substring(15);
       bleStateString = bleStateString[0].toUpperCase() + bleStateString.substring(1);
     }
-    
 
     return InkWell(
       onTap: (){

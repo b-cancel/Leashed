@@ -34,6 +34,7 @@ class ScannerStaticVars {
 
   static BluetoothState _bluetoothState = BluetoothState.unknown; //PRIVATE
   static ValueNotifier<bool> bluetoothOn = ValueNotifier(false); //SHOULD NOT manually set
+  static ValueNotifier<int> bluetoothState = ValueNotifier(BluetoothState.unknown.index);
 
   static StreamSubscription _stateSubscription; //PRIVATE
   static StreamSubscription _scanSubscription; //PRIVATE
@@ -92,8 +93,13 @@ class ScannerStaticVars {
 
   static updateBluetoothState(BluetoothState newState){
     _bluetoothState = newState;
+
+    //change simplified
     if(newState == BluetoothState.on) bluetoothOn.value = true;
     else bluetoothOn.value = false;
+
+    //change advanced
+    bluetoothState.value = newState.index;
     
     bool bluetoothIsOn = bluetoothOn.value;
     bool scanningIsOn = isScanning.value;
@@ -116,6 +122,8 @@ class ScannerStaticVars {
   //------------------------------Scanner Control------------------------------
 
   static void startScan(){
+    init();
+
     //NOTE: on error isn't being called when an error occurs
     if(isScanning.value == false){
       _scanSubscription = _flutterBlue.scan(

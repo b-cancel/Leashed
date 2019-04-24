@@ -35,7 +35,7 @@ class Navigation extends StatelessWidget {
         accentColor: blueGrey,
       ), //TODO... be able to dynamically change theme in settings
       onGenerateRoute: appRouter.generator,
-      home: new Scanner(),
+      home: new HomeStateLess(),
     );
   }
 

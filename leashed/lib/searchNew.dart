@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/helper/structs.dart';
+import 'package:leashed/pattern/phoneDown.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:leashed/widgets/newDeviceTile.dart';
+import 'package:page_transition/page_transition.dart';
 import 'scanner.dart';
 
 //NOTE: in order to be able to handle large quantity of devices
@@ -18,13 +21,36 @@ class SearchNew extends StatefulWidget {
 }
 
 class _SearchNewState extends State<SearchNew> {
+  @override
+  void initState() {
+    super.initState();
+
+    //Listeners To Determine Reload
+
+    ScannerStaticVars.allDevicesfoundLength.addListener((){
+      setState((){});
+    });
+
+    ScannerStaticVars.bluetoothOn.addListener((){
+      setState((){});
+    });
+
+    ScannerStaticVars.isScanning.addListener((){
+      setState((){});
+    });
+
+    ScannerStaticVars.showManualRestartButton.addListener((){
+      setState((){});
+    });
+  }
+
   ///-------------------------Overrides-------------------------
   @override
   Widget build(BuildContext context) {
     //a list of all the tiles that will be shown in the list view
     List<String> deviceIDs = sortResults(); 
 
-    int deviceCount = ScannerStaticVars.allDevicesFound.keys.toList().length;
+    int deviceCount = ScannerStaticVars.allDevicesfoundLength.value;
     String singularOrPlural = (deviceCount == 1) ? "Device" : "Devices";
 
     //our main widget to return
@@ -36,9 +62,9 @@ class _SearchNewState extends State<SearchNew> {
       ),
       body: new Column(
         children: <Widget>[
-          (bluetoothOn)
+          (ScannerStaticVars.bluetoothOn.value)
           ? Container()
-          : new BluetoothOffBanner(bluetoothState: ScannerStaticVars.getBluetoothState()),
+          : new BluetoothOffBanner(),
           DefaultTextStyle(
             style: TextStyle(
               color: Colors.black
@@ -70,11 +96,17 @@ class _SearchNewState extends State<SearchNew> {
           ),
         ],
       ),
-      /*
-      floatingActionButton: (bluetoothOn)
-      //-----Bluetooth Is On
-      ? (ScannerStaticVars.isScanning.value) 
-      //----------We Are Scanning
+      floatingActionButton: (ScannerStaticVars.showManualRestartButton.value)
+      ? FloatingActionButton.extended(
+        backgroundColor: Colors.redAccent,
+        foregroundColor: Colors.black,
+        onPressed: (){
+          ScannerStaticVars.startScan();
+        },
+        icon: new Icon(Icons.refresh),
+        label: new Text("Re-Start Scan"),
+      )
+      : (ScannerStaticVars.bluetoothOn.value && ScannerStaticVars.isScanning.value)
       ? FloatingActionButton.extended(
         onPressed: (){
           Navigator.pushReplacement(context, PageTransition(
@@ -96,20 +128,7 @@ class _SearchNewState extends State<SearchNew> {
             fontSize: 12,
           ),
         ),
-      )
-      //----------We Are Not Scanning
-      : FloatingActionButton.extended(
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.black,
-        onPressed: (){
-          startScan();
-        },
-        icon: new Icon(Icons.refresh),
-        label: new Text("Re-Start Scan"),
-      )
-      //-----Bluetooth Is Off
-      : Container(),
-      */
+      ) : Container(),
     );
   }
 }

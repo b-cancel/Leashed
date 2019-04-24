@@ -1,6 +1,7 @@
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:leashed/navigation.dart';
+import 'package:leashed/scanner.dart';
 
 import 'dart:math' as math;
 
@@ -11,6 +12,10 @@ import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSp
 class HomeStateLess extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    //begin scanner
+    ScannerStaticVars.startScan();
+
+    //load up the home page
     return Home();
   }
 }

@@ -31,20 +31,16 @@ class NewDeviceTile extends StatelessWidget {
             children: <Widget>[
               Stack(
                 children: <Widget>[
-                  AutoUpdatingWidget(
+                  SignalPulse(
                     interval: Duration(milliseconds: 100),
-                    child: SignalPulse(
-                      scanData: device.scanData,
-                    ),
+                    scanData: device.scanData,
                   ),
                   Positioned.fill(
                       child: Container(
                         alignment: Alignment.center,
-                        child: new AutoUpdatingWidget(
+                        child: CurrentRSSI(
                           interval: Duration(milliseconds: 500),
-                          child: CurrentRSSI(
-                            scanData: device.scanData,
-                          ),
+                          scanData: device.scanData,
                         ),
                       ),
                   ),
@@ -64,9 +60,9 @@ class NewDeviceTile extends StatelessWidget {
                       ),
                     ),
                     new Text(id + " | " + type),
-                    new AutoUpdatingWidget(
+                    new TimeSince(
                       interval: Duration(milliseconds: 500),
-                      child: TimeSince(scanData: device.scanData),
+                      scanData: device.scanData,
                     ),
                   ],
                 ),
@@ -80,20 +76,22 @@ class NewDeviceTile extends StatelessWidget {
   }
 }
 
-class AutoUpdatingWidget extends StatefulWidget {
-  final Widget child;
+//------------------------------Widgets We Pass To Auto Updater
+
+class TimeSince extends StatefulWidget {
+  final ScanData scanData;
   final Duration interval;
 
-  AutoUpdatingWidget({
-    @required this.child,
+  TimeSince({
+    @required this.scanData,
     this.interval: const Duration(milliseconds: 250),
   });
 
   @override
-  _AutoUpdatingWidgetState createState() => _AutoUpdatingWidgetState();
+  _TimeSinceState createState() => _TimeSinceState();
 }
 
-class _AutoUpdatingWidgetState extends State<AutoUpdatingWidget> {
+class _TimeSinceState extends State<TimeSince> {
   void update() async{
     await Future.delayed(widget.interval);
     if(mounted){
@@ -110,22 +108,7 @@ class _AutoUpdatingWidgetState extends State<AutoUpdatingWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.child;
-  }
-}
-
-//------------------------------Widgets We Pass To Auto Updater
-
-class TimeSince extends StatelessWidget {
-  final ScanData scanData;
-
-  TimeSince({
-    this.scanData,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    DateTime lastScan = scanData.rssiUpdateDateTimes.last;
+    DateTime lastScan = widget.scanData.rssiUpdateDateTimes.last;
     Duration timeSince = (DateTime.now()).difference(lastScan);
 
     //round to the nearest second, its really annoying to see milliseconds
@@ -135,19 +118,40 @@ class TimeSince extends StatelessWidget {
   }
 }
 
-class CurrentRSSI extends StatelessWidget {
+class CurrentRSSI extends StatefulWidget {
   final ScanData scanData;
   final int valuesPerAverage;
+  final Duration interval;
 
   CurrentRSSI({
-    this.scanData,
+    @required this.scanData,
     this.valuesPerAverage: 7,
+    this.interval: const Duration(milliseconds: 250),
   });
 
   @override
+  _CurrentRSSIState createState() => _CurrentRSSIState();
+}
+
+class _CurrentRSSIState extends State<CurrentRSSI> {
+  void update() async{
+    await Future.delayed(widget.interval);
+    if(mounted){
+      setState(() {});
+      update();
+    }
+  }
+
+  @override
+  void initState() {
+    update(); //start cyclical update
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    int lastIndex = scanData.rssiUpdates.length - 1;
-    num lastAverageRSSI = getAverage(scanData.rssiUpdates, lastIndex, valuesPerAverage);
+    int lastIndex = widget.scanData.rssiUpdates.length - 1;
+    num lastAverageRSSI = getAverage(widget.scanData.rssiUpdates, lastIndex, widget.valuesPerAverage);
     int signalStrength = rssiToAdjustedRssi(lastAverageRSSI).toInt();
 
     return new Text(
@@ -160,19 +164,40 @@ class CurrentRSSI extends StatelessWidget {
   }
 }
 
-class SignalPulse extends StatelessWidget {
+class SignalPulse extends StatefulWidget {
   final ScanData scanData;
+  final Duration interval;
 
   SignalPulse({
-    this.scanData,
+    @required this.scanData,
+    this.interval: const Duration(milliseconds: 250),
   });
 
   @override
+  _SignalPulseState createState() => _SignalPulseState();
+}
+
+class _SignalPulseState extends State<SignalPulse> {
+  void update() async{
+    await Future.delayed(widget.interval);
+    if(mounted){
+      setState(() {});
+      update();
+    }
+  }
+
+  @override
+  void initState() {
+    update(); //start cyclical update
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Duration averageInterval = scanData.averageIntervalDuration;
+    Duration averageInterval = widget.scanData.averageIntervalDuration;
     averageInterval = (averageInterval == null) ? Duration(seconds: 1) : averageInterval;
 
-    DateTime lastScan = scanData.rssiUpdateDateTimes.last;
+    DateTime lastScan = widget.scanData.rssiUpdateDateTimes.last;
     Duration intervalSoFar = (DateTime.now()).difference(lastScan);
 
     //0 -> averageInterval
