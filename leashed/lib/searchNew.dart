@@ -28,59 +28,8 @@ class SearchNew extends StatefulWidget {
 
 class _SearchNewState extends State<SearchNew> {
   ///-------------------------Overrides-------------------------
-
-  @override
-  void initState() {
-    super.initState();
-
-    // main init
-    ScannerStaticVars.scanResults = new Map<DeviceIdentifier, ScanResult>();
-    ScannerStaticVars.allDevicesFound = new Map<String, DeviceData>();
-    ScannerStaticVars.isScanning = new ValueNotifier(false);
-    ScannerStaticVars.firstStart = new ValueNotifier(true);
-    ScannerStaticVars.scanDateTimes = new List<DateTime>();
-
-    // first values in lists (the only false value)
-    ScannerStaticVars.scanDateTimes.add(DateTime.now());
-
-    // bluetooth init
-    ScannerStaticVars.flutterBlue = FlutterBlue.instance;
-
-    ScannerStaticVars.bluetoothState = BluetoothState.unknown;
-
-    ScannerStaticVars.flutterBlue.state.then((s) {
-      setState(() {
-        ScannerStaticVars.bluetoothState = s;
-      });
-    });
-
-    ScannerStaticVars.stateSubscription = ScannerStaticVars.flutterBlue.onStateChanged().listen((s) {
-      setState(() {
-        ScannerStaticVars.bluetoothState = s;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    ScannerStaticVars.stateSubscription?.cancel();
-    ScannerStaticVars.stateSubscription = null;
-    ScannerStaticVars.scanSubscription?.cancel();
-    ScannerStaticVars.scanSubscription = null;
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    //managing very annoying bluetooth toggles
-    bool bluetoothOn = (ScannerStaticVars.bluetoothState == BluetoothState.on);
-    
-    if(bluetoothOn && ScannerStaticVars.isScanning == false){
-      if(ScannerStaticVars.firstStart.value) startScan();
-      else restartScan();
-    }
-    if(bluetoothOn == false && ScannerStaticVars.isScanning.value) stopScan();
-
     //a list of all the tiles that will be shown in the list view
     List<String> deviceIDs = sortResults(); 
 
@@ -98,7 +47,7 @@ class _SearchNewState extends State<SearchNew> {
         children: <Widget>[
           (bluetoothOn)
           ? Container()
-          : new BluetoothOffBanner(bluetoothState: ScannerStaticVars.bluetoothState),
+          : new BluetoothOffBanner(bluetoothState: ScannerStaticVars.getBluetoothState()),
           DefaultTextStyle(
             style: TextStyle(
               color: Colors.black
@@ -130,6 +79,7 @@ class _SearchNewState extends State<SearchNew> {
           ),
         ],
       ),
+      /*
       floatingActionButton: (bluetoothOn)
       //-----Bluetooth Is On
       ? (ScannerStaticVars.isScanning.value) 
@@ -168,97 +118,7 @@ class _SearchNewState extends State<SearchNew> {
       )
       //-----Bluetooth Is Off
       : Container(),
+      */
     );
-  }
-
-  //------------------------------Scanning Functions(same in multiple)------------------------------
-
-  void restartScan(){
-    /*
-    WidgetsBinding.instance.addPostFrameCallback((_) async{
-      print("---------------auto restart");
-      //await Future.delayed(Duration(seconds: 1));
-      startScan();
-    });
-    */
-  }
-
-  void startScan(){
-    //NOTE: on error isn't being called when an error occurs
-    ScannerStaticVars.scanSubscription = ScannerStaticVars.flutterBlue.scan(
-      scanMode: ScanMode.lowLatency,
-    ).listen((scanResult) {
-      if(ScannerStaticVars.isScanning.value == false){
-        ScannerStaticVars.isScanning.value = true;
-        ScannerStaticVars.firstStart.value = false;
-      }
-      ScannerStaticVars.scanDateTimes.add(DateTime.now());
-      setState(() {
-        ScannerStaticVars.scanResults[scanResult.device.id] = scanResult;
-        updateDevice(scanResult.device.id);
-      });
-    }, onDone: stopScan);
-  }
-
-  void stopScan() {
-    ScannerStaticVars.isScanning.value = false;
-    ScannerStaticVars.scanSubscription?.cancel();
-    ScannerStaticVars.scanSubscription = null;
-  }
-
-  void updateDevice(DeviceIdentifier deviceID){
-    String deviceIDstr = deviceID.toString();
-    String thisName = ScannerStaticVars.scanResults[deviceID].device.name;
-    thisName = (thisName == null) ? "" : thisName;
-    BluetoothDeviceType thisType = ScannerStaticVars.scanResults[deviceID].device.type;
-    
-    bool updateList = false;
-    if(ScannerStaticVars.allDevicesFound.containsKey(deviceIDstr) == false){ //-----Adding New Device
-      ScannerStaticVars.allDevicesFound[deviceIDstr] = DeviceData(deviceIDstr, thisName, thisType, ScannerStaticVars.scanDateTimes[0]);
-      updateList = true;
-    }
-    else{ //-----MAYBE Update Device
-      bool matchingName = ScannerStaticVars.allDevicesFound[deviceIDstr].name != thisName;
-      if(matchingName == false){
-        ScannerStaticVars.allDevicesFound[deviceIDstr].name = thisName;
-        updateList = true;
-      }
-      //ELSE... name update not required [expected]
-
-      bool matchingType = ScannerStaticVars.allDevicesFound[deviceIDstr].type != thisType;
-      if(matchingType == false){
-        ScannerStaticVars.allDevicesFound[deviceIDstr].type = thisType;
-        updateList = true;
-      }
-      //ELSE... type update not required [expected]
-    }
-
-    //-----Update Device Values
-    //NOTE: our scanresults list DOES NOT CLEAR 
-    //so if a device disconnects we will just have the last recieved RSSI
-    var newRSSI = ScannerStaticVars.scanResults[deviceID].rssi;
-    ScannerStaticVars.allDevicesFound[deviceIDstr].add(newRSSI);
-
-    //-----Update Our Main List
-    if(updateList) setState(() {});
-  }
-
-  List<String> sortResults(){
-    //sort by ID
-    List<String> deviceIDs = ScannerStaticVars.allDevicesFound.keys.toList();
-    deviceIDs.sort();
-
-    //sort all devices by Name
-    List<String> withName = new List<String>();
-    List<String> withoutName = new List<String>();
-    for(int i = 0; i < ScannerStaticVars.allDevicesFound.length; i++){
-      String deviceID = deviceIDs[i];
-      if(ScannerStaticVars.allDevicesFound[deviceID].name != ""){
-        withName.add(deviceID);
-      }
-      else withoutName.add(deviceID);
-    }
-
-    return ([]..addAll(withName))..addAll(withoutName);
   }
 }
