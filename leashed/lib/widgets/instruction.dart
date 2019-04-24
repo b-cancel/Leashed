@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:leashed/helper/structs.dart';
 import 'package:leashed/navigation.dart';
 
 class Instruction extends StatelessWidget {
-  final Map<String, DeviceData> allDevicesFound;
-  final List<DateTime> scanDateTimes;
   final String imageUrl;
   final List<String> lines;
   final Function onDone;
 
   Instruction({
-    @required this.allDevicesFound,
-    @required this.scanDateTimes,
     @required this.imageUrl,
     @required this.lines,
     @required this.onDone,

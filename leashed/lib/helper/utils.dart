@@ -271,7 +271,6 @@ List<common.AnnotationSegment> createTapHighlights(
     List<charts.Series<Data, int>> chartList = new List<charts.Series<Data, int>>();
     for(int i = 0; i < 5; i++){ //MAX OF 5
       int value = valuesForRollingAverage[i];
-      List<Data> roll = xyToList(x, rollingAverage(y, value));  
       chartList.add(
         charts.Series<Data, int>(
           //set manually

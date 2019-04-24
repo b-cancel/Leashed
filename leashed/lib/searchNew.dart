@@ -109,13 +109,10 @@ class _SearchNewState extends State<SearchNew> {
       : (ScannerStaticVars.bluetoothOn.value && ScannerStaticVars.isScanning.value)
       ? FloatingActionButton.extended(
         onPressed: (){
-          Navigator.pushReplacement(context, PageTransition(
+          Navigator.push(context, PageTransition(
             type: PageTransitionType.fade,
             duration: Duration.zero, 
-            child: PhoneDown(
-              allDevicesFound: ScannerStaticVars.allDevicesFound,
-              scanDateTimes: ScannerStaticVars.scanDateTimes,
-            ),
+            child: PhoneDown(),
           ));
         },
         icon: new Icon(

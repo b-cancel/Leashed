@@ -58,8 +58,6 @@ class _FloatingAppBarState extends State<_FloatingAppBar> {
   @override
   void initState() {
     startMinimized();
-
-    // TODO: implement initState
     super.initState();
   }
 

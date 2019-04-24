@@ -86,7 +86,7 @@ class _DurationDisplayState extends State<DurationDisplay> {
           testBool = true;
         else {
           spacesUsed.add(i);
-          testBool == false;
+          testBool = false;
         }
       }
     }

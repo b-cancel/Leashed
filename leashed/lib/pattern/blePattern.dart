@@ -1,21 +1,14 @@
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:leashed/helper/structs.dart';
 import 'package:leashed/navigation.dart';
-import 'package:leashed/widgets/instruction.dart';
 import 'package:percent_indicator/percent_indicator.dart' as percent;
-import 'package:percent_indicator/linear_percent_indicator.dart' as linearPercent;
 
 class BlePattern extends StatefulWidget {
-  final Map<String, DeviceData> allDevicesFound;
-  final List<DateTime> scanDateTimes;
   final int secondsBetweenSteps;
   final int secondsPerStep;
 
   BlePattern({
-    @required this.allDevicesFound,
-    @required this.scanDateTimes,
     this.secondsBetweenSteps: 2,
     this.secondsPerStep: 5,
   });
