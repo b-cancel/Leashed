@@ -114,7 +114,9 @@ class ScannerStaticVars {
         showManualRestartButton.value = false;
       }
     }
-    else showManualRestartButton.value = false;
+    else{
+      showManualRestartButton.value = false;
+    }
     
     if(bluetoothIsOn == false && scanningIsOn == true) stopScan();
   }
@@ -133,6 +135,7 @@ class ScannerStaticVars {
         //since it can fail to begin
         isScanning.value = true;
         firstStart.value = false;
+        showManualRestartButton.value = false;
 
         //update everything as expected
         _addToScanDateTimes(DateTime.now());

@@ -163,7 +163,7 @@ class _BlePatternState extends State<BlePattern> {
                   percent: progressThisStep,
                   width: indicatorWidth,
                   lineHeight: 16, 
-                  progressColor: Colors.lightGreen,
+                  progressColor: Colors.lightGreenAccent,
                 )
               ),
             )
