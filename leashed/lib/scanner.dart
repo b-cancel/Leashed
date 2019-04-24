@@ -46,20 +46,22 @@ class ScannerStaticVars {
   //called by Navigation to start the scanner
 
   static init(){
-    _flutterBlue.state.then((s) {
-      updateBluetoothState(s);
-    });
-    _stateSubscription = _flutterBlue.onStateChanged().listen((s) {
-      updateBluetoothState(s);
-    });
+    if(_stateSubscription == null){
+      _flutterBlue.state.then((s) {
+        updateBluetoothState(s);
+      });
+      _stateSubscription = _flutterBlue.onStateChanged().listen((s) {
+        updateBluetoothState(s);
+      });
+    }
   }
 
   //------------------------------Setters------------------------------
 
   static setScanMode(ScanMode newScanMode){
+    _scanMode = newScanMode;
     if(isScanning.value){
       stopScan();
-      _scanMode = newScanMode;
       startScan();
     }
   }
@@ -96,11 +98,15 @@ class ScannerStaticVars {
     bool bluetoothIsOn = bluetoothOn.value;
     bool scanningIsOn = isScanning.value;
     if(bluetoothIsOn == true && scanningIsOn == false){
-      //TODO... add auto restart stuff here
-      showManualRestartButton.value = true;
+      if(autoStart.value){
+        showManualRestartButton.value = true;
 
-      if(firstStart.value) startScan();
-      else restartScan();
+        if(firstStart.value) startScan();
+        else restartScan();
+      }
+      else{
+        showManualRestartButton.value = false;
+      }
     }
     else showManualRestartButton.value = false;
     
@@ -113,7 +119,7 @@ class ScannerStaticVars {
     //NOTE: on error isn't being called when an error occurs
     if(isScanning.value == false){
       _scanSubscription = _flutterBlue.scan(
-        scanMode: getScanMode(),
+        scanMode: _scanMode,
       ).listen((scanResult) {
         //set our vars after its begun
         //since it can fail to begin
@@ -133,9 +139,11 @@ class ScannerStaticVars {
   }
 
   static void stopScan() {
-    isScanning.value = false;
-    _scanSubscription?.cancel();
-    _scanSubscription = null;
+    if(isScanning.value == true){
+      isScanning.value = false;
+      _scanSubscription?.cancel();
+      _scanSubscription = null;
+    }
   }
 
   //------------------------------Scanner Helper------------------------------

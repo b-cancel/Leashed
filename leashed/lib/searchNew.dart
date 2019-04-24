@@ -1,17 +1,8 @@
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/helper/structs.dart';
-import 'package:leashed/navigation.dart';
-import 'package:leashed/pattern/phoneDown.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:leashed/widgets/newDeviceTile.dart';
-import 'package:system_setting/system_setting.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:page_transition/page_transition.dart';
 import 'scanner.dart';
-
-import 'dart:async';
 
 //NOTE: in order to be able to handle large quantity of devices
 //1. we only update the main list if a new device is added
