@@ -22,56 +22,56 @@ class NewDeviceTile extends StatelessWidget {
     var id = device.id.toString();
     var type = shortBDT(device.type);
 
-    return InkWell(
-      onTap: (){
-      },
-      child: Column(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Stack(
+    return Column(
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            /*
+            Stack(
+              children: <Widget>[
+                SignalPulse(
+                  interval: Duration(milliseconds: 100),
+                  scanData: device.scanData,
+                ),
+                Positioned.fill(
+                    child: Container(
+                      alignment: Alignment.center,
+                      child: CurrentRSSI(
+                        interval: Duration(milliseconds: 500),
+                        scanData: device.scanData,
+                      ),
+                    ),
+                ),
+              ],
+            ),
+            */
+            Container(
+              padding: EdgeInsets.all(8),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  SignalPulse(
-                    interval: Duration(milliseconds: 100),
+                  new Text(
+                    noName ? "No Name Available" : name,
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontSize: 18,
+                    ),
+                  ),
+                  new Text(id + " | " + type),
+                  /*
+                  new TimeSince(
+                    interval: Duration(milliseconds: 500),
                     scanData: device.scanData,
                   ),
-                  Positioned.fill(
-                      child: Container(
-                        alignment: Alignment.center,
-                        child: CurrentRSSI(
-                          interval: Duration(milliseconds: 500),
-                          scanData: device.scanData,
-                        ),
-                      ),
-                  ),
+                  */
                 ],
               ),
-              Container(
-                padding: EdgeInsets.all(8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    new Text(
-                      noName ? "No Name Available" : name,
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontSize: 18,
-                      ),
-                    ),
-                    new Text(id + " | " + type),
-                    new TimeSince(
-                      interval: Duration(milliseconds: 500),
-                      scanData: device.scanData,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Divider(),
-        ],
-      ),
+            ),
+          ],
+        ),
+        Divider(),
+      ],
     );
   }
 }

@@ -23,9 +23,15 @@ class SearchNew extends StatefulWidget {
 class _SearchNewState extends State<SearchNew> {
   List<String> deviceIDs;
 
+  void startScanner()async{
+    ScannerStaticVars.startScan();
+  }
+
   @override
   void initState() {
     super.initState();
+
+    startScanner();
 
     //Listeners To Determine Reload
 
@@ -51,6 +57,12 @@ class _SearchNewState extends State<SearchNew> {
     deviceIDs.addAll(ScannerStaticVars.allDevicesFound.keys.toList());
   }
 
+  @override
+  void dispose() {
+    ScannerStaticVars.stopScan();
+    super.dispose();
+  }
+
   ///-------------------------Overrides-------------------------
   @override
   Widget build(BuildContext context) {
@@ -74,14 +86,48 @@ class _SearchNewState extends State<SearchNew> {
               color: Colors.black
             ),
             child: Expanded(
-              //maybe not nested listview?
+              //physics: const AlwaysScrollableScrollPhysics(), -> DONE
+              //maybe not nested listview? -> DONE
+              //maybe dont reload tile hearts, rssi, and times that we dont need to -> DONE
+
               //maybe ignore pointer in all locations except what is expected
-              //maybe dont reload tile hearts, rssi, and times that we dont need to
               //gesture detector instead of inkwell
               //flutter run --release
-              //physics: const AlwaysScrollableScrollPhysics(),
+              
               //slivers are slower for tons of objects
-              child: ListView(
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.all(8.0),
+                itemCount: deviceIDs.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return ListTile(
+                    title: new Text(index.toString()),
+                  );
+                  /*
+                  String deviceID = deviceIDs[index];
+                  DeviceData device = ScannerStaticVars.allDevicesFound[deviceID];
+                  var name = device.name.toString();
+                  bool noName = (name == "");
+                  var id = device.id.toString();
+
+                  return ListTile(
+                    title: new Text((noName) ? "No Name Available" : name),
+                    subtitle: new Text(id),
+                  );
+                  */
+
+                  /*
+                  return NewDeviceTile(
+                    scanDateTimes: ScannerStaticVars.scanDateTimes,
+                    devices: ScannerStaticVars.allDevicesFound,
+                    device: device,
+                  );
+                  */
+                },
+              ),
+              
+              /*ListView(
                 children: <Widget>[
                   ListView.builder(
                     shrinkWrap: true,
@@ -103,6 +149,7 @@ class _SearchNewState extends State<SearchNew> {
                   )
                 ],
               ),
+              */
             ),
           ),
         ],

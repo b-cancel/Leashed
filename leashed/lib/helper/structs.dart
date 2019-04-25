@@ -60,6 +60,13 @@ class ScanData{
   //-----RSSI List-----
 
   void add(int newRSSI){
+    //RSSI Update max
+    if(rssiUpdates.length > maxSamples){
+      rssiUpdates.clear();
+      rssiUpdateDateTimes.clear();
+      rssiIntervalDurations.clear();
+    }
+
     rssiUpdates.add(newRSSI);
     rssiUpdateDateTimes.add(DateTime.now());
     if(rssiUpdateDateTimes.length > 1){ //add duration if possible
@@ -93,13 +100,6 @@ class ScanData{
         int lastCount = rssiIntervalDurations.length - 1;
         averageIntervalDuration = newDurationAverage(averageIntervalDuration, lastCount, thisIntervalDuration);
       }
-    }
-
-    //RSSI Update max
-    if(rssiUpdates.length > maxSamples){
-      rssiUpdates.removeAt(0);
-      rssiUpdateDateTimes.removeAt(0);
-      rssiIntervalDurations.removeAt(0);
     }
   }
 }

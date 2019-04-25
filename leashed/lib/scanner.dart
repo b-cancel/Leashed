@@ -9,6 +9,9 @@ import 'dart:async';
 //3. the moments its turned on again we reload the page (ideally automatically)
 
 class ScannerStaticVars {
+  static bool prints = true; //prints stuff
+  static bool printsForUpdates = false; //prints all stuff
+
   //settings
   static Duration timeBeforeAutoStart = Duration(seconds: 1); //PUBLIC (once the delay begins its too much of a pain to stop)
   static final ValueNotifier<bool> autoStart = ValueNotifier(true); //PUBLIC (should be done before stopping the scan)
@@ -47,9 +50,9 @@ class ScannerStaticVars {
   //called by Navigation to start the scanner
 
   static init() async{
-    print("------------------------------try init");
+    if(prints) print("------------------------------try init");
     if(_stateSubscription == null){
-      print("------------------------------init");
+      if(prints) print("------------------------------init");
       _flutterBlue.state.then((s) async{
         updateBluetoothState(s);
       });
@@ -62,10 +65,10 @@ class ScannerStaticVars {
   //------------------------------Setters------------------------------
 
   static setScanMode(ScanMode newScanMode) async{
-    print("------------------------------set scan mode");
+    if(prints) print("------------------------------set scan mode");
     _scanMode = newScanMode;
     if(isScanning.value){
-      print("------------------------------set scan mode caused stop then start");
+      if(prints) print("------------------------------set scan mode caused stop then start");
       await stopScan();
       startScan(); 
     }
@@ -79,19 +82,19 @@ class ScannerStaticVars {
   //------------------------------Adders------------------------------
 
   static _addToScanResults(DeviceIdentifier key, ScanResult value) async{
-    print("add to scan results");
+    if(prints && printsForUpdates) print("add to scan results");
     scanResults[key] = value;
     scanResultsLength.value = scanResults.length;
   }
 
   static _addToAllDevicesFound(String key, DeviceData value) async{
-    print("add to all devices found");
+    if(prints && printsForUpdates) print("add to all devices found");
     allDevicesFound[key] = value;
     allDevicesfoundLength.value = allDevicesFound.length;
   }
 
   static _addToScanDateTimes(DateTime value) async{
-    print("add to scan date times");
+    if(prints && printsForUpdates) print("add to scan date times");
     scanDateTimes.add(value);
     scanDateTimesLength.value = scanDateTimes.length;
   }
@@ -99,7 +102,7 @@ class ScannerStaticVars {
   //------------------------------Control Scanning Depending on Bluetooth State------------------------------
 
   static updateBluetoothState(BluetoothState newState) async{
-    print("-------------------------update bluetooth state");
+    if(prints) print("-------------------------update bluetooth state");
     _bluetoothState = newState;
 
     //change simplified
@@ -136,7 +139,7 @@ class ScannerStaticVars {
 
     //NOTE: on error isn't being called when an error occurs
     if(isScanning.value == false){
-      print("-------------------------trying to start scan");
+      if(prints) print("-------------------------trying to start scan");
       _scanSubscription = _flutterBlue.scan(
         scanMode: _scanMode,
       ).listen((scanResult) async{
@@ -145,24 +148,26 @@ class ScannerStaticVars {
         isScanning.value = true;
         firstStart.value = false;
         showManualRestartButton.value = false;
-        print("new scan result");
+        if(prints && printsForUpdates) print("new scan result");
 
         //update everything as expected
-        await _addToScanDateTimes(DateTime.now()); 
-        await _addToScanResults(scanResult.device.id, scanResult); 
-        await updateDevice(scanResult.device.id); 
+        if(allDevicesFound.containsKey(scanResult.device.id.toString()) == false){
+          await _addToScanDateTimes(DateTime.now()); 
+          await _addToScanResults(scanResult.device.id, scanResult); 
+          await updateDevice(scanResult.device.id); 
+        }
       }, onDone: stopScan);
     }
   }
 
   static restartScan() async{
-    print("-------------------------trying to RE START scan");
+    if(prints) print("-------------------------trying to RE START scan");
     Future.delayed(timeBeforeAutoStart, () => startScan());
   }
 
   static stopScan() async{
     if(isScanning.value == true){
-      print("-------------------------stopping scan");
+      if(prints) print("-------------------------stopping scan");
       isScanning.value = false;
       _scanSubscription?.cancel();
       _scanSubscription = null;
@@ -172,7 +177,7 @@ class ScannerStaticVars {
   //------------------------------Scanner Helper------------------------------
 
   static updateDevice(DeviceIdentifier deviceID) async{
-    print("updating a device");
+    if(prints && printsForUpdates) print("updating a device");
     String deviceIDstr = deviceID.toString();
     
     //-----Adding New Device

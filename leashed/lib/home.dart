@@ -10,11 +10,14 @@ import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSp
 
 //NOTE: so Material App Works properly
 class HomeStateLess extends StatelessWidget {
+  void initScanner()async {
+    ScannerStaticVars.init();
+  }
+
   @override
   Widget build(BuildContext context) {
-    //begin scanner
-    ScannerStaticVars.startScan();
-
+    initScanner();
+    
     //load up the home page
     return Home();
   }
@@ -386,6 +389,7 @@ class NavBar extends StatelessWidget {
               color: Colors.white,
             ),
             onPressed: (){
+              print("-------------------------Searching For New");
               Navigation.appRouter.navigateTo(context, "searchNew", transition: TransitionType.inFromLeft);
             },
           ),
