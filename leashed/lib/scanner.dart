@@ -14,7 +14,7 @@ class ScannerStaticVars {
 
   //settings
   static Duration timeBeforeAutoStart = Duration(seconds: 1); //PUBLIC (once the delay begins its too much of a pain to stop)
-  static final ValueNotifier<bool> autoStart = ValueNotifier(true); //PUBLIC (should be done before stopping the scan)
+  static final ValueNotifier<bool> autoStart = ValueNotifier(false); //PUBLIC (should be done before stopping the scan)
   static ScanMode _scanMode = ScanMode.lowLatency; //PRIVATE with PUBLIC getter and setter
 
   //regular
@@ -145,17 +145,19 @@ class ScannerStaticVars {
       ).listen((scanResult) async{
         //set our vars after its begun
         //since it can fail to begin
-        isScanning.value = true;
-        firstStart.value = false;
-        showManualRestartButton.value = false;
+        if(isScanning.value == false){
+          if(prints) print("-------------------------start scan");
+          isScanning.value = true;
+          firstStart.value = false;
+          showManualRestartButton.value = false; //CHECK
+        }
+        
         if(prints && printsForUpdates) print("new scan result");
 
         //update everything as expected
-        if(allDevicesFound.containsKey(scanResult.device.id.toString()) == false){
-          await _addToScanDateTimes(DateTime.now()); 
-          await _addToScanResults(scanResult.device.id, scanResult); 
-          await updateDevice(scanResult.device.id); 
-        }
+        await _addToScanDateTimes(DateTime.now()); 
+        await _addToScanResults(scanResult.device.id, scanResult); 
+        await updateDevice(scanResult.device.id); 
       }, onDone: stopScan);
     }
   }
@@ -196,6 +198,7 @@ class ScannerStaticVars {
 }
 
 Future<List<String>> sortResults() async{
+  if(ScannerStaticVars.prints && ScannerStaticVars.printsForUpdates) print("sort results");
   //sort by ID
   List<String> deviceIDs = ScannerStaticVars.allDevicesFound.keys.toList();
   deviceIDs.sort();
