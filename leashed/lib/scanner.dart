@@ -11,47 +11,49 @@ import 'dart:async';
 class ScannerStaticVars {
   //settings
   static Duration timeBeforeAutoStart = Duration(seconds: 1); //PUBLIC (once the delay begins its too much of a pain to stop)
-  static ValueNotifier<bool> autoStart = ValueNotifier(true); //PUBLIC (should be done before stopping the scan)
+  static final ValueNotifier<bool> autoStart = ValueNotifier(true); //PUBLIC (should be done before stopping the scan)
   static ScanMode _scanMode = ScanMode.lowLatency; //PRIVATE with PUBLIC getter and setter
 
   //regular
-  static Map<DeviceIdentifier, ScanResult> scanResults = new Map<DeviceIdentifier, ScanResult>(); //SHOULD NOT manually add
-  static ValueNotifier<int> scanResultsLength = ValueNotifier(0); //SHOULD NOT manually set
+  static final Map<DeviceIdentifier, ScanResult> scanResults = new Map<DeviceIdentifier, ScanResult>(); //SHOULD NOT manually add
+  static final ValueNotifier<int> scanResultsLength = ValueNotifier(0); //SHOULD NOT manually set
 
   
-  static Map<String, DeviceData> allDevicesFound = new Map<String, DeviceData>(); //SHOULD NOT manually add
-  static ValueNotifier<int> allDevicesfoundLength = ValueNotifier(0); //SHOULD NOT manually set
+  static final Map<String, DeviceData> allDevicesFound = new Map<String, DeviceData>(); //SHOULD NOT manually add
+  static final ValueNotifier<int> allDevicesfoundLength = ValueNotifier(0); //SHOULD NOT manually set
 
   
-  static List<DateTime> scanDateTimes = [DateTime.now()]; //SHOULD NOT manually add
-  static ValueNotifier<int> scanDateTimesLength = ValueNotifier(0); //SHOULD NOT manually set
+  static final List<DateTime> scanDateTimes = [DateTime.now()]; //SHOULD NOT manually add
+  static final ValueNotifier<int> scanDateTimesLength = ValueNotifier(0); //SHOULD NOT manually set
 
-  static ValueNotifier<bool> isScanning = ValueNotifier(false); //SHOULD NOT manually set
-  static ValueNotifier<bool> firstStart = ValueNotifier(true); //SHOULD NOT manually set
+  static final ValueNotifier<bool> isScanning = ValueNotifier(false); //SHOULD NOT manually set
+  static final ValueNotifier<bool> firstStart = ValueNotifier(true); //SHOULD NOT manually set
 
   //bluetooth
-  static FlutterBlue _flutterBlue = FlutterBlue.instance; //PRIVATE
+  static final FlutterBlue _flutterBlue = FlutterBlue.instance; //PRIVATE
 
   static BluetoothState _bluetoothState = BluetoothState.unknown; //PRIVATE
-  static ValueNotifier<bool> bluetoothOn = ValueNotifier(false); //SHOULD NOT manually set
-  static ValueNotifier<int> bluetoothState = ValueNotifier(BluetoothState.unknown.index);
+  static final ValueNotifier<bool> bluetoothOn = ValueNotifier(false); //SHOULD NOT manually set
+  static final ValueNotifier<int> bluetoothState = ValueNotifier(BluetoothState.unknown.index);
 
   static StreamSubscription _stateSubscription; //PRIVATE
   static StreamSubscription _scanSubscription; //PRIVATE
 
   //combo
   //IF autoStart && (bluetoothOn && isScanning)
-  static ValueNotifier<bool> showManualRestartButton = ValueNotifier(false);
+  static final ValueNotifier<bool> showManualRestartButton = ValueNotifier(false);
 
   //------------------------------Init------------------------------
   //called by Navigation to start the scanner
 
-  static init(){
+  static init() async{
+    print("------------------------------try init");
     if(_stateSubscription == null){
-      _flutterBlue.state.then((s) {
+      print("------------------------------init");
+      _flutterBlue.state.then((s) async{
         updateBluetoothState(s);
       });
-      _stateSubscription = _flutterBlue.onStateChanged().listen((s) {
+      _stateSubscription = _flutterBlue.onStateChanged().listen((s) async{
         updateBluetoothState(s);
       });
     }
@@ -59,11 +61,13 @@ class ScannerStaticVars {
 
   //------------------------------Setters------------------------------
 
-  static setScanMode(ScanMode newScanMode){
+  static setScanMode(ScanMode newScanMode) async{
+    print("------------------------------set scan mode");
     _scanMode = newScanMode;
     if(isScanning.value){
-      stopScan();
-      startScan();
+      print("------------------------------set scan mode caused stop then start");
+      await stopScan();
+      startScan(); 
     }
   }
 
@@ -74,24 +78,28 @@ class ScannerStaticVars {
 
   //------------------------------Adders------------------------------
 
-  static _addToScanResults(DeviceIdentifier key, ScanResult value){
+  static _addToScanResults(DeviceIdentifier key, ScanResult value) async{
+    print("add to scan results");
     scanResults[key] = value;
     scanResultsLength.value = scanResults.length;
   }
 
-  static _addToAllDevicesFound(String key, DeviceData value){
+  static _addToAllDevicesFound(String key, DeviceData value) async{
+    print("add to all devices found");
     allDevicesFound[key] = value;
     allDevicesfoundLength.value = allDevicesFound.length;
   }
 
-  static _addToScanDateTimes(DateTime value){
+  static _addToScanDateTimes(DateTime value) async{
+    print("add to scan date times");
     scanDateTimes.add(value);
     scanDateTimesLength.value = scanDateTimes.length;
   }
 
   //------------------------------Control Scanning Depending on Bluetooth State------------------------------
 
-  static updateBluetoothState(BluetoothState newState){
+  static updateBluetoothState(BluetoothState newState) async{
+    print("-------------------------update bluetooth state");
     _bluetoothState = newState;
 
     //change simplified
@@ -116,41 +124,45 @@ class ScannerStaticVars {
     }
     else{
       showManualRestartButton.value = false;
+      if(bluetoothIsOn == false && scanningIsOn == true) stopScan();
+      //ELSE... we are doing what we want (staying on or off)
     }
-    
-    if(bluetoothIsOn == false && scanningIsOn == true) stopScan();
   }
 
   //------------------------------Scanner Control------------------------------
 
-  static void startScan(){
-    init();
+  static startScan() async{
+    await init();
 
     //NOTE: on error isn't being called when an error occurs
     if(isScanning.value == false){
+      print("-------------------------trying to start scan");
       _scanSubscription = _flutterBlue.scan(
         scanMode: _scanMode,
-      ).listen((scanResult) {
+      ).listen((scanResult) async{
         //set our vars after its begun
         //since it can fail to begin
         isScanning.value = true;
         firstStart.value = false;
         showManualRestartButton.value = false;
+        print("new scan result");
 
         //update everything as expected
-        _addToScanDateTimes(DateTime.now());
-        _addToScanResults(scanResult.device.id, scanResult);
-        updateDevice(scanResult.device.id);
+        await _addToScanDateTimes(DateTime.now()); 
+        await _addToScanResults(scanResult.device.id, scanResult); 
+        await updateDevice(scanResult.device.id); 
       }, onDone: stopScan);
     }
   }
 
-  static void restartScan(){
+  static restartScan() async{
+    print("-------------------------trying to RE START scan");
     Future.delayed(timeBeforeAutoStart, () => startScan());
   }
 
-  static void stopScan() {
+  static stopScan() async{
     if(isScanning.value == true){
+      print("-------------------------stopping scan");
       isScanning.value = false;
       _scanSubscription?.cancel();
       _scanSubscription = null;
@@ -159,14 +171,15 @@ class ScannerStaticVars {
 
   //------------------------------Scanner Helper------------------------------
 
-  static void updateDevice(DeviceIdentifier deviceID){
+  static updateDevice(DeviceIdentifier deviceID) async{
+    print("updating a device");
     String deviceIDstr = deviceID.toString();
     
     //-----Adding New Device
     if(allDevicesFound.containsKey(deviceIDstr) == false){ 
       String deviceName = scanResults[deviceID].device.name ?? "";
       BluetoothDeviceType deviceType = scanResults[deviceID].device.type;
-      _addToAllDevicesFound(deviceIDstr, DeviceData(deviceIDstr, deviceName, deviceType, scanDateTimes[0]));
+      await _addToAllDevicesFound(deviceIDstr, DeviceData(deviceIDstr, deviceName, deviceType, scanDateTimes[0]));
     }
 
     //-----Update Device Values
@@ -177,7 +190,7 @@ class ScannerStaticVars {
   }
 }
 
-List<String> sortResults(){
+Future<List<String>> sortResults() async{
   //sort by ID
   List<String> deviceIDs = ScannerStaticVars.allDevicesFound.keys.toList();
   deviceIDs.sort();

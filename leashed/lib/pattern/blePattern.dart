@@ -1,7 +1,8 @@
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:leashed/navigation.dart';
+import 'package:leashed/pattern/patternIdentify.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:percent_indicator/percent_indicator.dart' as percent;
 
 class BlePattern extends StatefulWidget {
@@ -35,12 +36,11 @@ class _BlePatternState extends State<BlePattern> {
     else{
       await Future.delayed(Duration(seconds: widget.secondsBetweenSteps));
       if(mounted){
-        Navigation.appRouter.navigateTo(
-          context, 
-          "addNew", 
-          transition: TransitionType.inFromBottom, 
-          replace: true,
-        );
+        Navigator.pushReplacement(context, PageTransition(
+          type: PageTransitionType.fade,
+          duration: Duration.zero, 
+          child: PatternIdentify(),
+        ));
       }
     }
   }

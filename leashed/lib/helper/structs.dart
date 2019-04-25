@@ -34,6 +34,7 @@ class DeviceData{
 // - we dont receive any new updates
 // - we are just left with whatever the last RSSI value was
 
+int maxSamples = 250;
 class ScanData{
   //-----Variable Inits-----
 
@@ -92,6 +93,13 @@ class ScanData{
         int lastCount = rssiIntervalDurations.length - 1;
         averageIntervalDuration = newDurationAverage(averageIntervalDuration, lastCount, thisIntervalDuration);
       }
+    }
+
+    //RSSI Update max
+    if(rssiUpdates.length > maxSamples){
+      rssiUpdates.removeAt(0);
+      rssiUpdateDateTimes.removeAt(0);
+      rssiIntervalDurations.removeAt(0);
     }
   }
 }

@@ -21,13 +21,17 @@ class SearchNew extends StatefulWidget {
 }
 
 class _SearchNewState extends State<SearchNew> {
+  List<String> deviceIDs;
+
   @override
   void initState() {
     super.initState();
 
     //Listeners To Determine Reload
 
-    ScannerStaticVars.allDevicesfoundLength.addListener((){
+    print("list init");
+    ScannerStaticVars.allDevicesfoundLength.addListener(() async{
+      deviceIDs = await sortResults(); 
       setState((){});
     });
 
@@ -42,14 +46,14 @@ class _SearchNewState extends State<SearchNew> {
     ScannerStaticVars.showManualRestartButton.addListener((){
       setState((){});
     });
+
+    deviceIDs = new List<String>();
+    deviceIDs.addAll(ScannerStaticVars.allDevicesFound.keys.toList());
   }
 
   ///-------------------------Overrides-------------------------
   @override
   Widget build(BuildContext context) {
-    //a list of all the tiles that will be shown in the list view
-    List<String> deviceIDs = sortResults(); 
-
     int deviceCount = ScannerStaticVars.allDevicesfoundLength.value;
     String singularOrPlural = (deviceCount == 1) ? "Device" : "Devices";
 
@@ -70,6 +74,13 @@ class _SearchNewState extends State<SearchNew> {
               color: Colors.black
             ),
             child: Expanded(
+              //maybe not nested listview?
+              //maybe ignore pointer in all locations except what is expected
+              //maybe dont reload tile hearts, rssi, and times that we dont need to
+              //gesture detector instead of inkwell
+              //flutter run --release
+              //physics: const AlwaysScrollableScrollPhysics(),
+              //slivers are slower for tons of objects
               child: ListView(
                 children: <Widget>[
                   ListView.builder(
