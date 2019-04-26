@@ -5,12 +5,10 @@ import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 
 class NewDeviceTile extends StatelessWidget {
-  final List<DateTime> scanDateTimes;
   final Map<String, DeviceData> devices;
   final DeviceData device;
 
   NewDeviceTile({
-    @required this.scanDateTimes,
     @required this.devices,
     @required this.device,
   });

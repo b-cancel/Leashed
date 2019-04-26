@@ -122,7 +122,6 @@ class _SearchNewState extends State<SearchNew> {
                       String deviceID = deviceIDs[index];
                       DeviceData device = ScannerStaticVars.allDevicesFound[deviceID];
                       return NewDeviceTile(
-                        scanDateTimes: ScannerStaticVars.scanDateTimes,
                         devices: ScannerStaticVars.allDevicesFound,
                         device: device,
                       );

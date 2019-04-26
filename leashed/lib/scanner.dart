@@ -18,14 +18,14 @@ class ScannerStaticVars {
   static ScanMode _scanMode = ScanMode.lowLatency; //PRIVATE with PUBLIC getter and setter
 
   //regular
-  static final Map<DeviceIdentifier, ScanResult> scanResults = new Map<DeviceIdentifier, ScanResult>(); //SHOULD NOT manually add
-  static final ValueNotifier<int> scanResultsLength = ValueNotifier(0); //SHOULD NOT manually set
-
   static final Map<String, DeviceData> allDevicesFound = new Map<String, DeviceData>(); //SHOULD NOT manually add
   static final ValueNotifier<int> allDevicesfoundLength = ValueNotifier(0); //SHOULD NOT manually set
 
-  static final List<DateTime> scanDateTimes = [DateTime.now()]; //SHOULD NOT manually add
-  static final ValueNotifier<int> scanDateTimesLength = ValueNotifier(0); //SHOULD NOT manually set
+  static final List<DateTime> scanStartDateTimes = [DateTime.now()]; //SHOULD NOT manually add
+  static final ValueNotifier<int> scanStartDateTimesLength = ValueNotifier(0); //SHOULD NOT manually set
+
+  static final List<DateTime> scanStopDateTimes = [DateTime.now()]; //SHOULD NOT manually add
+  static final ValueNotifier<int> scanStopDateTimesLength = ValueNotifier(0); //SHOULD NOT manually set
 
   static final ValueNotifier<bool> isScanning = ValueNotifier(false); //SHOULD NOT manually set
   static final ValueNotifier<bool> firstStart = ValueNotifier(true); //SHOULD NOT manually set
@@ -116,6 +116,7 @@ class ScannerStaticVars {
   //ASYNC not needed [1] rarely called and [2] all operations are very fast
   static stopScan(){
     if(isScanning.value == true){
+      _addToScanStopDateTimes(DateTime.now());
       if(prints) print("-------------------------stopping scan");
       isScanning.value = false;
       _scanSubscription?.cancel(); //since ASYNC so ONLY started here
@@ -125,6 +126,7 @@ class ScannerStaticVars {
 
   static pauseScan(){
     if(isScanning.value == true){
+      _addToScanStopDateTimes(DateTime.now());
       if(prints) print("-------------------------pausing scan");
       isScanning.value = false;
       _scanSubscription.pause();
@@ -137,13 +139,6 @@ class ScannerStaticVars {
   //DONT need to be async but it might be best to make them async since they are called so often
 
   //ASYNC not needed all operations are very fast BUT -> called very often
-  static _addToScanResults(DeviceIdentifier key, ScanResult value){
-    if(prints && printsForUpdates) print("add to scan results");
-    scanResults[key] = value;
-    scanResultsLength.value = scanResults.length;
-  }
-
-  //ASYNC not needed all operations are very fast BUT -> called very often
   static _addToAllDevicesFound(String key, DeviceData value){
     if(prints && printsForUpdates) print("add to all devices found");
     allDevicesFound[key] = value;
@@ -151,28 +146,36 @@ class ScannerStaticVars {
   }
  
   //ASYNC not needed all operations are very fast BUT -> called very often
-  static _addToScanDateTimes(DateTime value){
+  static _addToScanStartDateTimes(DateTime value){
     if(prints && printsForUpdates) print("add to scan date times");
-    scanDateTimes.add(value);
-    scanDateTimesLength.value = scanDateTimes.length;
+    scanStartDateTimes.add(value);
+    scanStartDateTimesLength.value = scanStartDateTimes.length;
   }
 
-  static updateDevice(DeviceIdentifier deviceID){
+  //ASYNC not needed all operations are very fast BUT -> called very often
+  static _addToScanStopDateTimes(DateTime value){
+    if(prints && printsForUpdates) print("add to scan date times");
+    scanStopDateTimes.add(value);
+    scanStopDateTimesLength.value = scanStopDateTimes.length;
+  }
+
+  static updateDevice(
+    DeviceIdentifier deviceID,
+    String deviceName,
+    BluetoothDeviceType deviceType,
+    int deviceRssi,
+    ){
     if(prints && printsForUpdates) print("updating a device");
     String deviceIDstr = deviceID.toString();
     
     //-----Adding New Device
     if(allDevicesFound.containsKey(deviceIDstr) == false){ 
-      String deviceName = scanResults[deviceID].device.name ?? "";
-      BluetoothDeviceType deviceType = scanResults[deviceID].device.type;
-      _addToAllDevicesFound(deviceIDstr, DeviceData(deviceIDstr, deviceName, deviceType, scanDateTimes[0]));
+      deviceName = deviceName ?? "";
+      _addToAllDevicesFound(deviceIDstr, DeviceData(deviceIDstr, deviceName, deviceType, scanStartDateTimes[0]));
     }
 
     //-----Update Device Values
-    //NOTE: our scanresults list DOES NOT CLEAR 
-    //so if a device disconnects we will just have the last recieved RSSI
-    var newRSSI = scanResults[deviceID].rssi;
-    allDevicesFound[deviceIDstr].add(newRSSI);
+    allDevicesFound[deviceIDstr].add(deviceRssi);
   }
 
   //------------------------------Start/Resume Streamsubscription
@@ -186,16 +189,17 @@ class ScannerStaticVars {
         print("-------------------------trying to start scan " 
         + bluetoothOn.value.toString());
       }
-      
+
       if(_scanSubscription == null){
         print("-------------------------FIRST SCAN start");
          _scanSubscription = _flutterBlue.scan(
           scanMode: _scanMode,
-        ).listen((scanResult){
+        ).listen((scanResult)async {
           //set our vars after its begun
           //since it can fail to begin
           if(isScanning.value == false){
             if(prints) print("-------------------------start scan");
+            _addToScanStartDateTimes(DateTime.now());
             isScanning.value = true;
             firstStart.value = false;
             showManualRestartButton.value = false; //CHECK
@@ -204,9 +208,12 @@ class ScannerStaticVars {
           if(prints && printsForUpdates) print("new scan result");
 
           //update everything as expected
-          _addToScanDateTimes(DateTime.now()); 
-          _addToScanResults(scanResult.device.id, scanResult); 
-          updateDevice(scanResult.device.id); 
+          updateDevice(
+            scanResult.device.id,
+            scanResult.device.name,
+            scanResult.device.type,
+            scanResult.rssi,
+          ); 
         }, onDone: stopScan);
 
         _scanSubscription.onError((e){
@@ -217,6 +224,7 @@ class ScannerStaticVars {
       }
       else{
         if(prints) print("-------------------------resume scan");
+        _addToScanStartDateTimes(DateTime.now());
         _scanSubscription.resume();
       }
     }
