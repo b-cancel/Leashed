@@ -98,7 +98,7 @@ class _SearchNewState extends State<SearchNew> {
               child: NotificationListener<ScrollNotification>(
                 onNotification: (scrollNotification) {
                   if (scrollNotification is ScrollStartNotification) {
-                    ScannerStaticVars.pauseScan();
+                    ScannerStaticVars.stopScan();
                   } else if (scrollNotification is ScrollEndNotification) {
                     ScannerStaticVars.startScan();
                   }

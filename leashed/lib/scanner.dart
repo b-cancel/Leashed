@@ -117,7 +117,7 @@ class ScannerStaticVars {
   static stopScan(){
     if(isScanning.value == true){
       _addToScanStopDateTimes(DateTime.now());
-      if(prints) print("-------------------------stopping scan");
+      if(prints) print("-------------------------stopping scan " + scanStopDateTimesLength.value.toString());
       isScanning.value = false;
       _scanSubscription?.cancel(); //since ASYNC so ONLY started here
       _scanSubscription = null;
@@ -127,7 +127,7 @@ class ScannerStaticVars {
   static pauseScan(){
     if(isScanning.value == true){
       _addToScanStopDateTimes(DateTime.now());
-      if(prints) print("-------------------------pausing scan");
+      if(prints) print("-------------------------pausing scan " + scanStopDateTimesLength.value.toString());
       isScanning.value = false;
       _scanSubscription.pause();
     }
@@ -164,7 +164,7 @@ class ScannerStaticVars {
     String deviceName,
     BluetoothDeviceType deviceType,
     int deviceRssi,
-    ){
+    )async {
     if(prints && printsForUpdates) print("updating a device");
     String deviceIDstr = deviceID.toString();
     
@@ -197,13 +197,7 @@ class ScannerStaticVars {
         ).listen((scanResult)async {
           //set our vars after its begun
           //since it can fail to begin
-          if(isScanning.value == false){
-            if(prints) print("-------------------------start scan");
-            _addToScanStartDateTimes(DateTime.now());
-            isScanning.value = true;
-            firstStart.value = false;
-            showManualRestartButton.value = false; //CHECK
-          }
+          _scanStarted(resumed: false);
           
           if(prints && printsForUpdates) print("new scan result");
 
@@ -223,10 +217,23 @@ class ScannerStaticVars {
         });
       }
       else{
-        if(prints) print("-------------------------resume scan");
-        _addToScanStartDateTimes(DateTime.now());
         _scanSubscription.resume();
+        _scanStarted();
       }
+    }
+  }
+
+  static _scanStarted({bool resumed: true}){
+    if(isScanning.value == false){
+      _addToScanStartDateTimes(DateTime.now());
+      if(prints){
+        String action = (resumed) ? "Resumed" : "Started";
+        String scanSessionCount = scanStartDateTimesLength.value.toString();
+        print("-------------------------" + action + " scan " + scanSessionCount);
+      }
+      isScanning.value = true;
+      firstStart.value = false;
+      showManualRestartButton.value = false; //CHECK
     }
   }
 
