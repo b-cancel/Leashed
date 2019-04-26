@@ -9,12 +9,13 @@ import 'dart:async';
 //3. the moments its turned on again we reload the page (ideally automatically)
 
 class ScannerStaticVars {
+  //NOTE: ALL value notifers should NOT be set MANUALLY
+
+  //debug
   static bool prints = true; //prints stuff
   static bool printsForUpdates = false; //prints all stuff
 
   //settings
-  static Duration timeBeforeAutoStart = Duration(seconds: 1); //PUBLIC (once the delay begins its too much of a pain to stop)
-  static final ValueNotifier<bool> autoStart = ValueNotifier(false); //PUBLIC (should be done before stopping the scan)
   static ScanMode _scanMode = ScanMode.lowLatency; //PRIVATE with PUBLIC getter and setter
 
   //regular
@@ -27,22 +28,22 @@ class ScannerStaticVars {
   static final List<DateTime> scanStopDateTimes = [DateTime.now()]; //SHOULD NOT manually add
   static final ValueNotifier<int> scanStopDateTimesLength = ValueNotifier(0); //SHOULD NOT manually set
 
+  //these are seperate because something starting a scan fails
+  //IDEALLY these are always the same value
+  //whenever isScanning == true && wantToBeScanning == false => should never happen (unless slight async issue)
+  //wehenever isScanning == false && wantToBeScanning == true => we are working towards starting the scan
+  static final ValueNotifier<bool> wantToBeScanning = ValueNotifier(false); //SHOULD NOT manually set
   static final ValueNotifier<bool> isScanning = ValueNotifier(false); //SHOULD NOT manually set
-  
 
   //bluetooth
   static final FlutterBlue _flutterBlue = FlutterBlue.instance; //PRIVATE
 
   static BluetoothState _bluetoothState = BluetoothState.unknown; //PRIVATE
   static final ValueNotifier<bool> bluetoothOn = ValueNotifier(false); //SHOULD NOT manually set
-  static final ValueNotifier<int> bluetoothState = ValueNotifier(BluetoothState.unknown.index);
+  static final ValueNotifier<int> bluetoothState = ValueNotifier(BluetoothState.unknown.index); //SHOULD NOT manually set
 
   static StreamSubscription _stateSubscription; //PRIVATE
   static StreamSubscription _scanSubscription; //PRIVATE
-
-  //combo
-  //IF autoStart && (bluetoothOn && isScanning)
-  static final ValueNotifier<bool> showManualRestartButton = ValueNotifier(false);
 
   //------------------------------Init------------------------------
   //called by Navigation to init the scanner
@@ -96,17 +97,12 @@ class ScannerStaticVars {
     bool bluetoothIsOn = bluetoothOn.value;
     bool scanningIsOn = isScanning.value;
     if(bluetoothIsOn == true && scanningIsOn == false){
-      if(autoStart.value){
-        showManualRestartButton.value = true;
+      if(wantToBeScanning.value){
         startScan();
-      }
-      else{
-        showManualRestartButton.value = false;
       }
     }
     else{
-      showManualRestartButton.value = false;
-      if(bluetoothIsOn == false && scanningIsOn == true) stopScan();
+      if(bluetoothIsOn == false && scanningIsOn == true) pauseScan();
       //ELSE... we are doing what we want (staying on or off)
     }
   }
@@ -115,26 +111,34 @@ class ScannerStaticVars {
 
   //ASYNC not needed [1] rarely called and [2] all operations are very fast
   static stopScan(){
-    if(isScanning.value == true){
-      _addToScanStopDateTimes(DateTime.now());
-      if(prints) print("-------------------------stopping scan " + scanStopDateTimesLength.value.toString());
-      
-      isScanning.value = false;
-      _scanSubscription?.cancel(); //since ASYNC so ONLY started here
-      _scanSubscription = null;
-    }
+    pauseScan(actuallyStop: true);
   }
 
-  /*
-  static pauseScan(){
-    if(isScanning.value == true){
+  static pauseScan({actuallyStop: false}) async{
+    //NOTE: wantToBeScanning AND isScanning are SEPERATE
+    //this is because we could have want to be scanning BUT NOT successfully started scanning yet
+
+    if(isScanning.value){
       _addToScanStopDateTimes(DateTime.now());
-      if(prints) print("-------------------------pausing scan " + scanStopDateTimesLength.value.toString());
+      if(prints){
+        String action = actuallyStop ? "stopping" : "pausing";
+        print("-------------------------" + action + " scan " + scanStopDateTimesLength.value.toString());
+      }
+
+      if(actuallyStop){
+        await _scanSubscription?.cancel(); //since ASYNC so ONLY started here
+        _scanSubscription = null;
+      }
+      else{
+        _scanSubscription.pause();
+      }
+
+      //we set isScanning here so that we know we are done scanning before setting the var
       isScanning.value = false;
-      _scanSubscription.pause();
     }
+
+    if(wantToBeScanning.value) wantToBeScanning.value = false;
   }
-  */
 
   //------------------------------MAYBE ASYNC FUNCTIONS------------------------------
 
@@ -186,12 +190,14 @@ class ScannerStaticVars {
   //INIT must have already been called
   //DO NOT USE TO QUICKLY PAUSE
   static startScan() async{
+    if(wantToBeScanning.value == false) wantToBeScanning.value = true;
+
     //NOTE: on error isn't being called when an error occurs
     if(isScanning.value == false){
       if(prints){
         print("-------------------------trying to start scan STARTED " 
         + bluetoothOn.value.toString());
-        await scannerStatus(); //TODO... remove debug
+        scannerStatus(); //TODO... remove debug
       }
 
       if(_scanSubscription == null){
@@ -201,7 +207,7 @@ class ScannerStaticVars {
         ).listen((scanResult){
           //set our vars after its begun
           //since it can fail to begin
-          _scanStarted(resumed: false);
+          _scanStarted();
           
           if(prints && printsForUpdates) print("new scan result");
 
@@ -221,8 +227,7 @@ class ScannerStaticVars {
         });
       }
       else{
-        _scanSubscription.resume();
-        _scanStarted();
+        _scanSubscription.resume(); 
       }
 
       if(prints){
@@ -230,25 +235,33 @@ class ScannerStaticVars {
         + bluetoothOn.value.toString());
         await scannerStatus(); //TODO... remove debug
       }
+
+      //NOTE: by now we know FOR A FACT that we want the scanner to be running
+      //IF it isnt then we need to take steps to make it so...
+      //TODO... NEXT STEP
+      //add listener to is scanning
+        //if is scanning turns
+        //wait 1 microsecond
+        //check if scanning
+        //IF we didnt stop scanner during the time we were waiting
+        //if not then startScanner again
     }
   }
 
-  static _scanStarted({bool resumed: true}){
+  static _scanStarted(){
     if(isScanning.value == false){
       _addToScanStartDateTimes(DateTime.now());
       if(prints){
-        String action = (resumed) ? "RESUMED" : "STARTED";
+        String action = "started/resumed";
         String scanSessionCount = scanStartDateTimesLength.value.toString();
         print("******************************" + 
         action + " SCAN " + scanSessionCount + 
         "******************************" );
       }
       isScanning.value = true;
-      
-      showManualRestartButton.value = false; //CHECK
     }
     else{
-      if(prints) print("******************************" + "ALREADY SCANING" + "******************************" );
+      if(prints && printsForUpdates) print("******************************" + "ALREADY SCANING" + "******************************" );
     }
   }
 
