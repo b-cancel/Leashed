@@ -186,8 +186,9 @@ class ScannerStaticVars {
         print("-------------------------trying to start scan " 
         + bluetoothOn.value.toString());
       }
-
+      
       if(_scanSubscription == null){
+        print("-------------------------FIRST SCAN start");
          _scanSubscription = _flutterBlue.scan(
           scanMode: _scanMode,
         ).listen((scanResult){
@@ -215,6 +216,7 @@ class ScannerStaticVars {
         });
       }
       else{
+        if(prints) print("-------------------------resume scan");
         _scanSubscription.resume();
       }
     }

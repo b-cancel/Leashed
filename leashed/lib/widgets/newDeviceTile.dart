@@ -22,6 +22,7 @@ class NewDeviceTile extends StatelessWidget {
     var id = device.id.toString();
     var type = shortBDT(device.type);
 
+    //TODO... add inkwell or gesture detector with print... see performance difference
     return Column(
       children: <Widget>[
         Row(

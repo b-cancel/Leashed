@@ -28,34 +28,39 @@ class _SearchNewState extends State<SearchNew> {
     super.initState();
 
     //start off the device ID list
-    deviceIDs = new List<String>();
+    deviceIDs = ScannerStaticVars.allDevicesFound.keys.toList();
 
     //start the scanner after the first build (the user will instantly see the effect of them pressing the plus)
     WidgetsBinding.instance.addPostFrameCallback((_) => ScannerStaticVars.startScan());
 
     //Listeners To Determine When to Reload
-    ScannerStaticVars.allDevicesfoundLength.addListener(() async{
-      deviceIDs = await ScannerStaticVars.sortResults(); 
-      setState((){});
-    });
-
-    ScannerStaticVars.bluetoothOn.addListener(() async{
-      setState((){});
-    });
-
-    ScannerStaticVars.isScanning.addListener(() async{
-      setState((){});
-    });
-
-    ScannerStaticVars.showManualRestartButton.addListener(() async{
-      setState((){});
-    });
+    ScannerStaticVars.allDevicesfoundLength.addListener(updateListThenSetState);
+    ScannerStaticVars.bluetoothOn.addListener(customSetState);
+    ScannerStaticVars.isScanning.addListener(customSetState);
+    ScannerStaticVars.showManualRestartButton.addListener(customSetState);
   }
 
   @override
   void dispose(){
     super.dispose();
+    ScannerStaticVars.allDevicesfoundLength.removeListener(updateListThenSetState);
+    ScannerStaticVars.bluetoothOn.removeListener(customSetState);
+    ScannerStaticVars.isScanning.removeListener(customSetState);
+    ScannerStaticVars.showManualRestartButton.removeListener(customSetState);
     ScannerStaticVars.pauseScan();
+  }
+
+  updateListThenSetState(){
+    customSetState(updateList: true);
+  }
+
+  customSetState({bool updateList: false})async {
+    if(updateList){
+      deviceIDs = await ScannerStaticVars.sortResults(); 
+    }
+    if(mounted){
+      setState((){});
+    }
   }
 
   ///-------------------------Overrides-------------------------
@@ -99,46 +104,21 @@ class _SearchNewState extends State<SearchNew> {
                   }
                 },
                 child: ListView.builder(
+                  //POTENTIAL OPTIMIZATIONS
                   //maybe ignore pointer in all locations except what is expected
                   //gesture detector instead of inkwell
                   //flutter run --release
-                  
                   shrinkWrap: true,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.all(8.0),
-                  itemCount: deviceCount,
+                  itemCount: deviceIDs.length + 1,
                   itemBuilder: (BuildContext context, int index) {
-                    String deviceID = deviceIDs[index];
-                    DeviceData device = ScannerStaticVars.allDevicesFound[deviceID];
-                    var name = device.name.toString();
-                    bool noName = (name == "");
-                    var id = device.id.toString();
-
-                    return ListTile(
-                      title: new Text((noName) ? "No Name Available" : name),
-                      subtitle: new Text(id),
-                    );
-                    
-
-                    /*
-                    return NewDeviceTile(
-                      scanDateTimes: ScannerStaticVars.scanDateTimes,
-                      devices: ScannerStaticVars.allDevicesFound,
-                      device: device,
-                    );
-                    */
-                  },
-                ),
-              ),
-              
-              /*ListView(
-                children: <Widget>[
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: ClampingScrollPhysics(),
-                    padding: EdgeInsets.all(8.0),
-                    itemCount: deviceIDs.length,
-                    itemBuilder: (BuildContext context, int index) {
+                    if(index == deviceIDs.length){
+                      return new Container(
+                        height: 65,
+                      );
+                    }
+                    else{
                       String deviceID = deviceIDs[index];
                       DeviceData device = ScannerStaticVars.allDevicesFound[deviceID];
                       return NewDeviceTile(
@@ -146,14 +126,10 @@ class _SearchNewState extends State<SearchNew> {
                         devices: ScannerStaticVars.allDevicesFound,
                         device: device,
                       );
-                    },
-                  ),
-                  new Container(
-                    height: 65,
-                  )
-                ],
+                    }
+                  },
+                ),
               ),
-              */
             ),
           ),
         ],
