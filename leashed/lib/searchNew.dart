@@ -47,7 +47,7 @@ class _SearchNewState extends State<SearchNew> {
     ScannerStaticVars.bluetoothOn.removeListener(customSetState);
     ScannerStaticVars.isScanning.removeListener(customSetState);
     ScannerStaticVars.showManualRestartButton.removeListener(customSetState);
-    ScannerStaticVars.pauseScan();
+    ScannerStaticVars.stopScan();
   }
 
   updateListThenSetState(){
@@ -74,7 +74,7 @@ class _SearchNewState extends State<SearchNew> {
       appBar: AppBar(
         leading: InkWell(
           onTap: () async{
-            ScannerStaticVars.pauseScan();
+            ScannerStaticVars.stopScan();
             Navigator.of(context).maybePop();
           },
           child: IgnorePointer(
@@ -90,6 +90,10 @@ class _SearchNewState extends State<SearchNew> {
           (ScannerStaticVars.bluetoothOn.value)
           ? Container()
           : new BluetoothOffBanner(),
+          new RaisedButton(
+            onPressed: () => ScannerStaticVars.scannerStatus(),
+            child: new Text("debug"),
+          ),
           DefaultTextStyle(
             style: TextStyle(
               color: Colors.black

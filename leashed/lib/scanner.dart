@@ -28,7 +28,7 @@ class ScannerStaticVars {
   static final ValueNotifier<int> scanStopDateTimesLength = ValueNotifier(0); //SHOULD NOT manually set
 
   static final ValueNotifier<bool> isScanning = ValueNotifier(false); //SHOULD NOT manually set
-  static final ValueNotifier<bool> firstStart = ValueNotifier(true); //SHOULD NOT manually set
+  
 
   //bluetooth
   static final FlutterBlue _flutterBlue = FlutterBlue.instance; //PRIVATE
@@ -106,7 +106,7 @@ class ScannerStaticVars {
     }
     else{
       showManualRestartButton.value = false;
-      if(bluetoothIsOn == false && scanningIsOn == true) pauseScan();
+      if(bluetoothIsOn == false && scanningIsOn == true) stopScan();
       //ELSE... we are doing what we want (staying on or off)
     }
   }
@@ -118,12 +118,14 @@ class ScannerStaticVars {
     if(isScanning.value == true){
       _addToScanStopDateTimes(DateTime.now());
       if(prints) print("-------------------------stopping scan " + scanStopDateTimesLength.value.toString());
+      
       isScanning.value = false;
       _scanSubscription?.cancel(); //since ASYNC so ONLY started here
       _scanSubscription = null;
     }
   }
 
+  /*
   static pauseScan(){
     if(isScanning.value == true){
       _addToScanStopDateTimes(DateTime.now());
@@ -132,6 +134,7 @@ class ScannerStaticVars {
       _scanSubscription.pause();
     }
   }
+  */
 
   //------------------------------MAYBE ASYNC FUNCTIONS------------------------------
 
@@ -164,7 +167,7 @@ class ScannerStaticVars {
     String deviceName,
     BluetoothDeviceType deviceType,
     int deviceRssi,
-    )async {
+    ){
     if(prints && printsForUpdates) print("updating a device");
     String deviceIDstr = deviceID.toString();
     
@@ -182,19 +185,20 @@ class ScannerStaticVars {
 
   //INIT must have already been called
   //DO NOT USE TO QUICKLY PAUSE
-  static startScan(){
+  static startScan() async{
     //NOTE: on error isn't being called when an error occurs
     if(isScanning.value == false){
       if(prints){
-        print("-------------------------trying to start scan " 
+        print("-------------------------trying to start scan STARTED " 
         + bluetoothOn.value.toString());
+        await scannerStatus(); //TODO... remove debug
       }
 
       if(_scanSubscription == null){
         print("-------------------------FIRST SCAN start");
          _scanSubscription = _flutterBlue.scan(
           scanMode: _scanMode,
-        ).listen((scanResult)async {
+        ).listen((scanResult){
           //set our vars after its begun
           //since it can fail to begin
           _scanStarted(resumed: false);
@@ -220,6 +224,12 @@ class ScannerStaticVars {
         _scanSubscription.resume();
         _scanStarted();
       }
+
+      if(prints){
+        print("-------------------------trying to start scan FINISHED " 
+        + bluetoothOn.value.toString());
+        await scannerStatus(); //TODO... remove debug
+      }
     }
   }
 
@@ -227,13 +237,18 @@ class ScannerStaticVars {
     if(isScanning.value == false){
       _addToScanStartDateTimes(DateTime.now());
       if(prints){
-        String action = (resumed) ? "Resumed" : "Started";
+        String action = (resumed) ? "RESUMED" : "STARTED";
         String scanSessionCount = scanStartDateTimesLength.value.toString();
-        print("-------------------------" + action + " scan " + scanSessionCount);
+        print("******************************" + 
+        action + " SCAN " + scanSessionCount + 
+        "******************************" );
       }
       isScanning.value = true;
-      firstStart.value = false;
+      
       showManualRestartButton.value = false; //CHECK
+    }
+    else{
+      if(prints) print("******************************" + "ALREADY SCANING" + "******************************" );
     }
   }
 
@@ -257,5 +272,37 @@ class ScannerStaticVars {
     }
 
     return ([]..addAll(withName))..addAll(withoutName);
+  }
+
+  static scannerStatus() async{
+    print("------------------------------|------------------------------");
+
+    print("devices: " + allDevicesfoundLength.value.toString()
+    + " starts: " + scanStartDateTimesLength.value.toString()
+    + " stops: " + scanStopDateTimesLength.value.toString());
+
+    print("is scanning " + isScanning.value.toString());
+
+    //_flutterBlue
+    /*
+    bool bleSupport = await _flutterBlue.isAvailable;
+    if(bleSupport == false) print("***BLE NOT SUPPORTED");
+    else{
+      print("is bleOn? think: " + bluetoothOn.toString() + " know: " + (await _flutterBlue.isOn).toString());
+      print("state? think: " + _bluetoothState.toString() + " know: " + (await _flutterBlue.state).toString());
+    }
+    */
+    
+    /*
+    //_stateSubscription
+    if(_stateSubscription == null) print("state sub null");
+    else print("state subscription " + _stateSubscription.isPaused.toString());
+    */
+
+    //_scanSubscription
+    if(_scanSubscription == null) print("scan sub null");
+    else print("scan subscription " + _scanSubscription.isPaused.toString());
+
+    print("------------------------------|------------------------------");
   }
 }
