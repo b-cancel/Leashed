@@ -23,21 +23,19 @@ class SearchNew extends StatefulWidget {
 class _SearchNewState extends State<SearchNew> {
   List<String> deviceIDs;
 
-  startScanner() async{
-    ScannerStaticVars.startScan();
-  }
-
   @override
   void initState() {
     super.initState();
 
-    //start the scanner after the first build
-    WidgetsBinding.instance.addPostFrameCallback((_) => startScanner());
+    //start off the device ID list
+    deviceIDs = new List<String>();
 
-    //Listeners To Determine Reload
+    //start the scanner after the first build (the user will instantly see the effect of them pressing the plus)
+    WidgetsBinding.instance.addPostFrameCallback((_) => ScannerStaticVars.startScan());
 
+    //Listeners To Determine When to Reload
     ScannerStaticVars.allDevicesfoundLength.addListener(() async{
-      deviceIDs = await sortResults(); 
+      deviceIDs = await ScannerStaticVars.sortResults(); 
       setState((){});
     });
 
@@ -52,29 +50,18 @@ class _SearchNewState extends State<SearchNew> {
     ScannerStaticVars.showManualRestartButton.addListener(() async{
       setState((){});
     });
-
-    deviceIDs = new List<String>();
-    deviceIDs.addAll(ScannerStaticVars.allDevicesFound.keys.toList());
   }
 
   @override
   void dispose(){
     super.dispose();
-    stopTheScan();
-  }
-
-  startTheScan()async {
-    ScannerStaticVars.startScan();
-  } 
-
-  stopTheScan()async {
     ScannerStaticVars.stopScan();
   }
 
   ///-------------------------Overrides-------------------------
   @override
   Widget build(BuildContext context) {
-    int deviceCount = ScannerStaticVars.allDevicesfoundLength.value;
+    int deviceCount = deviceIDs.length;
     String singularOrPlural = (deviceCount == 1) ? "Device" : "Devices";
 
     //our main widget to return
@@ -82,8 +69,8 @@ class _SearchNewState extends State<SearchNew> {
       appBar: AppBar(
         leading: InkWell(
           onTap: () async{
+            ScannerStaticVars.stopScan();
             Navigator.of(context).maybePop();
-            stopTheScan();
           },
           child: IgnorePointer(
             child: BackButton(),
@@ -106,29 +93,21 @@ class _SearchNewState extends State<SearchNew> {
               child: NotificationListener<ScrollNotification>(
                 onNotification: (scrollNotification) {
                   if (scrollNotification is ScrollStartNotification) {
-                    stopTheScan();
-                  } else if (scrollNotification is ScrollUpdateNotification) {
-                    ;
+                    ScannerStaticVars.stopScan();
                   } else if (scrollNotification is ScrollEndNotification) {
-                    startTheScan();
+                    ScannerStaticVars.startScan();
                   }
                 },
                 child: ListView.builder(
-                  //physics: const AlwaysScrollableScrollPhysics(), -> DONE
-                  //maybe not nested listview? -> DONE
-                  //maybe dont reload tile hearts, rssi, and times that we dont need to -> DONE
-
                   //maybe ignore pointer in all locations except what is expected
                   //gesture detector instead of inkwell
                   //flutter run --release
                   
-                  //slivers are slower for tons of objects
                   shrinkWrap: true,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.all(8.0),
-                  itemCount: 250,
+                  itemCount: deviceCount,
                   itemBuilder: (BuildContext context, int index) {
-                    
                     String deviceID = deviceIDs[index];
                     DeviceData device = ScannerStaticVars.allDevicesFound[deviceID];
                     var name = device.name.toString();
@@ -179,8 +158,7 @@ class _SearchNewState extends State<SearchNew> {
           ),
         ],
       ),
-      
-      floatingActionButton: /*(ScannerStaticVars.showManualRestartButton.value)
+      floatingActionButton: (ScannerStaticVars.showManualRestartButton.value)
       ? FloatingActionButton.extended(
         backgroundColor: Colors.redAccent,
         foregroundColor: Colors.black,
@@ -191,7 +169,7 @@ class _SearchNewState extends State<SearchNew> {
         label: new Text("Re-Start Scan"),
       )
       : (ScannerStaticVars.bluetoothOn.value && ScannerStaticVars.isScanning.value)
-      ? */FloatingActionButton.extended(
+      ? FloatingActionButton.extended(
         onPressed: (){
           Navigator.push(context, PageTransition(
             type: PageTransitionType.fade,
@@ -209,8 +187,7 @@ class _SearchNewState extends State<SearchNew> {
             fontSize: 12,
           ),
         ),
-      ) /*: Container(),
-      */
+      ) : Container(),
     );
   }
 }

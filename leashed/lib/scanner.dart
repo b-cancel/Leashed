@@ -47,16 +47,17 @@ class ScannerStaticVars {
   static final ValueNotifier<bool> showManualRestartButton = ValueNotifier(false);
 
   //------------------------------Init------------------------------
-  //called by Navigation to start the scanner
+  //called by Navigation to init the scanner
 
-  static init() async{
+  //ASYNC not needed [1] Only calld once and [2] all operations are very fast
+  static init(){
     if(prints) print("------------------------------try init");
     if(_stateSubscription == null){
       if(prints) print("------------------------------init");
-      _flutterBlue.state.then((s) async{
+      _flutterBlue.state.then((s){
         updateBluetoothState(s);
       });
-      _stateSubscription = _flutterBlue.onStateChanged().listen((s) async{
+      _stateSubscription = _flutterBlue.onStateChanged().listen((s){
         updateBluetoothState(s);
       });
     }
@@ -64,13 +65,14 @@ class ScannerStaticVars {
 
   //------------------------------Setters------------------------------
 
-  static setScanMode(ScanMode newScanMode) async{
+  //ASYNC not needed [1] Rarely called and [2] all operations are very fast
+  static setScanMode(ScanMode newScanMode){
     if(prints) print("------------------------------set scan mode");
     _scanMode = newScanMode;
     if(isScanning.value){
       if(prints) print("------------------------------set scan mode caused stop then start");
-      await stopScan();
-      startScan(); 
+      stopScan();
+      startScan(); //since ASYNC so ONLY started here
     }
   }
 
@@ -79,29 +81,10 @@ class ScannerStaticVars {
   static ScanMode getScanMode() => _scanMode;
   static BluetoothState getBluetoothState() => _bluetoothState;
 
-  //------------------------------Adders------------------------------
-
-  static _addToScanResults(DeviceIdentifier key, ScanResult value) async{
-    if(prints && printsForUpdates) print("add to scan results");
-    scanResults[key] = value;
-    scanResultsLength.value = scanResults.length;
-  }
-
-  static _addToAllDevicesFound(String key, DeviceData value) async{
-    if(prints && printsForUpdates) print("add to all devices found");
-    allDevicesFound[key] = value;
-    allDevicesfoundLength.value = allDevicesFound.length;
-  }
-
-  static _addToScanDateTimes(DateTime value) async{
-    if(prints && printsForUpdates) print("add to scan date times");
-    scanDateTimes.add(value);
-    scanDateTimesLength.value = scanDateTimes.length;
-  }
-
   //------------------------------Control Scanning Depending on Bluetooth State------------------------------
 
-  static updateBluetoothState(BluetoothState newState) async{
+  //ASYNC not needed [1] rarely called and [2] all operations are very fast
+  static updateBluetoothState(BluetoothState newState){
     if(prints) print("-------------------------update bluetooth state");
     _bluetoothState = newState;
 
@@ -134,9 +117,72 @@ class ScannerStaticVars {
 
   //------------------------------Scanner Control------------------------------
 
-  static startScan() async{
-    await init();
+  //ASYNC not needed [1] rarely called and [2] all operations are very fast
+  static restartScan(){
+    if(prints) print("-------------------------trying to RE START scan");
+    Future.delayed(timeBeforeAutoStart, () => startScan()); //since ASYNC so ONLY started here
+  }
 
+  //ASYNC not needed [1] rarely called and [2] all operations are very fast
+  static stopScan(){
+    if(isScanning.value == true){
+      if(prints) print("-------------------------stopping scan");
+      isScanning.value = false;
+      _scanSubscription?.cancel(); //since ASYNC so ONLY started here
+      _scanSubscription = null;
+    }
+  }
+
+  //------------------------------MAYBE ASYNC FUNCTIONS------------------------------
+
+  //------------------------------Updaters
+  //DONT need to be async but it might be best to make them async since they are called so often
+
+  //ASYNC not needed all operations are very fast BUT -> called very often
+  static _addToScanResults(DeviceIdentifier key, ScanResult value){
+    if(prints && printsForUpdates) print("add to scan results");
+    scanResults[key] = value;
+    scanResultsLength.value = scanResults.length;
+  }
+
+  //ASYNC not needed all operations are very fast BUT -> called very often
+  static _addToAllDevicesFound(String key, DeviceData value){
+    if(prints && printsForUpdates) print("add to all devices found");
+    allDevicesFound[key] = value;
+    allDevicesfoundLength.value = allDevicesFound.length;
+  }
+ 
+  //ASYNC not needed all operations are very fast BUT -> called very often
+  static _addToScanDateTimes(DateTime value){
+    if(prints && printsForUpdates) print("add to scan date times");
+    scanDateTimes.add(value);
+    scanDateTimesLength.value = scanDateTimes.length;
+  }
+
+  static updateDevice(DeviceIdentifier deviceID){
+    if(prints && printsForUpdates) print("updating a device");
+    String deviceIDstr = deviceID.toString();
+    
+    //-----Adding New Device
+    if(allDevicesFound.containsKey(deviceIDstr) == false){ 
+      String deviceName = scanResults[deviceID].device.name ?? "";
+      BluetoothDeviceType deviceType = scanResults[deviceID].device.type;
+      _addToAllDevicesFound(deviceIDstr, DeviceData(deviceIDstr, deviceName, deviceType, scanDateTimes[0]));
+    }
+
+    //-----Update Device Values
+    //NOTE: our scanresults list DOES NOT CLEAR 
+    //so if a device disconnects we will just have the last recieved RSSI
+    var newRSSI = scanResults[deviceID].rssi;
+    allDevicesFound[deviceIDstr].add(newRSSI);
+  }
+
+  //------------------------------ASYNC FUNCTIONS------------------------------
+
+  //------------------------------COVER FAILURE TO START edge case
+
+  //INIT must have already been called
+  static startScan() async{
     //NOTE: on error isn't being called when an error occurs
     if(isScanning.value == false){
       if(prints) print("-------------------------trying to start scan");
@@ -155,64 +201,32 @@ class ScannerStaticVars {
         if(prints && printsForUpdates) print("new scan result");
 
         //update everything as expected
-        await _addToScanDateTimes(DateTime.now()); 
-        await _addToScanResults(scanResult.device.id, scanResult); 
-        await updateDevice(scanResult.device.id); 
+        _addToScanDateTimes(DateTime.now()); 
+        _addToScanResults(scanResult.device.id, scanResult); 
+        updateDevice(scanResult.device.id); 
       }, onDone: stopScan);
     }
   }
 
-  static restartScan() async{
-    if(prints) print("-------------------------trying to RE START scan");
-    Future.delayed(timeBeforeAutoStart, () => startScan());
-  }
+  //------------------------------No Big Deal To Delay New Results Displaying
 
-  static stopScan() async{
-    if(isScanning.value == true){
-      if(prints) print("-------------------------stopping scan");
-      isScanning.value = false;
-      _scanSubscription?.cancel();
-      _scanSubscription = null;
-    }
-  }
+  static Future<List<String>> sortResults() async{
+    if(ScannerStaticVars.prints && ScannerStaticVars.printsForUpdates) print("sort results");
+    //sort by ID
+    List<String> deviceIDs = ScannerStaticVars.allDevicesFound.keys.toList();
+    deviceIDs.sort();
 
-  //------------------------------Scanner Helper------------------------------
-
-  static updateDevice(DeviceIdentifier deviceID) async{
-    if(prints && printsForUpdates) print("updating a device");
-    String deviceIDstr = deviceID.toString();
-    
-    //-----Adding New Device
-    if(allDevicesFound.containsKey(deviceIDstr) == false){ 
-      String deviceName = scanResults[deviceID].device.name ?? "";
-      BluetoothDeviceType deviceType = scanResults[deviceID].device.type;
-      await _addToAllDevicesFound(deviceIDstr, DeviceData(deviceIDstr, deviceName, deviceType, scanDateTimes[0]));
+    //sort all devices by Name
+    List<String> withName = new List<String>();
+    List<String> withoutName = new List<String>();
+    for(int i = 0; i < ScannerStaticVars.allDevicesFound.length; i++){
+      String deviceID = deviceIDs[i];
+      if(ScannerStaticVars.allDevicesFound[deviceID].name != ""){
+        withName.add(deviceID);
+      }
+      else withoutName.add(deviceID);
     }
 
-    //-----Update Device Values
-    //NOTE: our scanresults list DOES NOT CLEAR 
-    //so if a device disconnects we will just have the last recieved RSSI
-    var newRSSI = scanResults[deviceID].rssi;
-    allDevicesFound[deviceIDstr].add(newRSSI);
+    return ([]..addAll(withName))..addAll(withoutName);
   }
-}
-
-Future<List<String>> sortResults() async{
-  if(ScannerStaticVars.prints && ScannerStaticVars.printsForUpdates) print("sort results");
-  //sort by ID
-  List<String> deviceIDs = ScannerStaticVars.allDevicesFound.keys.toList();
-  deviceIDs.sort();
-
-  //sort all devices by Name
-  List<String> withName = new List<String>();
-  List<String> withoutName = new List<String>();
-  for(int i = 0; i < ScannerStaticVars.allDevicesFound.length; i++){
-    String deviceID = deviceIDs[i];
-    if(ScannerStaticVars.allDevicesFound[deviceID].name != ""){
-      withName.add(deviceID);
-    }
-    else withoutName.add(deviceID);
-  }
-
-  return ([]..addAll(withName))..addAll(withoutName);
 }
