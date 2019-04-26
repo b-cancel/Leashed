@@ -37,7 +37,6 @@ class _SearchNewState extends State<SearchNew> {
     ScannerStaticVars.allDevicesfoundLength.addListener(updateListThenSetState);
     ScannerStaticVars.bluetoothOn.addListener(customSetState);
     ScannerStaticVars.isScanning.addListener(customSetState);
-    ScannerStaticVars.showManualRestartButton.addListener(customSetState);
   }
 
   @override
@@ -46,7 +45,6 @@ class _SearchNewState extends State<SearchNew> {
     ScannerStaticVars.allDevicesfoundLength.removeListener(updateListThenSetState);
     ScannerStaticVars.bluetoothOn.removeListener(customSetState);
     ScannerStaticVars.isScanning.removeListener(customSetState);
-    ScannerStaticVars.showManualRestartButton.removeListener(customSetState);
     ScannerStaticVars.stopScan();
   }
 
@@ -137,17 +135,7 @@ class _SearchNewState extends State<SearchNew> {
           ),
         ],
       ),
-      floatingActionButton: (ScannerStaticVars.showManualRestartButton.value)
-      ? FloatingActionButton.extended(
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.black,
-        onPressed: (){
-          ScannerStaticVars.startScan();
-        },
-        icon: new Icon(Icons.refresh),
-        label: new Text("Re-Start Scan"),
-      )
-      : (ScannerStaticVars.bluetoothOn.value && ScannerStaticVars.isScanning.value)
+      floatingActionButton: (ScannerStaticVars.bluetoothOn.value && ScannerStaticVars.isScanning.value)
       ? FloatingActionButton.extended(
         onPressed: (){
           Navigator.push(context, PageTransition(
@@ -170,3 +158,15 @@ class _SearchNewState extends State<SearchNew> {
     );
   }
 }
+
+/*
+FloatingActionButton.extended(
+  backgroundColor: Colors.redAccent,
+  foregroundColor: Colors.black,
+  onPressed: (){
+    ScannerStaticVars.startScan();
+  },
+  icon: new Icon(Icons.refresh),
+  label: new Text("Re-Start Scan"),
+)
+*/

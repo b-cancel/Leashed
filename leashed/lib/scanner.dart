@@ -96,13 +96,17 @@ class ScannerStaticVars {
     
     bool bluetoothIsOn = bluetoothOn.value;
     bool scanningIsOn = isScanning.value;
+    print(bluetoothIsOn.toString() + ' ' + scanningIsOn.toString() + ' ' + wantToBeScanning.value.toString());
     if(bluetoothIsOn == true && scanningIsOn == false){
       if(wantToBeScanning.value){
         startScan();
       }
     }
     else{
-      if(bluetoothIsOn == false && scanningIsOn == true) pauseScan();
+      if(bluetoothIsOn == false && scanningIsOn == true){
+        print("-------------------------we should stop the scan cuz bluetooth just died on us");
+        stopScan();
+      }
       //ELSE... we are doing what we want (staying on or off)
     }
   }
@@ -110,7 +114,8 @@ class ScannerStaticVars {
   //------------------------------Scanner Control------------------------------
 
   //ASYNC not needed [1] rarely called and [2] all operations are very fast
-  static stopScan(){
+  static stopScan({String extraMsg: ""}){
+    if(extraMsg != "") print(extraMsg);
     pauseScan(actuallyStop: true);
   }
 
@@ -218,7 +223,10 @@ class ScannerStaticVars {
             scanResult.device.type,
             scanResult.rssi,
           ); 
-        }, onDone: stopScan);
+        });
+
+        //NOTE: I am not worrying about onDone since I have no idea where its triggered
+        //TODO... find out where its triggered and handle it appropiately
 
         _scanSubscription.onError((e){
           print("-------------------------STREAM ERROR-------------------------");
@@ -238,14 +246,53 @@ class ScannerStaticVars {
 
       //NOTE: by now we know FOR A FACT that we want the scanner to be running
       //IF it isnt then we need to take steps to make it so...
-      //TODO... NEXT STEP
-      //add listener to is scanning
-        //if is scanning turns
-        //wait 1 microsecond
-        //check if scanning
-        //IF we didnt stop scanner during the time we were waiting
-        //if not then startScanner again
+      if(isScanning.value == false){
+        //LISTENER
+        //add listener to wantsToBeScanning
+        //IF it changes to false then stop the function below
+
+        //FUNCTION
+        //wait TIME
+        //If isScanning == false => startScan()
+        //NOTE: the above only runs if it hasnt already been stoped
+
+        //SADLY... in dart you can't cancel futures... 
+        //SO... we do some "hacks"
+
+        wantToBeScanning.addListener(_maybeRemoveForceStartScan);
+        wantToBeScanning.value = false;
+        wantToBeScanning.value = true;
+        //we know its true
+        //set it to false => (1st run) will start the function we want (in an if statement)
+        //set it to true => (2nd run) nothing... will start actually listening now
+        //WE ASSUME that when you remove a listener you also remove all processes it may have started
+      }
     }
+  }
+
+  static ValueNotifier _runCount = new ValueNotifier(0);
+  static _maybeRemoveForceStartScan() async{
+    if(_runCount.value == 0){
+      print("FIRST RUN");
+      _runCount.value++;
+      await Future.delayed(Duration(milliseconds: 250));
+      print("starting scan as a result of the first listener");
+      startScan();
+    }
+    else if(_runCount.value == 1){
+      print("SEOCND RUN");
+      _runCount.value++;
+    }
+    else{
+      print("THIRD RUN -> remove ourselves as the listener");
+      _runCount.value = 0; //RESET
+      wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
+    }
+  }
+
+  _forceStartScan() async{
+    await Future.delayed(Duration(milliseconds: 250));
+    startScan();
   }
 
   static _scanStarted(){
