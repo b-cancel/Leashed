@@ -55,7 +55,7 @@ class _SearchNewState extends State<SearchNew> {
   @override
   void dispose(){
     super.dispose();
-    ScannerStaticVars.stopScan();
+    ScannerStaticVars.pauseScan();
   }
 
   ///-------------------------Overrides-------------------------
@@ -69,7 +69,7 @@ class _SearchNewState extends State<SearchNew> {
       appBar: AppBar(
         leading: InkWell(
           onTap: () async{
-            ScannerStaticVars.stopScan();
+            ScannerStaticVars.pauseScan();
             Navigator.of(context).maybePop();
           },
           child: IgnorePointer(
@@ -93,7 +93,7 @@ class _SearchNewState extends State<SearchNew> {
               child: NotificationListener<ScrollNotification>(
                 onNotification: (scrollNotification) {
                   if (scrollNotification is ScrollStartNotification) {
-                    ScannerStaticVars.stopScan();
+                    ScannerStaticVars.pauseScan();
                   } else if (scrollNotification is ScrollEndNotification) {
                     ScannerStaticVars.startScan();
                   }

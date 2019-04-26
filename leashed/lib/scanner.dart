@@ -98,9 +98,7 @@ class ScannerStaticVars {
     if(bluetoothIsOn == true && scanningIsOn == false){
       if(autoStart.value){
         showManualRestartButton.value = true;
-
-        if(firstStart.value) startScan();
-        else restartScan();
+        startScan();
       }
       else{
         showManualRestartButton.value = false;
@@ -108,18 +106,12 @@ class ScannerStaticVars {
     }
     else{
       showManualRestartButton.value = false;
-      if(bluetoothIsOn == false && scanningIsOn == true) stopScan();
+      if(bluetoothIsOn == false && scanningIsOn == true) pauseScan();
       //ELSE... we are doing what we want (staying on or off)
     }
   }
 
   //------------------------------Scanner Control------------------------------
-
-  //ASYNC not needed [1] rarely called and [2] all operations are very fast
-  static restartScan(){
-    if(prints) print("-------------------------trying to RE START scan");
-    Future.delayed(timeBeforeAutoStart, () => startScan()); //since ASYNC so ONLY started here
-  }
 
   //ASYNC not needed [1] rarely called and [2] all operations are very fast
   static stopScan(){
@@ -128,6 +120,14 @@ class ScannerStaticVars {
       isScanning.value = false;
       _scanSubscription?.cancel(); //since ASYNC so ONLY started here
       _scanSubscription = null;
+    }
+  }
+
+  static pauseScan(){
+    if(isScanning.value == true){
+      if(prints) print("-------------------------pausing scan");
+      isScanning.value = false;
+      _scanSubscription.pause();
     }
   }
 
@@ -175,37 +175,48 @@ class ScannerStaticVars {
     allDevicesFound[deviceIDstr].add(newRSSI);
   }
 
-  //------------------------------ASYNC FUNCTIONS------------------------------
-
-  //------------------------------COVER FAILURE TO START edge case
+  //------------------------------Start/Resume Streamsubscription
 
   //INIT must have already been called
-  static startScan() async{
+  //DO NOT USE TO QUICKLY PAUSE
+  static startScan(){
     //NOTE: on error isn't being called when an error occurs
     if(isScanning.value == false){
       if(prints){
         print("-------------------------trying to start scan " 
         + bluetoothOn.value.toString());
       }
-      _scanSubscription = _flutterBlue.scan(
-        scanMode: _scanMode,
-      ).listen((scanResult) async{
-        //set our vars after its begun
-        //since it can fail to begin
-        if(isScanning.value == false){
-          if(prints) print("-------------------------start scan");
-          isScanning.value = true;
-          firstStart.value = false;
-          showManualRestartButton.value = false; //CHECK
-        }
-        
-        if(prints && printsForUpdates) print("new scan result");
 
-        //update everything as expected
-        _addToScanDateTimes(DateTime.now()); 
-        _addToScanResults(scanResult.device.id, scanResult); 
-        updateDevice(scanResult.device.id); 
-      }, onDone: stopScan);
+      if(_scanSubscription == null){
+         _scanSubscription = _flutterBlue.scan(
+          scanMode: _scanMode,
+        ).listen((scanResult){
+          //set our vars after its begun
+          //since it can fail to begin
+          if(isScanning.value == false){
+            if(prints) print("-------------------------start scan");
+            isScanning.value = true;
+            firstStart.value = false;
+            showManualRestartButton.value = false; //CHECK
+          }
+          
+          if(prints && printsForUpdates) print("new scan result");
+
+          //update everything as expected
+          _addToScanDateTimes(DateTime.now()); 
+          _addToScanResults(scanResult.device.id, scanResult); 
+          updateDevice(scanResult.device.id); 
+        }, onDone: stopScan);
+
+        _scanSubscription.onError((e){
+          print("-------------------------STREAM ERROR-------------------------");
+          print(e.toString());
+          print("-------------------------STREAM ERROR-------------------------");
+        });
+      }
+      else{
+        _scanSubscription.resume();
+      }
     }
   }
 
