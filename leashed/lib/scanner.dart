@@ -21,11 +21,9 @@ class ScannerStaticVars {
   static final Map<DeviceIdentifier, ScanResult> scanResults = new Map<DeviceIdentifier, ScanResult>(); //SHOULD NOT manually add
   static final ValueNotifier<int> scanResultsLength = ValueNotifier(0); //SHOULD NOT manually set
 
-  
   static final Map<String, DeviceData> allDevicesFound = new Map<String, DeviceData>(); //SHOULD NOT manually add
   static final ValueNotifier<int> allDevicesfoundLength = ValueNotifier(0); //SHOULD NOT manually set
 
-  
   static final List<DateTime> scanDateTimes = [DateTime.now()]; //SHOULD NOT manually add
   static final ValueNotifier<int> scanDateTimesLength = ValueNotifier(0); //SHOULD NOT manually set
 
@@ -185,7 +183,10 @@ class ScannerStaticVars {
   static startScan() async{
     //NOTE: on error isn't being called when an error occurs
     if(isScanning.value == false){
-      if(prints) print("-------------------------trying to start scan");
+      if(prints){
+        print("-------------------------trying to start scan " 
+        + bluetoothOn.value.toString());
+      }
       _scanSubscription = _flutterBlue.scan(
         scanMode: _scanMode,
       ).listen((scanResult) async{
