@@ -300,7 +300,7 @@ class ScannerStaticVars {
 
   //INIT must have already been called
   //DO NOT USE TO QUICKLY PAUSE
-  static startScan() async{
+  static startScan({bool forceRestart: false}) async{
     //Regardless of what can we done we want to communicate that we want to be scanning
     if(wantToBeScanning.value == false) wantToBeScanning.value = true;
 
@@ -315,8 +315,18 @@ class ScannerStaticVars {
           scannerStatus(); //TODO... remove debug
         }
 
+        //Forces us to get a brand new scan subscriber
+        if(forceRestart){
+          if(_scanSubscription != null){
+            await _scanSubscription?.cancel(); //since ASYNC so ONLY started here
+            _scanSubscription = null;
+          }
+          //ELSE... its already equal to null so we can already grab a brand new one
+        }
+
         if(_scanSubscription != null){
           if(prints) print("REGULAR START FAIL-------------------------TRYING TO RESUME");
+          _scanSubscription.resume(); 
           /*
           if(_scanSubscription.isPaused) print("paused");
           else print("not paused");
