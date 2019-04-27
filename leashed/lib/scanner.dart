@@ -166,19 +166,11 @@ class ScannerStaticVars {
     print("------------------------------|------------------------------");
   }
 
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-
   //------------------------------Control Scanning Depending on Bluetooth State------------------------------
 
   //ASYNC not needed [1] rarely called and [2] all operations are very fast
   static updateBluetoothState(BluetoothState newState){
-    //TODO.... IF bluetooth is turned off then isScanning should also be off
+    //-----Do The Updates
 
     if(prints) print("-------------------------update bluetooth state");
     _bluetoothState = newState;
@@ -189,33 +181,58 @@ class ScannerStaticVars {
 
     //change advanced
     bluetoothState.value = newState.index;
-    
+
+    //-----Printer
+
     bool bluetoothIsOn = bluetoothOn.value;
     bool scanningIsOn = isScanning.value;
-    print(bluetoothIsOn.toString() + ' ' + scanningIsOn.toString() + ' ' + wantToBeScanning.value.toString());
-    if(bluetoothIsOn == true && scanningIsOn == false){
-      if(wantToBeScanning.value){
-        startScan();
+    bool weWantToBeScanning = wantToBeScanning.value;
+
+    if(prints){
+      print(bluetoothIsOn.toString() + ' ' 
+      + scanningIsOn.toString() + ' ' 
+      + weWantToBeScanning.toString());
+    }
+
+    //-----React Given The Updates
+
+    if(bluetoothIsOn){
+      if(scanningIsOn == false){
+        if(weWantToBeScanning) startScan();
+        //ELSE... bluetooth is on && scanning is not 
+        //BUT its okay because we dont want it to be on
       }
+      //ELSE... bluetooth is on BUT its okay because scanning is also on
     }
     else{
-      if(bluetoothIsOn == false && scanningIsOn == true){
+      //NOTE: "wantToBeScanning" doesn't matter
+      //IF isScannign == true => wantToBeScanning == true
+      if(scanningIsOn){
         print("-------------------------we should stop the scan cuz bluetooth just died on us");
-        stopScan();
+        stopScan(updateDesire: false); 
       }
-      //ELSE... we are doing what we want (staying on or off)
+      //ELSE... bluetooth is off BUT its okay because scanning is also off
     }
   }
 
   //------------------------------Scanner Control------------------------------
 
   //ASYNC not needed [1] rarely called and [2] all operations are very fast
-  static stopScan({String extraMsg: ""}){
+  static stopScan({
+    String extraMsg: "",
+    bool updateDesire: true,
+    }){
     if(extraMsg != "") print(extraMsg);
-    pauseScan(actuallyStop: true);
+    pauseScan(
+      actuallyStop: true, 
+      updateDesire: updateDesire,
+    );
   }
 
-  static pauseScan({actuallyStop: false}) async{
+  static pauseScan({
+    bool actuallyStop: false, 
+    bool updateDesire: true,
+    }) async{
     //NOTE: wantToBeScanning AND isScanning are SEPERATE
     //this is because we could have want to be scanning BUT NOT successfully started scanning yet
 
@@ -238,8 +255,18 @@ class ScannerStaticVars {
       isScanning.value = false;
     }
 
-    if(wantToBeScanning.value) wantToBeScanning.value = false;
+    if(updateDesire){
+      if(wantToBeScanning.value) wantToBeScanning.value = false;
+    }
   }
+
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
 
   //------------------------------MAYBE ASYNC FUNCTIONS------------------------------
 
