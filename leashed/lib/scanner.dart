@@ -380,12 +380,15 @@ class ScannerStaticVars {
           //SADLY... in dart you can't cancel futures... 
           //SO... we do some "hacks"
 
-          wantToBeScanning.addListener(_maybeRemoveForceStartScan);
-          wantToBeScanning.value = false;
-          wantToBeScanning.value = true;
+          //remove the listener (in case that the listener is present)
+          wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
           //we know its true
+          wantToBeScanning.addListener(_maybeRemoveForceStartScan);
           //set it to false => (1st run) will start the function we want (in an if statement)
+          wantToBeScanning.value = false;
           //set it to true => (2nd run) nothing... will start actually listening now
+          wantToBeScanning.value = true;
+          
           //WE ASSUME that when you remove a listener you also remove all processes it may have started
         }
 
@@ -399,14 +402,14 @@ class ScannerStaticVars {
   static ValueNotifier _runCount = new ValueNotifier(0);
   static _maybeRemoveForceStartScan() async{
     if(_runCount.value == 0){
-      print("FIRST RUN");
+      print("INIT FIRST RUN");
       _runCount.value++;
       await Future.delayed(Duration(milliseconds: 250));
       print("starting scan as a result of the first listener");
       startScan();
     }
     else if(_runCount.value == 1){
-      print("SEOCND RUN");
+      print("INIT SECOND RUN");
       _runCount.value++;
     }
     else{
