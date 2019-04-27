@@ -308,7 +308,7 @@ class ScannerStaticVars {
     if(wantToBeScanning.value){
       //We can only start the scan if bluetooth is on
       if(bluetoothOn.value){
-        print("SCAN START TRY START");
+        if(prints) print("SCAN START TRY START");
 
         //NOTE: on error isn't being called when an error occurs
         if(isScanning.value == false){
@@ -387,7 +387,7 @@ class ScannerStaticVars {
           Future.delayed(
             Duration(milliseconds: msBeforeTryAgain.value), 
             (){
-              print("*************************RESTART*************************");
+              if(prints) print("*************************RESTART*************************");
               //we dont update the desire because they user may stop the scan before it can actually start
               startScan(updateDesire: false);
             }
@@ -398,7 +398,7 @@ class ScannerStaticVars {
           if(prints) print("CANT START we are already running");
         }
 
-        print("SCAN START TRY END");
+        if(prints) print("SCAN START TRY END");
       }
       else{
         //ELSE... our bluetooth is off so we have to wait for it to turn on to start scanning
