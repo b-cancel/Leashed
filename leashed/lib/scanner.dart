@@ -237,6 +237,17 @@ class ScannerStaticVars {
   //------------------------------Scanner Control------------------------------
 
   //DO NOT IMPLEMENT pausing the scan... resuming the scan at times fails and causes issues
+  /*
+  From:
+  https://docs.flutter.io/flutter/dart-async/StreamSubscription/pause.html
+
+  Info:
+  To avoid buffering events on a broadcast stream, 
+  it is better to cancel this subscription, 
+  and start to listen again when events are needed, 
+  if the intermediate events are not important.
+  */
+  //NOTE: If the subscription is paused more than once, an equal number of resumes must be performed to resume 
 
   //ASYNC not needed [1] rarely called and [2] all operations are very fast
   static stopScan({bool updateDesire: true,}) async{
@@ -300,90 +311,100 @@ class ScannerStaticVars {
       //NOTE: on error isn't being called when an error occurs
       if(isScanning.value == false){
         if(prints){
-          print("-------------------------trying to start scan STARTED " 
-          + bluetoothOn.value.toString());
+          print("-------------------------trying to start scan STARTED");
           scannerStatus(); //TODO... remove debug
         }
 
-        //aparently last time we started it
-        //it did not start successfully
-        //so remove the current failed subscription and start a new one
         if(_scanSubscription != null){
-          await _scanSubscription?.cancel(); //since ASYNC so ONLY started here
-          _scanSubscription = null;
+          if(prints) print("REGULAR START FAIL-------------------------TRYING TO RESUME");
+          /*
+          if(_scanSubscription.isPaused) print("paused");
+          else print("not paused");
+          _scanSubscription.pause();
+          _scanSubscription.resume(); 
+          */
+        }
+        else{
+          if(prints) print("-------------------------TRYING TO START");
+          _scanSubscription = _flutterBlue.scan(
+            scanMode: _scanMode,
+          ).listen((scanResult){
+            //set our vars after its begun
+            //since it can fail to begin
+            //NOTE: this will mark the END of BOTH
+            //[1] starting AND [2] resuming
+            _scanStarted();
+            
+            if(prints && printsForUpdates) print("new scan result");
+
+            print("run");
+
+            //update everything as expected
+            updateDevice(
+              scanResult.device.id,
+              scanResult.device.name,
+              scanResult.device.type,
+              scanResult.rssi,
+            ); 
+          });
+
+          //NOTE: I am not worrying about onDone since I have no idea where its triggered
+          //TODO... find out where its triggered and handle it appropiately
+
+          _scanSubscription.onDone((){
+            print("-------------------------STREAM DONE-------------------------");
+            print("DONE");
+            print("-------------------------STREAM DONE-------------------------");
+          });
+
+          _scanSubscription.onError((e){
+            print("-------------------------STREAM ERROR-------------------------");
+            print(e.toString());
+            print("-------------------------STREAM ERROR-------------------------");
+          });
+
+          if(prints){
+            print("-------------------------trying to start scan FINISHED");
+            await scannerStatus(); //TODO... remove debug
+          }
         }
 
-        if(prints) print("-------------------------TRYING TO START");
-        _scanSubscription = _flutterBlue.scan(
-          scanMode: _scanMode,
-        ).listen((scanResult){
-          //set our vars after its begun
-          //since it can fail to begin
-          //NOTE: this will mark the END of BOTH
-          //[1] starting AND [2] resuming
-          _scanStarted();
-          
-          if(prints && printsForUpdates) print("new scan result");
-
-          //update everything as expected
-          updateDevice(
-            scanResult.device.id,
-            scanResult.device.name,
-            scanResult.device.type,
-            scanResult.rssi,
-          ); 
-        });
-
-        //NOTE: I am not worrying about onDone since I have no idea where its triggered
-        //TODO... find out where its triggered and handle it appropiately
-
-        _scanSubscription.onError((e){
-          print("-------------------------STREAM ERROR-------------------------");
-          print(e.toString());
-          print("-------------------------STREAM ERROR-------------------------");
-        });
-
-        if(prints){
-          print("-------------------------trying to start scan FINISHED " 
-          + bluetoothOn.value.toString());
-          await scannerStatus(); //TODO... remove debug
-        }
+        //flicker isScanning so that the button for manual reset shows up wherever the scanner is being used
+        isScanning.value = true; //hasnt happened yet but might
+        isScanning.value = false; //what is actually currently happening
         
         //-----IMPROVE BELOW
 
+        //NOTE: we dont check for IS SCANNING HERE because we KNOW it isnt going to set itself to true fast enough
+
         //NOTE: by now we know FOR A FACT that we want the scanner to be running
         //IF it isnt then we need to take steps to make it so...
-        if(isScanning.value == false){
-          print("/////////////////////////NOT OBEYING/////////////////////////");
-          //LISTENER
-          //add listener to wantsToBeScanning
-          //IF it changes to false then stop the function below
 
-          //FUNCTION
-          //wait TIME
-          //If isScanning == false => startScan()
-          //NOTE: the above only runs if it hasnt already been stoped
+        //LISTENER
+        //add listener to wantsToBeScanning
+        //IF it changes to false then stop the function below
 
-          //SADLY... in dart you can't cancel futures... 
-          //SO... we do some "hacks"
+        //FUNCTION
+        //wait TIME
+        //If isScanning == false => startScan()
+        //NOTE: the above only runs if it hasnt already been stoped
 
-          //there might already be a listener here that is working to start up the scanner automatically but cant
-          //if we cancel it we run the risk of
-          wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
-          //we know its true
-          wantToBeScanning.addListener(_maybeRemoveForceStartScan);
-          //set it to false => (1st run) will start the function we want (in an if statement)
-          wantToBeScanning.value = false;
-          print("After 1st");
-          //set it to true => (2nd run) nothing... will start actually listening now
-          wantToBeScanning.value = true;
-          print("After 2nd");
-          
-          //WE ASSUME that when you remove a listener you also remove all processes it may have started
-        }
-        else{
-          print("/////////////////////////OBEYED/////////////////////////");
-        }
+        //SADLY... in dart you can't cancel futures... 
+        //SO... we do some "hacks"
+
+        /*
+        //there might already be a listener here that is working to start up the scanner automatically but cant
+        //if we cancel it we run the risk of
+        wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
+        //we know its true
+        wantToBeScanning.addListener(_maybeRemoveForceStartScan);
+        //set it to false => (1st run) will start the function we want (in an if statement)
+        wantToBeScanning.value = false;
+        print("After 1st");
+        //set it to true => (2nd run) nothing... will start actually listening now
+        wantToBeScanning.value = true;
+        print("After 2nd");
+        */
 
         //-----IMPROVE ABOVE
       }

@@ -140,38 +140,56 @@ class _SearchNewState extends State<SearchNew> {
           ),
         ],
       ),
-      floatingActionButton: (ScannerStaticVars.bluetoothOn.value && ScannerStaticVars.isScanning.value)
-      ? FloatingActionButton.extended(
-        onPressed: (){
-          Navigator.push(context, PageTransition(
-            type: PageTransitionType.fade,
-            duration: Duration.zero, 
-            child: PhoneDown(),
-          ));
-        },
-        icon: new Icon(
-          FontAwesomeIcons.questionCircle,
-          size: 18,
+      floatingActionButton: floatingButton(),
+    );
+  }
+
+  Widget floatingButton(){
+    if(ScannerStaticVars.bluetoothOn.value){
+      if(ScannerStaticVars.wantToBeScanning.value){
+        if(ScannerStaticVars.isScanning.value){
+          return patternDetectionButton();
+        }
+        else{
+          return resetButton();
+        }
+      }
+      else return Container();
+    }
+    else return Container();
+  }
+
+  Widget resetButton(){
+    return FloatingActionButton.extended(
+      backgroundColor: Colors.redAccent,
+      foregroundColor: Colors.black,
+      onPressed: (){
+        ScannerStaticVars.startScan();
+      },
+      icon: new Icon(Icons.refresh),
+      label: new Text("Re-Start Scan"),
+    );
+  }
+
+  Widget patternDetectionButton(){
+    return FloatingActionButton.extended(
+      onPressed: (){
+        Navigator.push(context, PageTransition(
+          type: PageTransitionType.fade,
+          duration: Duration.zero, 
+          child: PhoneDown(),
+        ));
+      },
+      icon: new Icon(
+        FontAwesomeIcons.questionCircle,
+        size: 18,
+      ),
+      label: new Text(
+        "Can't Identify Your Device?",
+        style: TextStyle(
+          fontSize: 12,
         ),
-        label: new Text(
-          "Can't Identify Your Device?",
-          style: TextStyle(
-            fontSize: 12,
-          ),
-        ),
-      ) : Container(),
+      ),
     );
   }
 }
-
-/*
-FloatingActionButton.extended(
-  backgroundColor: Colors.redAccent,
-  foregroundColor: Colors.black,
-  onPressed: (){
-    ScannerStaticVars.startScan();
-  },
-  icon: new Icon(Icons.refresh),
-  label: new Text("Re-Start Scan"),
-)
-*/
