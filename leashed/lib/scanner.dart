@@ -227,7 +227,7 @@ class ScannerStaticVars {
       //NOTE: "wantToBeScanning" doesn't matter
       //IF isScannign == true => wantToBeScanning == true
       if(scanningIsOn){
-        print("-------------------------we should stop the scan cuz bluetooth just died on us");
+        if(prints) print("-------------------------we should stop the scan cuz bluetooth just died on us");
         stopScan(updateDesire: false); 
       }
       //ELSE... bluetooth is off BUT its okay because scanning is also off
@@ -322,7 +322,7 @@ class ScannerStaticVars {
         }
 
         if(_scanSubscription == null){
-          print("-------------------------TRYING TO START");
+          if(prints) print("-------------------------TRYING TO START");
           _scanSubscription = _flutterBlue.scan(
             scanMode: _scanMode,
           ).listen((scanResult){
@@ -353,7 +353,7 @@ class ScannerStaticVars {
           });
         }
         else{
-          print("-------------------------TRYING TO RESUME");
+          if(prints) print("-------------------------TRYING TO RESUME");
           _scanSubscription.resume(); 
         }
 
@@ -402,18 +402,18 @@ class ScannerStaticVars {
   static ValueNotifier _runCount = new ValueNotifier(0);
   static _maybeRemoveForceStartScan() async{
     if(_runCount.value == 0){
-      print("INIT FIRST RUN");
+      if(prints) print("INIT FIRST RUN");
       _runCount.value++;
       await Future.delayed(Duration(milliseconds: 250));
-      print("starting scan as a result of the first listener");
+      if(prints) print("starting scan as a result of the first listener");
       startScan();
     }
     else if(_runCount.value == 1){
-      print("INIT SECOND RUN");
+      if(prints) print("INIT SECOND RUN");
       _runCount.value++;
     }
     else{
-      print("THIRD RUN -> remove ourselves as the listener");
+      if(prints) print("THIRD RUN -> remove ourselves as the listener");
       _runCount.value = 0; //RESET
       wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
     }
