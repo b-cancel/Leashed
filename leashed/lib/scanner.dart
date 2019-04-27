@@ -91,6 +91,25 @@ class ScannerStaticVars {
     scanStopDateTimesLength.value = scanStopDateTimes.length;
   }
 
+  static updateDevice(
+    DeviceIdentifier deviceID,
+    String deviceName,
+    BluetoothDeviceType deviceType,
+    int deviceRssi,
+    ){
+    if(prints && printsForUpdates) print("updating a device");
+    String deviceIDstr = deviceID.toString();
+    
+    //-----Adding New Device
+    if(allDevicesFound.containsKey(deviceIDstr) == false){ 
+      deviceName = deviceName ?? "";
+      _addToAllDevicesFound(deviceIDstr, DeviceData(deviceIDstr, deviceName, deviceType, scanStartDateTimes[0]));
+    }
+
+    //-----Update Device Values
+    allDevicesFound[deviceIDstr].add(deviceRssi);
+  }
+
   //------------------------------Setters------------------------------
 
   //ASYNC not needed [1] Rarely called and [2] all operations are very fast
@@ -260,115 +279,121 @@ class ScannerStaticVars {
     }
   }
 
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-  //------------------------------------------------------------------------------------------
-
-  //------------------------------MAYBE ASYNC FUNCTIONS------------------------------
-
-  static updateDevice(
-    DeviceIdentifier deviceID,
-    String deviceName,
-    BluetoothDeviceType deviceType,
-    int deviceRssi,
-    ){
-    if(prints && printsForUpdates) print("updating a device");
-    String deviceIDstr = deviceID.toString();
-    
-    //-----Adding New Device
-    if(allDevicesFound.containsKey(deviceIDstr) == false){ 
-      deviceName = deviceName ?? "";
-      _addToAllDevicesFound(deviceIDstr, DeviceData(deviceIDstr, deviceName, deviceType, scanStartDateTimes[0]));
+  static _scanStarted(){
+    //NOTE: "wantToBeScanning" AND "bluetoothOn" ARE BOTH TRUE
+    if(isScanning.value == false){
+      _addToScanStartDateTimes(DateTime.now());
+      if(prints){
+        String action = "started/resumed";
+        String scanSessionCount = scanStartDateTimesLength.value.toString();
+        print("******************************" + 
+        action + " SCAN " + scanSessionCount + 
+        "******************************" );
+      }
+      isScanning.value = true;
     }
-
-    //-----Update Device Values
-    allDevicesFound[deviceIDstr].add(deviceRssi);
+    //ELSE... is already scanning
   }
+
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
 
   //------------------------------Start/Resume Streamsubscription
 
   //INIT must have already been called
   //DO NOT USE TO QUICKLY PAUSE
   static startScan() async{
-    //TODO... should only be possible to switch isScanning on IF bluetooth is on
-
+    //Regardless of what can we done we want to communicate that we want to be scanning
     if(wantToBeScanning.value == false) wantToBeScanning.value = true;
 
-    //NOTE: on error isn't being called when an error occurs
-    if(isScanning.value == false){
-      if(prints){
-        print("-------------------------trying to start scan STARTED " 
-        + bluetoothOn.value.toString());
-        scannerStatus(); //TODO... remove debug
-      }
-
-      if(_scanSubscription == null){
-        print("-------------------------FIRST SCAN start");
-         _scanSubscription = _flutterBlue.scan(
-          scanMode: _scanMode,
-        ).listen((scanResult){
-          //set our vars after its begun
-          //since it can fail to begin
-          _scanStarted();
-          
-          if(prints && printsForUpdates) print("new scan result");
-
-          //update everything as expected
-          updateDevice(
-            scanResult.device.id,
-            scanResult.device.name,
-            scanResult.device.type,
-            scanResult.rssi,
-          ); 
-        });
-
-        //NOTE: I am not worrying about onDone since I have no idea where its triggered
-        //TODO... find out where its triggered and handle it appropiately
-
-        _scanSubscription.onError((e){
-          print("-------------------------STREAM ERROR-------------------------");
-          print(e.toString());
-          print("-------------------------STREAM ERROR-------------------------");
-        });
-      }
-      else{
-        _scanSubscription.resume(); 
-      }
-
-      if(prints){
-        print("-------------------------trying to start scan FINISHED " 
-        + bluetoothOn.value.toString());
-        await scannerStatus(); //TODO... remove debug
-      }
-
-      //NOTE: by now we know FOR A FACT that we want the scanner to be running
-      //IF it isnt then we need to take steps to make it so...
+    //We can only start the scan if bluetooth is on
+    if(bluetoothOn.value){
+      //NOTE: on error isn't being called when an error occurs
       if(isScanning.value == false){
-        //LISTENER
-        //add listener to wantsToBeScanning
-        //IF it changes to false then stop the function below
+        if(prints){
+          print("-------------------------trying to start scan STARTED " 
+          + bluetoothOn.value.toString());
+          scannerStatus(); //TODO... remove debug
+        }
 
-        //FUNCTION
-        //wait TIME
-        //If isScanning == false => startScan()
-        //NOTE: the above only runs if it hasnt already been stoped
+        if(_scanSubscription == null){
+          print("-------------------------TRYING TO START");
+          _scanSubscription = _flutterBlue.scan(
+            scanMode: _scanMode,
+          ).listen((scanResult){
+            //set our vars after its begun
+            //since it can fail to begin
+            //NOTE: this will mark the END of BOTH
+            //[1] starting AND [2] resuming
+            _scanStarted();
+            
+            if(prints && printsForUpdates) print("new scan result");
 
-        //SADLY... in dart you can't cancel futures... 
-        //SO... we do some "hacks"
+            //update everything as expected
+            updateDevice(
+              scanResult.device.id,
+              scanResult.device.name,
+              scanResult.device.type,
+              scanResult.rssi,
+            ); 
+          });
 
-        wantToBeScanning.addListener(_maybeRemoveForceStartScan);
-        wantToBeScanning.value = false;
-        wantToBeScanning.value = true;
-        //we know its true
-        //set it to false => (1st run) will start the function we want (in an if statement)
-        //set it to true => (2nd run) nothing... will start actually listening now
-        //WE ASSUME that when you remove a listener you also remove all processes it may have started
+          //NOTE: I am not worrying about onDone since I have no idea where its triggered
+          //TODO... find out where its triggered and handle it appropiately
+
+          _scanSubscription.onError((e){
+            print("-------------------------STREAM ERROR-------------------------");
+            print(e.toString());
+            print("-------------------------STREAM ERROR-------------------------");
+          });
+        }
+        else{
+          print("-------------------------TRYING TO RESUME");
+          _scanSubscription.resume(); 
+        }
+
+        if(prints){
+          print("-------------------------trying to start scan FINISHED " 
+          + bluetoothOn.value.toString());
+          await scannerStatus(); //TODO... remove debug
+        }
+        
+        //-----IMPROVE BELOW
+
+        //NOTE: by now we know FOR A FACT that we want the scanner to be running
+        //IF it isnt then we need to take steps to make it so...
+        if(isScanning.value == false){
+          //LISTENER
+          //add listener to wantsToBeScanning
+          //IF it changes to false then stop the function below
+
+          //FUNCTION
+          //wait TIME
+          //If isScanning == false => startScan()
+          //NOTE: the above only runs if it hasnt already been stoped
+
+          //SADLY... in dart you can't cancel futures... 
+          //SO... we do some "hacks"
+
+          wantToBeScanning.addListener(_maybeRemoveForceStartScan);
+          wantToBeScanning.value = false;
+          wantToBeScanning.value = true;
+          //we know its true
+          //set it to false => (1st run) will start the function we want (in an if statement)
+          //set it to true => (2nd run) nothing... will start actually listening now
+          //WE ASSUME that when you remove a listener you also remove all processes it may have started
+        }
+
+        //-----IMPROVE ABOVE
       }
+      //ELSE... we have already started scanning
     }
+    //ELSE... our bluetooth is off so we have to wait for it to turn on to start scanning
   }
 
   static ValueNotifier _runCount = new ValueNotifier(0);
@@ -388,28 +413,6 @@ class ScannerStaticVars {
       print("THIRD RUN -> remove ourselves as the listener");
       _runCount.value = 0; //RESET
       wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
-    }
-  }
-
-  _forceStartScan() async{
-    await Future.delayed(Duration(milliseconds: 250));
-    startScan();
-  }
-
-  static _scanStarted(){
-    if(isScanning.value == false){
-      _addToScanStartDateTimes(DateTime.now());
-      if(prints){
-        String action = "started/resumed";
-        String scanSessionCount = scanStartDateTimesLength.value.toString();
-        print("******************************" + 
-        action + " SCAN " + scanSessionCount + 
-        "******************************" );
-      }
-      isScanning.value = true;
-    }
-    else{
-      if(prints && printsForUpdates) print("******************************" + "ALREADY SCANING" + "******************************" );
     }
   }
 }
