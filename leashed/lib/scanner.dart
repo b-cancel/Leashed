@@ -62,12 +62,45 @@ class ScannerStaticVars {
     }
   }
 
+  //------------------------------Getters------------------------------
+  
+  static ScanMode getScanMode() => _scanMode;
+  static BluetoothState getBluetoothState() => _bluetoothState;
+
+  //------------------------------Updaters
+  //DONT need to be async but it might be best to make them async since they are called so often
+
+  //ASYNC not needed all operations are very fast BUT -> called very often
+  static _addToAllDevicesFound(String key, DeviceData value){
+    if(prints && printsForUpdates) print("add to all devices found");
+    allDevicesFound[key] = value;
+    allDevicesfoundLength.value = allDevicesFound.length;
+  }
+ 
+  //ASYNC not needed all operations are very fast BUT -> called very often
+  static _addToScanStartDateTimes(DateTime value){
+    if(prints && printsForUpdates) print("add to scan start date times");
+    scanStartDateTimes.add(value);
+    scanStartDateTimesLength.value = scanStartDateTimes.length;
+  }
+
+  //ASYNC not needed all operations are very fast BUT -> called very often
+  static _addToScanStopDateTimes(DateTime value){
+    if(prints && printsForUpdates) print("add to scan stop date times");
+    scanStopDateTimes.add(value);
+    scanStopDateTimesLength.value = scanStopDateTimes.length;
+  }
+
   //------------------------------Setters------------------------------
 
   //ASYNC not needed [1] Rarely called and [2] all operations are very fast
   static setScanMode(ScanMode newScanMode){
     if(prints) print("------------------------------set scan mode");
     _scanMode = newScanMode;
+    //NOTE: "bluetoothOn" doesn't matter
+    //IF isScanning == true => bluetoothOn == true
+    //NOTE: "wantToBeScanning" doesn't matter
+    //IF isScannign == true => wantToBeScanning == true
     if(isScanning.value){
       if(prints) print("------------------------------set scan mode caused stop then start");
       stopScan();
@@ -75,15 +108,78 @@ class ScannerStaticVars {
     }
   }
 
-  //------------------------------Getters------------------------------
-  
-  static ScanMode getScanMode() => _scanMode;
-  static BluetoothState getBluetoothState() => _bluetoothState;
+  //------------------------------Sorting
+
+  static Future<List<String>> sortResults() async{
+    if(prints && printsForUpdates) print("sort results");
+    //sort by ID
+    List<String> deviceIDs = allDevicesFound.keys.toList();
+    deviceIDs.sort();
+
+    //seperate with and without name
+    List<String> withName = new List<String>();
+    List<String> withoutName = new List<String>();
+    for(int i = 0; i < allDevicesFound.length; i++){
+      String deviceID = deviceIDs[i];
+      if(allDevicesFound[deviceID].name != ""){
+        withName.add(deviceID);
+      }
+      else withoutName.add(deviceID);
+    }
+
+    //TODO... sort the withName by the devices name NOT it's id
+
+    return ([]..addAll(withName))..addAll(withoutName);
+  }
+
+  //------------------------------Debugging
+
+  static scannerStatus() async{
+    print("------------------------------|------------------------------");
+
+    print("devices: " + allDevicesfoundLength.value.toString()
+    + " starts: " + scanStartDateTimesLength.value.toString()
+    + " stops: " + scanStopDateTimesLength.value.toString());
+
+    print("is scanning " + isScanning.value.toString());
+
+    //_flutterBlue
+    /*
+    bool bleSupport = await _flutterBlue.isAvailable;
+    if(bleSupport == false) print("***BLE NOT SUPPORTED");
+    else{
+      print("is bleOn? think: " + bluetoothOn.toString() + " know: " + (await _flutterBlue.isOn).toString());
+      print("state? think: " + _bluetoothState.toString() + " know: " + (await _flutterBlue.state).toString());
+    }
+    */
+    
+    /*
+    //_stateSubscription
+    if(_stateSubscription == null) print("state sub null");
+    else print("state subscription " + _stateSubscription.isPaused.toString());
+    */
+
+    //_scanSubscription
+    if(_scanSubscription == null) print("scan sub null");
+    else print("scan subscription " + _scanSubscription.isPaused.toString());
+
+    print("------------------------------|------------------------------");
+  }
+
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------
 
   //------------------------------Control Scanning Depending on Bluetooth State------------------------------
 
   //ASYNC not needed [1] rarely called and [2] all operations are very fast
   static updateBluetoothState(BluetoothState newState){
+    //TODO.... IF bluetooth is turned off then isScanning should also be off
+
     if(prints) print("-------------------------update bluetooth state");
     _bluetoothState = newState;
 
@@ -147,30 +243,6 @@ class ScannerStaticVars {
 
   //------------------------------MAYBE ASYNC FUNCTIONS------------------------------
 
-  //------------------------------Updaters
-  //DONT need to be async but it might be best to make them async since they are called so often
-
-  //ASYNC not needed all operations are very fast BUT -> called very often
-  static _addToAllDevicesFound(String key, DeviceData value){
-    if(prints && printsForUpdates) print("add to all devices found");
-    allDevicesFound[key] = value;
-    allDevicesfoundLength.value = allDevicesFound.length;
-  }
- 
-  //ASYNC not needed all operations are very fast BUT -> called very often
-  static _addToScanStartDateTimes(DateTime value){
-    if(prints && printsForUpdates) print("add to scan date times");
-    scanStartDateTimes.add(value);
-    scanStartDateTimesLength.value = scanStartDateTimes.length;
-  }
-
-  //ASYNC not needed all operations are very fast BUT -> called very often
-  static _addToScanStopDateTimes(DateTime value){
-    if(prints && printsForUpdates) print("add to scan date times");
-    scanStopDateTimes.add(value);
-    scanStopDateTimesLength.value = scanStopDateTimes.length;
-  }
-
   static updateDevice(
     DeviceIdentifier deviceID,
     String deviceName,
@@ -195,6 +267,8 @@ class ScannerStaticVars {
   //INIT must have already been called
   //DO NOT USE TO QUICKLY PAUSE
   static startScan() async{
+    //TODO... should only be possible to switch isScanning on IF bluetooth is on
+
     if(wantToBeScanning.value == false) wantToBeScanning.value = true;
 
     //NOTE: on error isn't being called when an error occurs
@@ -310,59 +384,5 @@ class ScannerStaticVars {
     else{
       if(prints && printsForUpdates) print("******************************" + "ALREADY SCANING" + "******************************" );
     }
-  }
-
-  //------------------------------No Big Deal To Delay New Results Displaying
-
-  static Future<List<String>> sortResults() async{
-    if(ScannerStaticVars.prints && ScannerStaticVars.printsForUpdates) print("sort results");
-    //sort by ID
-    List<String> deviceIDs = ScannerStaticVars.allDevicesFound.keys.toList();
-    deviceIDs.sort();
-
-    //sort all devices by Name
-    List<String> withName = new List<String>();
-    List<String> withoutName = new List<String>();
-    for(int i = 0; i < ScannerStaticVars.allDevicesFound.length; i++){
-      String deviceID = deviceIDs[i];
-      if(ScannerStaticVars.allDevicesFound[deviceID].name != ""){
-        withName.add(deviceID);
-      }
-      else withoutName.add(deviceID);
-    }
-
-    return ([]..addAll(withName))..addAll(withoutName);
-  }
-
-  static scannerStatus() async{
-    print("------------------------------|------------------------------");
-
-    print("devices: " + allDevicesfoundLength.value.toString()
-    + " starts: " + scanStartDateTimesLength.value.toString()
-    + " stops: " + scanStopDateTimesLength.value.toString());
-
-    print("is scanning " + isScanning.value.toString());
-
-    //_flutterBlue
-    /*
-    bool bleSupport = await _flutterBlue.isAvailable;
-    if(bleSupport == false) print("***BLE NOT SUPPORTED");
-    else{
-      print("is bleOn? think: " + bluetoothOn.toString() + " know: " + (await _flutterBlue.isOn).toString());
-      print("state? think: " + _bluetoothState.toString() + " know: " + (await _flutterBlue.state).toString());
-    }
-    */
-    
-    /*
-    //_stateSubscription
-    if(_stateSubscription == null) print("state sub null");
-    else print("state subscription " + _stateSubscription.isPaused.toString());
-    */
-
-    //_scanSubscription
-    if(_scanSubscription == null) print("scan sub null");
-    else print("scan subscription " + _scanSubscription.isPaused.toString());
-
-    print("------------------------------|------------------------------");
   }
 }
