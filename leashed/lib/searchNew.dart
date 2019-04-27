@@ -100,10 +100,15 @@ class _SearchNewState extends State<SearchNew> {
               child: NotificationListener<ScrollNotification>(
                 onNotification: (scrollNotification) {
                   if (scrollNotification is ScrollStartNotification) {
+                    print("-------------------------SCROLL START");
                     ScannerStaticVars.stopScan();
                   } else if (scrollNotification is ScrollEndNotification) {
+                    print("-------------------------SCROLL END");
                     ScannerStaticVars.startScan();
                   }
+
+                  //ScrollUpdateNotification -> get give position and velocity
+                  //UserScrollNotification -> user changes scroll direction
                 },
                 child: ListView.builder(
                   //POTENTIAL OPTIMIZATIONS

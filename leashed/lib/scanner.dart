@@ -380,41 +380,62 @@ class ScannerStaticVars {
           //SADLY... in dart you can't cancel futures... 
           //SO... we do some "hacks"
 
-          //remove the listener (in case that the listener is present)
+          //there might already be a listener here that is working to start up the scanner automatically but cant
+          //if we cancel it we run the risk of
           wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
           //we know its true
           wantToBeScanning.addListener(_maybeRemoveForceStartScan);
           //set it to false => (1st run) will start the function we want (in an if statement)
           wantToBeScanning.value = false;
+          print("After 1st");
           //set it to true => (2nd run) nothing... will start actually listening now
           wantToBeScanning.value = true;
+          print("After 2nd");
           
           //WE ASSUME that when you remove a listener you also remove all processes it may have started
         }
 
         //-----IMPROVE ABOVE
       }
-      //ELSE... we have already started scanning
+      else{
+        //ELSE... we have already started scanning
+        if(prints) print("CANT START we are already running");
+      }
     }
-    //ELSE... our bluetooth is off so we have to wait for it to turn on to start scanning
+    else{
+      //ELSE... our bluetooth is off so we have to wait for it to turn on to start scanning
+      if(prints) print("CANT START bluetooth is off");
+    }
   }
 
+  //NOTE: this listener below works as such
+  //it is added to our variable...
+  //it either 1. removes itself from the variable because the action it wanted to occur is no longer desired
+  //or 2. removes itself from the variable because the action it wanted to occur is being executed by it
   static ValueNotifier _runCount = new ValueNotifier(0);
   static _maybeRemoveForceStartScan() async{
     if(_runCount.value == 0){
       if(prints) print("INIT FIRST RUN");
       _runCount.value++;
+      if(prints) print("waiting started " + DateTime.now().toIso8601String());
       await Future.delayed(Duration(milliseconds: 250));
-      if(prints) print("starting scan as a result of the first listener");
+      if(prints) print("waiting ended " + DateTime.now().toIso8601String());
+
+      //-----OPTION 1 -> action desired -> executed
+      if(prints) print("RESET**********----------**********STARTING SCAN CUZ FORCE");
+      _runCount.value = 0; //RESET (cuz we are doing the force start)
       startScan();
+      wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
     }
     else if(_runCount.value == 1){
       if(prints) print("INIT SECOND RUN");
       _runCount.value++;
     }
     else{
-      if(prints) print("THIRD RUN -> remove ourselves as the listener");
-      _runCount.value = 0; //RESET
+      //-----OPTION 2 -> action desired -> no longer desired
+      if(prints) print("RESET**********----------**********THIRD RUN -> remove ourselves as the listener");
+      _runCount.value = 0; //RESET (cuz we are cancelling the force start)
+      //NO ACTION (instead of start scan)
       wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
     }
   }
