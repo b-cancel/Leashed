@@ -236,39 +236,21 @@ class ScannerStaticVars {
 
   //------------------------------Scanner Control------------------------------
 
-  //ASYNC not needed [1] rarely called and [2] all operations are very fast
-  static stopScan({
-    String extraMsg: "",
-    bool updateDesire: true,
-    }){
-    if(extraMsg != "") print(extraMsg);
-    pauseScan(
-      actuallyStop: true, 
-      updateDesire: updateDesire,
-    );
-  }
+  //DO NOT IMPLEMENT pausing the scan... resuming the scan at times fails and causes issues
 
-  static pauseScan({
-    bool actuallyStop: false, 
-    bool updateDesire: true,
-    }) async{
+  //ASYNC not needed [1] rarely called and [2] all operations are very fast
+  static stopScan({bool updateDesire: true,}) async{
     //NOTE: wantToBeScanning AND isScanning are SEPERATE
     //this is because we could have want to be scanning BUT NOT successfully started scanning yet
 
     if(isScanning.value){
       _addToScanStopDateTimes(DateTime.now());
       if(prints){
-        String action = actuallyStop ? "stopping" : "pausing";
-        print("-------------------------" + action + " scan " + scanStopDateTimesLength.value.toString());
+        print("-------------------------stopping scan " + scanStopDateTimesLength.value.toString());
       }
 
-      if(actuallyStop){
-        await _scanSubscription?.cancel(); //since ASYNC so ONLY started here
-        _scanSubscription = null;
-      }
-      else{
-        _scanSubscription.pause();
-      }
+      await _scanSubscription?.cancel(); //since ASYNC so ONLY started here
+      _scanSubscription = null;
 
       //we set isScanning here so that we know we are done scanning before setting the var
       isScanning.value = false;
@@ -313,6 +295,8 @@ class ScannerStaticVars {
 
     //We can only start the scan if bluetooth is on
     if(bluetoothOn.value){
+      print("SCAN START TRY START");
+
       //NOTE: on error isn't being called when an error occurs
       if(isScanning.value == false){
         if(prints){
@@ -321,41 +305,43 @@ class ScannerStaticVars {
           scannerStatus(); //TODO... remove debug
         }
 
-        if(_scanSubscription == null){
-          if(prints) print("-------------------------TRYING TO START");
-          _scanSubscription = _flutterBlue.scan(
-            scanMode: _scanMode,
-          ).listen((scanResult){
-            //set our vars after its begun
-            //since it can fail to begin
-            //NOTE: this will mark the END of BOTH
-            //[1] starting AND [2] resuming
-            _scanStarted();
-            
-            if(prints && printsForUpdates) print("new scan result");
-
-            //update everything as expected
-            updateDevice(
-              scanResult.device.id,
-              scanResult.device.name,
-              scanResult.device.type,
-              scanResult.rssi,
-            ); 
-          });
-
-          //NOTE: I am not worrying about onDone since I have no idea where its triggered
-          //TODO... find out where its triggered and handle it appropiately
-
-          _scanSubscription.onError((e){
-            print("-------------------------STREAM ERROR-------------------------");
-            print(e.toString());
-            print("-------------------------STREAM ERROR-------------------------");
-          });
+        //aparently last time we started it
+        //it did not start successfully
+        //so remove the current failed subscription and start a new one
+        if(_scanSubscription != null){
+          await _scanSubscription?.cancel(); //since ASYNC so ONLY started here
+          _scanSubscription = null;
         }
-        else{
-          if(prints) print("-------------------------TRYING TO RESUME");
-          _scanSubscription.resume(); 
-        }
+
+        if(prints) print("-------------------------TRYING TO START");
+        _scanSubscription = _flutterBlue.scan(
+          scanMode: _scanMode,
+        ).listen((scanResult){
+          //set our vars after its begun
+          //since it can fail to begin
+          //NOTE: this will mark the END of BOTH
+          //[1] starting AND [2] resuming
+          _scanStarted();
+          
+          if(prints && printsForUpdates) print("new scan result");
+
+          //update everything as expected
+          updateDevice(
+            scanResult.device.id,
+            scanResult.device.name,
+            scanResult.device.type,
+            scanResult.rssi,
+          ); 
+        });
+
+        //NOTE: I am not worrying about onDone since I have no idea where its triggered
+        //TODO... find out where its triggered and handle it appropiately
+
+        _scanSubscription.onError((e){
+          print("-------------------------STREAM ERROR-------------------------");
+          print(e.toString());
+          print("-------------------------STREAM ERROR-------------------------");
+        });
 
         if(prints){
           print("-------------------------trying to start scan FINISHED " 
@@ -368,6 +354,7 @@ class ScannerStaticVars {
         //NOTE: by now we know FOR A FACT that we want the scanner to be running
         //IF it isnt then we need to take steps to make it so...
         if(isScanning.value == false){
+          print("/////////////////////////NOT OBEYING/////////////////////////");
           //LISTENER
           //add listener to wantsToBeScanning
           //IF it changes to false then stop the function below
@@ -394,6 +381,9 @@ class ScannerStaticVars {
           
           //WE ASSUME that when you remove a listener you also remove all processes it may have started
         }
+        else{
+          print("/////////////////////////OBEYED/////////////////////////");
+        }
 
         //-----IMPROVE ABOVE
       }
@@ -401,6 +391,8 @@ class ScannerStaticVars {
         //ELSE... we have already started scanning
         if(prints) print("CANT START we are already running");
       }
+
+      print("SCAN START TRY END");
     }
     else{
       //ELSE... our bluetooth is off so we have to wait for it to turn on to start scanning
@@ -414,6 +406,8 @@ class ScannerStaticVars {
   //or 2. removes itself from the variable because the action it wanted to occur is being executed by it
   static ValueNotifier _runCount = new ValueNotifier(0);
   static _maybeRemoveForceStartScan() async{
+    bool reset = false;
+
     if(_runCount.value == 0){
       if(prints) print("INIT FIRST RUN");
       _runCount.value++;
@@ -423,9 +417,8 @@ class ScannerStaticVars {
 
       //-----OPTION 1 -> action desired -> executed
       if(prints) print("RESET**********----------**********STARTING SCAN CUZ FORCE");
-      _runCount.value = 0; //RESET (cuz we are doing the force start)
+      reset = true;
       startScan();
-      wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
     }
     else if(_runCount.value == 1){
       if(prints) print("INIT SECOND RUN");
@@ -434,8 +427,11 @@ class ScannerStaticVars {
     else{
       //-----OPTION 2 -> action desired -> no longer desired
       if(prints) print("RESET**********----------**********THIRD RUN -> remove ourselves as the listener");
-      _runCount.value = 0; //RESET (cuz we are cancelling the force start)
-      //NO ACTION (instead of start scan)
+      reset = true;
+    }
+
+    if(reset){
+      _runCount.value = 0; //RESET (cuz we are doing the force start)
       wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
     }
   }
