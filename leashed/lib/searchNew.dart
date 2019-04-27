@@ -88,10 +88,6 @@ class _SearchNewState extends State<SearchNew> {
           (ScannerStaticVars.bluetoothOn.value)
           ? Container()
           : new BluetoothOffBanner(),
-          new RaisedButton(
-            onPressed: () => ScannerStaticVars.scannerStatus(),
-            child: new Text("debug"),
-          ),
           DefaultTextStyle(
             style: TextStyle(
               color: Colors.black
@@ -140,18 +136,20 @@ class _SearchNewState extends State<SearchNew> {
           ),
         ],
       ),
-      floatingActionButton: floatingButton(),
+      floatingActionButton: new Builder(builder: (BuildContext context) {
+        return floatingButton(context);
+      }),
     );
   }
 
-  Widget floatingButton(){
+  Widget floatingButton(BuildContext context){
     if(ScannerStaticVars.bluetoothOn.value){
       if(ScannerStaticVars.wantToBeScanning.value){
         if(ScannerStaticVars.isScanning.value){
           return patternDetectionButton();
         }
         else{
-          return resetButton();
+          return resetButton(context);
         }
       }
       else return Container();
@@ -159,11 +157,21 @@ class _SearchNewState extends State<SearchNew> {
     else return Container();
   }
 
-  Widget resetButton(){
+  Widget resetButton(BuildContext context){
     return FloatingActionButton.extended(
       backgroundColor: Colors.redAccent,
       foregroundColor: Colors.black,
       onPressed: (){
+        //Inform the user that it might fail
+        final SnackBar msg = SnackBar(
+          content: Text(
+            'Trying To Re-Start The Scanner' 
+            + '\n' 
+            + 'If It Fails Please Try Again',
+          ),
+        );
+        Scaffold.of(context).showSnackBar(msg);
+        //Attempt to Start Up The Scanner
         ScannerStaticVars.startScan();
       },
       icon: new Icon(Icons.refresh),

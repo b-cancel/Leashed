@@ -12,7 +12,7 @@ class ScannerStaticVars {
   //NOTE: ALL value notifers should NOT be set MANUALLY
 
   //debug
-  static bool prints = true; //prints stuff
+  static bool prints = false; //prints stuff
   static bool printsForUpdates = false; //prints all stuff
 
   //settings
