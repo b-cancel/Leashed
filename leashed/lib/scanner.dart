@@ -274,22 +274,6 @@ class ScannerStaticVars {
     }
   }
 
-  static _scanStarted(){
-    //NOTE: "wantToBeScanning" AND "bluetoothOn" ARE BOTH TRUE
-    if(isScanning.value == false){
-      _addToScanStartDateTimes(DateTime.now());
-      if(prints){
-        String action = "started/resumed";
-        String scanSessionCount = scanStartDateTimesLength.value.toString();
-        print("******************************" + 
-        action + " SCAN " + scanSessionCount + 
-        "******************************" );
-      }
-      isScanning.value = true;
-    }
-    //ELSE... is already scanning
-  }
-
   //------------------------------------------------------------------------------------------
   //------------------------------------------------------------------------------------------
   //------------------------------------------------------------------------------------------
@@ -300,10 +284,15 @@ class ScannerStaticVars {
 
   //------------------------------Start/Resume Streamsubscription
 
+  //NOTE: when we successfully start up the scanner we reset the var below to 0 again
+
+  //this keeps track of how long we are waiting to try and start up the scanner again
+  static ValueNotifier<int> msBeforeTryAgain  = new ValueNotifier(0);
+  //this is how much we increase our wait time after every failure
+  static int msIncrementAfterFailureToRestart = 50; 
+
   //INIT must have already been called
-  //DO NOT USE TO QUICKLY PAUSE
   static startScan({
-    bool forceRestart: false,
     bool updateDesire: true,
     }) async{
     
@@ -328,111 +317,81 @@ class ScannerStaticVars {
             scannerStatus(); //TODO... remove debug
           }
 
-          //Forces us to get a brand new scan subscriber
-          if(forceRestart){
-            if(_scanSubscription != null){
-              await _scanSubscription?.cancel(); //since ASYNC so ONLY started here
-              _scanSubscription = null;
-            }
-            //ELSE... its already equal to null so we can already grab a brand new one
-          }
-
+          //get rid of our old failing scan subscriber
           if(_scanSubscription != null){
-            if(prints) print("REGULAR START FAIL-------------------------TRYING TO RESUME");
-            _scanSubscription.resume(); 
-            /*
-            if(_scanSubscription.isPaused) print("paused");
-            else print("not paused");
-            _scanSubscription.pause();
-            _scanSubscription.resume(); 
-            */
+            await _scanSubscription?.cancel(); //since ASYNC so ONLY started here
+            _scanSubscription = null;
           }
-          else{
-            if(prints) print("-------------------------TRYING TO START");
-            _scanSubscription = _flutterBlue.scan(
-              scanMode: _scanMode,
-            ).listen((scanResult){
-              //set our vars after its begun
-              //since it can fail to begin
-              //NOTE: this will mark the END of BOTH
-              //[1] starting AND [2] resuming
-              _scanStarted();
-              
-              if(prints && printsForUpdates) print("new scan result");
 
-              //update everything as expected
-              updateDevice(
-                scanResult.device.id,
-                scanResult.device.name,
-                scanResult.device.type,
-                scanResult.rssi,
-              ); 
-            });
-
-            //NOTE: I am not worrying about onDone since I have no idea where its triggered
-            //TODO... find out where its triggered and handle it appropiately
-
-            _scanSubscription.onDone((){
-              print("-------------------------STREAM DONE-------------------------");
-              print("DONE");
-              print("-------------------------STREAM DONE-------------------------");
-            });
-
-            _scanSubscription.onError((e){
-              print("-------------------------STREAM ERROR-------------------------");
-              print(e.toString());
-              print("-------------------------STREAM ERROR-------------------------");
-            });
-
-            if(prints){
-              print("-------------------------trying to start scan FINISHED");
-              await scannerStatus(); //TODO... remove debug
+          //make the brand new scan subscriber
+          if(prints) print("-------------------------TRYING TO START");
+          _scanSubscription = _flutterBlue.scan(
+            scanMode: _scanMode,
+          ).listen((scanResult){
+            //set our vars after its begun
+            //since it can fail to begin
+            //NOTE: this will mark the END of BOTH
+            //[1] starting AND [2] resuming
+            //NOTE: "wantToBeScanning" AND "bluetoothOn" ARE BOTH TRUE
+            if(isScanning.value == false){
+              _addToScanStartDateTimes(DateTime.now());
+              if(prints){
+                String action = "started/resumed";
+                String scanSessionCount = scanStartDateTimesLength.value.toString();
+                print("******************************" + 
+                action + " SCAN " + scanSessionCount + 
+                "******************************" );
+              }
+              isScanning.value = true;
+              msBeforeTryAgain.value = 0; //RESET
             }
+            //ELSE... is already scanning
+            
+            if(prints && printsForUpdates) print("new scan result");
+
+            //update everything as expected
+            updateDevice(
+              scanResult.device.id,
+              scanResult.device.name,
+              scanResult.device.type,
+              scanResult.rssi,
+            ); 
+          });
+
+          //NOTE: I am not worrying about onDone since I have no idea where its triggered
+          //TODO... find out where its triggered and handle it appropiately
+
+          _scanSubscription.onDone((){
+            print("-------------------------STREAM DONE-------------------------");
+            print("DONE");
+            print("-------------------------STREAM DONE-------------------------");
+          });
+
+          _scanSubscription.onError((e){
+            print("-------------------------STREAM ERROR-------------------------");
+            print(e.toString());
+            print("-------------------------STREAM ERROR-------------------------");
+          });
+
+          if(prints){
+            print("-------------------------trying to start scan FINISHED");
+            await scannerStatus(); //TODO... remove debug
           }
 
           //flicker isScanning so that the button for manual reset shows up wherever the scanner is being used
           isScanning.value = true; //hasnt happened yet but might
           isScanning.value = false; //what is actually currently happening
 
-          //we dont update the desire because they user may stop the scan before it can actually start
-          /*
-          startScan(updateDesire: false);
-          */
-          
-          //-----IMPROVE BELOW
-
-          //NOTE: we dont check for IS SCANNING HERE because we KNOW it isnt going to set itself to true fast enough
-
-          //NOTE: by now we know FOR A FACT that we want the scanner to be running
-          //IF it isnt then we need to take steps to make it so...
-
-          //LISTENER
-          //add listener to wantsToBeScanning
-          //IF it changes to false then stop the function below
-
-          //FUNCTION
-          //wait TIME
-          //If isScanning == false => startScan()
-          //NOTE: the above only runs if it hasnt already been stoped
-
-          //SADLY... in dart you can't cancel futures... 
-          //SO... we do some "hacks"
-
-          /*
-          //there might already be a listener here that is working to start up the scanner automatically but cant
-          //if we cancel it we run the risk of
-          wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
-          //we know its true
-          wantToBeScanning.addListener(_maybeRemoveForceStartScan);
-          //set it to false => (1st run) will start the function we want (in an if statement)
-          wantToBeScanning.value = false;
-          print("After 1st");
-          //set it to true => (2nd run) nothing... will start actually listening now
-          wantToBeScanning.value = true;
-          print("After 2nd");
-          */
-
-          //-----IMPROVE ABOVE
+          //auto restart functionality
+          msBeforeTryAgain.value += msIncrementAfterFailureToRestart;
+          Future.delayed(
+            Duration(milliseconds: msBeforeTryAgain.value), 
+            (){
+              print("*************************RESTART*************************");
+              //we dont update the desire because they user may stop the scan before it can actually start
+              startScan(updateDesire: false);
+            }
+          );
         }
         else{
           //ELSE... we have already started scanning
@@ -449,41 +408,5 @@ class ScannerStaticVars {
     else{
       if(prints) print("-----the user changed their mind... they no longer want to keep restarting the scan");
     }    
-  }
-
-  //NOTE: this listener below works as such
-  //it is added to our variable...
-  //it either 1. removes itself from the variable because the action it wanted to occur is no longer desired
-  //or 2. removes itself from the variable because the action it wanted to occur is being executed by it
-  static ValueNotifier _runCount = new ValueNotifier(0);
-  static _maybeRemoveForceStartScan() async{
-    bool reset = false;
-
-    if(_runCount.value == 0){
-      if(prints) print("INIT FIRST RUN");
-      _runCount.value++;
-      if(prints) print("waiting started " + DateTime.now().toIso8601String());
-      await Future.delayed(Duration(milliseconds: 250));
-      if(prints) print("waiting ended " + DateTime.now().toIso8601String());
-
-      //-----OPTION 1 -> action desired -> executed
-      if(prints) print("RESET**********----------**********STARTING SCAN CUZ FORCE");
-      reset = true;
-      startScan();
-    }
-    else if(_runCount.value == 1){
-      if(prints) print("INIT SECOND RUN");
-      _runCount.value++;
-    }
-    else{
-      //-----OPTION 2 -> action desired -> no longer desired
-      if(prints) print("RESET**********----------**********THIRD RUN -> remove ourselves as the listener");
-      reset = true;
-    }
-
-    if(reset){
-      _runCount.value = 0; //RESET (cuz we are doing the force start)
-      wantToBeScanning.removeListener(_maybeRemoveForceStartScan);
-    }
   }
 }
