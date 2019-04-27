@@ -165,7 +165,7 @@ class _SearchNewState extends State<SearchNew> {
       foregroundColor: Colors.black,
       onPressed: (){
         ScannerStaticVars.startScan(
-          forceRestart: true,
+          forceRestart: false,
         );
       },
       icon: new Icon(Icons.refresh),
