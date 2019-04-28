@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/helper/structs.dart';
+import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/pattern/phoneDown.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
@@ -38,6 +39,7 @@ class _SearchNewState extends State<SearchNew> with RouteAware {
     ScannerStaticVars.allDevicesfoundLength.addListener(updateListThenSetState);
     ScannerStaticVars.bluetoothOn.addListener(customSetState);
     ScannerStaticVars.isScanning.addListener(customSetState);
+    ScannerStaticVars.wantToBeScanning.addListener(customSetState); //allows for reset button
   }
 
   @override
@@ -58,6 +60,7 @@ class _SearchNewState extends State<SearchNew> with RouteAware {
     ScannerStaticVars.allDevicesfoundLength.removeListener(updateListThenSetState);
     ScannerStaticVars.bluetoothOn.removeListener(customSetState);
     ScannerStaticVars.isScanning.removeListener(customSetState);
+    ScannerStaticVars.wantToBeScanning.removeListener(customSetState); //allows for reset button
     ScannerStaticVars.stopScan();
 
     super.dispose();
@@ -115,10 +118,8 @@ class _SearchNewState extends State<SearchNew> with RouteAware {
               child: NotificationListener<ScrollNotification>(
                 onNotification: (scrollNotification) {
                   if (scrollNotification is ScrollStartNotification) {
-                    print("-------------------------SCROLL START");
                     ScannerStaticVars.stopScan();
                   } else if (scrollNotification is ScrollEndNotification) {
-                    print("-------------------------SCROLL END");
                     ScannerStaticVars.startScan();
                   }
 
@@ -170,32 +171,10 @@ class _SearchNewState extends State<SearchNew> with RouteAware {
         else{
           return resetButton(context);
         }
-      }
-      else return Container();
-    }
+      } //so we dont show the reset button when scrolling
+      return Container();
+    } //so we dont show either when waiting for the user to start turn onbluetooth
     else return Container();
-  }
-
-  Widget resetButton(BuildContext context){
-    return FloatingActionButton.extended(
-      backgroundColor: Colors.redAccent,
-      foregroundColor: Colors.black,
-      onPressed: (){
-        //Inform the user that it might fail
-        final SnackBar msg = SnackBar(
-          content: Text(
-            'Trying To Re-Start The Scanner' 
-            + '\n' 
-            + 'If It Fails Please Try Again',
-          ),
-        );
-        Scaffold.of(context).showSnackBar(msg);
-        //Attempt to Start Up The Scanner
-        ScannerStaticVars.startScan();
-      },
-      icon: new Icon(Icons.refresh),
-      label: new Text("Re-Start Scan"),
-    );
   }
 
   Widget patternDetectionButton(){

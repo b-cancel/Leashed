@@ -4,6 +4,7 @@ import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:charts_common/common.dart' as common;
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/helper/structs.dart';
+import 'package:leashed/scanner.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 
@@ -464,3 +465,25 @@ double lerp(double a, double b, double f)
   f = (f > 1) ? 1 : f;
   return a + f * (b - a);
 }
+
+Widget resetButton(BuildContext context){
+    return FloatingActionButton.extended(
+      backgroundColor: Colors.redAccent,
+      foregroundColor: Colors.black,
+      onPressed: (){
+        //Inform the user that it might fail
+        final SnackBar msg = SnackBar(
+          content: Text(
+            'Trying To Re-Start The Scanner' 
+            + '\n' 
+            + 'If It Fails Please Try Again',
+          ),
+        );
+        Scaffold.of(context).showSnackBar(msg);
+        //Attempt to Start Up The Scanner
+        ScannerStaticVars.startScan();
+      },
+      icon: new Icon(Icons.refresh),
+      label: new Text("Re-Start Scan"),
+    );
+  }

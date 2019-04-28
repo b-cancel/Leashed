@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_page_indicator/flutter_page_indicator.dart';
 import 'package:leashed/navigation.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:leashed/pattern/blePattern.dart';
+import 'package:page_transition/page_transition.dart';
 
 class PatternIdentify extends StatelessWidget {
   final controller = PageController();
@@ -56,7 +58,8 @@ class PatternIdentify extends StatelessWidget {
             left: 0,
             right: 0,
             bottom: 0,
-            child: IgnorePointer(
+            child: GestureDetector(
+              behavior: HitTestBehavior.deferToChild,
               child: Column(
                 children: <Widget>[
                   Container(
@@ -64,18 +67,30 @@ class PatternIdentify extends StatelessWidget {
                     child: new Text("Swipe To Manually Identify The Pattern"),
                   ),
                   Container(
-                    padding: EdgeInsets.all(8),
-                    child: RaisedButton(
-                      onPressed: () => print("try again"),
-                      child: new Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          new Icon(Icons.refresh),
-                          new Text(" Try Again"),
-                        ],
-                      ),
+                  padding: EdgeInsets.all(8),
+                  child: RaisedButton(
+                    onPressed: (){
+                      //change how long you are waiting for pattern detection
+                      Navigation.timeToDetectPattern.value += 1;
+
+                      //try again but waiting a little longer
+                      Navigator.pushReplacement(context, PageTransition(
+                        type: PageTransitionType.fade,
+                        duration: Duration.zero, 
+                        child: BlePattern(
+                          secondsPerStep: Navigation.timeToDetectPattern.value,
+                        ),
+                      ));
+                    },
+                    child: new Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        new Icon(Icons.refresh),
+                        new Text(" Try Again"),
+                      ],
                     ),
                   ),
+                    ),
                 ],
               ),
             ),
@@ -153,7 +168,10 @@ class DevicePattern extends StatelessWidget {
                     ),
                     RaisedButton(
                       color: Navigation.blueGrey,
-                      onPressed: () => print("selecting this device"),
+                      onPressed: (){
+                        Navigator.of(context).pop();
+                        Navigation.timeToDetectPattern.value = 3; //RESET
+                      },
                       child: new Text(
                         "Select This Device",
                         style: TextStyle(

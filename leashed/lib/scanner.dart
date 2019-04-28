@@ -378,9 +378,11 @@ class ScannerStaticVars {
             await scannerStatus(); //TODO... remove debug
           }
 
-          //flicker isScanning so that the button for manual reset shows up wherever the scanner is being used
-          isScanning.value = true; //hasnt happened yet but might
-          isScanning.value = false; //what is actually currently happening
+          //flicker "wantToBeScanning" so that the button for manual reset 
+          //shows up wherever the scanner is being used
+          //a flicker is used since we are listening to this in UI where the scanner is being used
+          wantToBeScanning.value = false; 
+          wantToBeScanning.value = true; 
 
           //auto restart functionality
           msBeforeTryAgain.value += msIncrementAfterFailureToRestart;

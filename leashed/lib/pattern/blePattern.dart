@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/pattern/patternIdentify.dart';
 import 'package:leashed/scanner.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:percent_indicator/percent_indicator.dart' as percent;
 
+//NOTE: we KNOW that bluetooth is one when we arrive at this page
+
 class BlePattern extends StatefulWidget {
   final int secondsBetweenSteps;
   final int secondsPerStep;
 
   BlePattern({
-    this.secondsBetweenSteps: 2,
-    this.secondsPerStep: 5,
+    this.secondsBetweenSteps: 1,
+    this.secondsPerStep: 3,
   });
 
   @override
@@ -24,7 +27,13 @@ class _BlePatternState extends State<BlePattern> {
   @override
   void initState() {
     super.initState();
-    ScannerStaticVars.bluetoothOn.addListener(customSetState);
+
+    //if the bluetooth turns off we should navigate away from the page
+    ScannerStaticVars.bluetoothOn.addListener(popIfBluetoothOff);
+
+    //make sure that the scanner turn on before starting to gather data
+    ScannerStaticVars.isScanning.addListener(startWhenIsScaning);
+    ScannerStaticVars.wantToBeScanning.addListener(otherSetState);
 
     //Start the scanner right after all the image load
     //otherwise the images wont load quickly when the device is busy
@@ -32,35 +41,42 @@ class _BlePatternState extends State<BlePattern> {
       print("----LOADED");
       ScannerStaticVars.startScan();
     });
-
-    //BEGIN DATA ANALYSIS (done below)
-    process(); 
   }
 
   @override
   void dispose(){
-    ScannerStaticVars.bluetoothOn.removeListener(customSetState);
+    ScannerStaticVars.wantToBeScanning.removeListener(otherSetState);
+    ScannerStaticVars.isScanning.removeListener(startWhenIsScaning);
+    ScannerStaticVars.bluetoothOn.removeListener(popIfBluetoothOff);
     ScannerStaticVars.stopScan();
     super.dispose();
   }
 
-  customSetState(){
+  otherSetState(){
+    setState(() {});
+  }
+
+  popIfBluetoothOff(){
     if(ScannerStaticVars.bluetoothOn.value == false){
       Navigator.of(context).pop(); 
     }
   }
 
-  //-----The Process-----
+  startWhenIsScaning(){ 
+    setState(() {});
+    if(ScannerStaticVars.isScanning.value){
+      print("-------------------------STARTING THE SCAN-------------------------");
+      recursion();
+    }
+  }
 
-  int stepNumber = 1;
+  //-----The Process-----
+  int instructionNumber = 1; //starts at 1
   double progressThisStep = 0;
 
-  process() async{
-    await step(); //1->2 | 2->3 | 3->4
-    if(stepNumber <= 3){
-      process();
-    }
-    else{
+  recursion()async{
+    //recursion
+    if(instructionNumber > 3){ //base case
       await Future.delayed(Duration(seconds: widget.secondsBetweenSteps));
       if(mounted){
         Navigator.pushReplacement(context, PageTransition(
@@ -70,31 +86,27 @@ class _BlePatternState extends State<BlePattern> {
         ));
       }
     }
-  }
-
-  step() async{ //should add to step number
-    //wait until the user processes the command
-    await Future.delayed(Duration(seconds: widget.secondsBetweenSteps));
-    if(mounted){
-      //grab data in this step
-      int secondsPerStep = widget.secondsPerStep;
-      int timeTillCompletion = secondsPerStep;
-      while(timeTillCompletion > 0){
-        //wait a second
-        await Future.delayed(Duration(seconds: 1));
-        if(mounted){
-          timeTillCompletion--;
-
-          //inform the user of the progress
-          int timePassed = secondsPerStep - timeTillCompletion;
-          progressThisStep = timePassed / secondsPerStep.toDouble();
-          print("progress: " + progressThisStep.toString());
-          setState(() {});
+    else{ //loop
+      await Future.delayed(Duration(seconds: widget.secondsBetweenSteps));
+      if(mounted){
+        //grab data in this step
+        int secondsPerStep = widget.secondsPerStep;
+        int secondsTillCompletion = secondsPerStep;
+        while(secondsTillCompletion > 0){
+          //wait a second
+          await Future.delayed(Duration(seconds: 1));
+          secondsTillCompletion--;
+          if(mounted){
+            int timePassed = secondsPerStep - secondsTillCompletion;
+            progressThisStep = timePassed / secondsPerStep.toDouble();
+            setState(() {});
+          }
         }
-      }
 
-      //move onto the next step
-      stepNumber++;
+        //recurse
+        instructionNumber++;
+        recursion();
+      }
     }
   }
 
@@ -112,10 +124,6 @@ class _BlePatternState extends State<BlePattern> {
     double indicatorPadding = 16;
     double indicatorWidth = imageSize - (indicatorPadding * 2);
 
-    //instruction
-    String instructString;
-    String instructUrl;
-
     //return widget
     return Theme(
       data: Theme.of(context).copyWith(
@@ -129,17 +137,14 @@ class _BlePatternState extends State<BlePattern> {
           children: <Widget>[
             Stack(
               children: <Widget>[
-                Opacity(
-                  opacity: (stepNumber == 1) ? 1 : 0,
-                  child: new Step(
-                    titleHeight: titleHeight, 
-                    instructString: "To The Left Of", 
-                    imageSize: imageSize, 
-                    instructUrl: "assets/pngs/bleLeftTurn.png",
-                  ),
+                new Step(
+                  titleHeight: titleHeight, 
+                  instructString: "To The Right Of", 
+                  imageSize: imageSize, 
+                  instructUrl: "assets/pngs/bleRightTurn.png",
                 ),
                 Opacity(
-                  opacity: (stepNumber == 2) ? 1 : 0,
+                  opacity: (instructionNumber == 2) ? 1 : 0,
                   child: new Step(
                     titleHeight: titleHeight, 
                     instructString: "Over", 
@@ -148,12 +153,12 @@ class _BlePatternState extends State<BlePattern> {
                   ),
                 ),
                 Opacity(
-                  opacity: (stepNumber == 3) ? 1 : 0,
+                  opacity: (instructionNumber == 1) ? 1 : 0,
                   child: new Step(
                     titleHeight: titleHeight, 
-                    instructString: "To The Right Of", 
+                    instructString: "To The Left Of", 
                     imageSize: imageSize, 
-                    instructUrl: "assets/pngs/bleRightTurn.png",
+                    instructUrl: "assets/pngs/bleLeftTurn.png",
                   ),
                 ),
               ],
@@ -162,7 +167,8 @@ class _BlePatternState extends State<BlePattern> {
               child: Container(
                 padding: EdgeInsets.fromLTRB(indicatorPadding, 0, indicatorPadding, 0),
                 alignment: Alignment.center,
-                child: percent.LinearPercentIndicator(
+                child: (ScannerStaticVars.isScanning.value)
+                ? percent.LinearPercentIndicator(
                   animation: true,
                   animationDuration: 100,
                   animateFromLastPercent: true,
@@ -171,6 +177,32 @@ class _BlePatternState extends State<BlePattern> {
                   lineHeight: 16, 
                   progressColor: Colors.lightGreenAccent,
                 )
+                : new Builder(builder: (BuildContext context) {
+                  return InkWell(
+                    onTap: (){
+                      //Inform the user that it might fail
+                      final SnackBar msg = SnackBar(
+                        content: Text(
+                          'Trying To Re-Start The Scanner' 
+                          + '\n' 
+                          + 'If It Fails Please Try Again',
+                        ),
+                      );
+                      Scaffold.of(context).showSnackBar(msg);
+                      //Attempt to Start Up The Scanner
+                      ScannerStaticVars.startScan();
+                    },
+                    child: Container(
+                      child: Text(
+                        "Waiting For The Scanner To Start Up",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Navigation.blueGrey,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
               ),
             )
           ],
@@ -196,40 +228,43 @@ class Step extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: titleHeight,
-          ),
-          child: DefaultTextStyle(
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Navigation.blueGrey,
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: <Widget>[
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: titleHeight,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text("Hold Your Device"),
-                Text(
-                  instructString,
-                  style: TextStyle(
-                    fontSize: 32,
+            child: DefaultTextStyle(
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Navigation.blueGrey,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text("Hold Your Device"),
+                  Text(
+                    instructString,
+                    style: TextStyle(
+                      fontSize: 32,
+                    ),
                   ),
-                ),
-                Text("Your Phone")
-              ],
+                  Text("Your Phone")
+                ],
+              ),
             ),
           ),
-        ),
-        Container(
-          height: imageSize,
-          width: imageSize,
-          child: Image.asset(instructUrl),
-        ),
-      ],
+          Container(
+            height: imageSize,
+            width: imageSize,
+            child: Image.asset(instructUrl),
+          ),
+        ],
+      ),
     );
   }
 }

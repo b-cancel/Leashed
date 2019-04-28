@@ -189,7 +189,8 @@ class _SignalPulseState extends State<SignalPulse> {
 
   @override
   Widget build(BuildContext context) {
-    Duration averageInterval = widget.scanData.averageIntervalDuration;
+    //NOTE: we use min so the scanner being off doesn't throw off what should be our average
+    Duration averageInterval = widget.scanData.minIntervalDuration * 3;
     averageInterval = (averageInterval == null) ? Duration(seconds: 1) : averageInterval;
 
     DateTime lastScan = widget.scanData.rssiUpdateDateTimes.last;

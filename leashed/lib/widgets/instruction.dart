@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
@@ -95,8 +96,9 @@ class _InstructionState extends State<Instruction> {
             ),
             Expanded(
               child: Center(
-                child: (ScannerStaticVars.bluetoothOn.value)
-                ? new RaisedButton(
+                child: (ScannerStaticVars.bluetoothOn.value && ScannerStaticVars.isScanning.value)
+                ? Container()
+                : new RaisedButton(
                   color: Navigation.blueGrey,
                   onPressed: () => widget.onDone(),
                   child: new Text(
@@ -105,8 +107,7 @@ class _InstructionState extends State<Instruction> {
                       color: Colors.white,
                     ),
                   ),
-                )
-                : Container(),
+                ),
               ),
             )
           ],
