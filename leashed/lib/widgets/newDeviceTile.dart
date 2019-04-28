@@ -25,7 +25,6 @@ class NewDeviceTile extends StatelessWidget {
       children: <Widget>[
         Row(
           children: <Widget>[
-            /*
             Stack(
               children: <Widget>[
                 SignalPulse(
@@ -43,7 +42,6 @@ class NewDeviceTile extends StatelessWidget {
                 ),
               ],
             ),
-            */
             Container(
               padding: EdgeInsets.all(8),
               child: Column(
@@ -58,12 +56,10 @@ class NewDeviceTile extends StatelessWidget {
                     ),
                   ),
                   new Text(id + " | " + type),
-                  /*
                   new TimeSince(
                     interval: Duration(milliseconds: 500),
                     scanData: device.scanData,
                   ),
-                  */
                 ],
               ),
             ),

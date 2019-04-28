@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/helper/structs.dart';
+import 'package:leashed/navigation.dart';
 import 'package:leashed/pattern/phoneDown.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:leashed/widgets/newDeviceTile.dart';
@@ -20,7 +21,7 @@ class SearchNew extends StatefulWidget {
   _SearchNewState createState() => _SearchNewState();
 }
 
-class _SearchNewState extends State<SearchNew> {
+class _SearchNewState extends State<SearchNew> with RouteAware {
   List<String> deviceIDs;
 
   @override
@@ -40,13 +41,29 @@ class _SearchNewState extends State<SearchNew> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    Navigation.routeObserver.subscribe(this, ModalRoute.of(context));
+  }
+
+  @override
+  void didPopNext() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => ScannerStaticVars.startScan());
+  }
+
+  @override
   void dispose(){
-    super.dispose();
+    Navigation.routeObserver.unsubscribe(this);
+
     ScannerStaticVars.allDevicesfoundLength.removeListener(updateListThenSetState);
     ScannerStaticVars.bluetoothOn.removeListener(customSetState);
     ScannerStaticVars.isScanning.removeListener(customSetState);
     ScannerStaticVars.stopScan();
+
+    super.dispose();
   }
+
+  //-----BLE Interact START
 
   updateListThenSetState(){
     customSetState(updateList: true);
@@ -60,6 +77,8 @@ class _SearchNewState extends State<SearchNew> {
       setState((){});
     }
   }
+
+  //-----BLE Interact END
 
   ///-------------------------Overrides-------------------------
   @override
@@ -182,6 +201,7 @@ class _SearchNewState extends State<SearchNew> {
   Widget patternDetectionButton(){
     return FloatingActionButton.extended(
       onPressed: (){
+        ScannerStaticVars.stopScan();
         Navigator.push(context, PageTransition(
           type: PageTransitionType.fade,
           duration: Duration.zero, 

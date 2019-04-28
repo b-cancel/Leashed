@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:leashed/navigation.dart';
+import 'package:leashed/scanner.dart';
+import 'package:leashed/widgets/bluetoothOffBanner.dart';
 
-class Instruction extends StatelessWidget {
+class Instruction extends StatefulWidget {
   final String imageUrl;
   final List<String> lines;
   final Function onDone;
@@ -12,23 +14,47 @@ class Instruction extends StatelessWidget {
     @required this.lines,
     @required this.onDone,
   });
+
+  @override
+  _InstructionState createState() => _InstructionState();
+}
+
+class _InstructionState extends State<Instruction> {
   
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+
     //force portrait mode
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown
     ]);
-    
+
+    //listen to the bluetooth states changes
+    ScannerStaticVars.bluetoothOn.addListener(customSetState);
+  }
+
+  @override
+  void dispose(){
+    ScannerStaticVars.bluetoothOn.removeListener(customSetState);
+    super.dispose();
+  }
+
+  customSetState(){
+   setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
     //get size
     double imageSize = MediaQuery.of(context).size.width;
     double titleHeight = (MediaQuery.of(context).size.height - imageSize) / 2;
 
     //create list of text widgets
     List<Widget> textLines = new List<Widget>();
-    for(int i = 0; i < lines.length; i++){
-      textLines.add(new Text(lines[i]));
+    for(int i = 0; i < widget.lines.length; i++){
+      textLines.add(new Text(widget.lines[i]));
     }
 
     //return widget
@@ -42,6 +68,9 @@ class Instruction extends StatelessWidget {
         ),
         body: new Column(
           children: <Widget>[
+            (ScannerStaticVars.bluetoothOn.value)
+            ? Container()
+            : new BluetoothOffBanner(),
             ConstrainedBox(
               constraints: BoxConstraints(
                 minHeight: titleHeight,
@@ -62,20 +91,22 @@ class Instruction extends StatelessWidget {
             Container(
               height: imageSize,
               width: imageSize,
-              child: Image.asset(imageUrl),
+              child: Image.asset(widget.imageUrl),
             ),
             Expanded(
               child: Center(
-                child: new RaisedButton(
+                child: (ScannerStaticVars.bluetoothOn.value)
+                ? new RaisedButton(
                   color: Navigation.blueGrey,
-                  onPressed: () => onDone(),
+                  onPressed: () => widget.onDone(),
                   child: new Text(
                     "Done",
                     style: TextStyle(
                       color: Colors.white,
                     ),
                   ),
-                ),
+                )
+                : Container(),
               ),
             )
           ],

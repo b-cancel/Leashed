@@ -5,16 +5,22 @@ import 'package:leashed/home.dart';
 import 'package:leashed/searchNew.dart';
 import 'package:leashed/settings.dart';
 
+//-------------------------Root Widget-------------------------
+
 ///This Exists Exclusively to
 ///(1) create a top level Material App that can be used by the rest of the widgets for navigation
 ///(2) define a global Route that can be used by the rest of widgets for navigation
 ///(3) define all potential routes throughout the application
 
-//-------------------------Root Widget-------------------------
-
 class Navigation extends StatelessWidget {
   static final appRouter = new Router();
   static final Color blueGrey = Colors.blueGrey[900];
+
+  //used to detect when we come back to
+  //1. going back to ourDeviceScan should restart the scan
+  //2. going back to newDeviceScan should restart the scan
+
+  static final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
   //-------------------------Overrides-------------------------
 
@@ -33,6 +39,7 @@ class Navigation extends StatelessWidget {
         primaryColor: blueGrey,
         accentColor: blueGrey,
       ), //TODO... be able to dynamically change theme in settings
+      navigatorObservers: [routeObserver],
       onGenerateRoute: appRouter.generator,
       home: new HomeStateLess(),
     );
