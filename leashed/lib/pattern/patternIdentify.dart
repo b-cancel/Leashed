@@ -193,6 +193,39 @@ class PatternIdentify extends StatelessWidget {
   }
 
   List<DevicePattern> generateWidgets(Map<String, PatternAnalyzer> map, double maxWidth){
+    //init the arrray
+    List<DevicePattern> widgets = new List<DevicePattern>();
+
+    //fill the array
+    if(map.length != 0){
+      List<String> devicesIDs = map.keys.toList();
+      for(int i = 0; i < devicesIDs.length; i++){
+        String thisDeviceID = devicesIDs[i];
+        DeviceData thisDevice  = ScannerStaticVars.allDevicesFound[thisDeviceID];
+        String thisDeviceName = thisDevice.name;
+        String thisDeviceType = shortBDT(thisDevice.type);
+        widgets.add(
+          new DevicePattern(
+            name: (thisDeviceName == "") ? "N0 NAME" : thisDeviceName,
+            id: thisDeviceID,
+            type: thisDeviceType,
+            maxWidth: maxWidth,
+            /*
+            minRssi: 2,
+            maxRssi: 9,
+            intervalTimes: new List<DateTime>(),
+            dtToRssi: new Map<DateTime,int>(),
+            dtToIdealRssi: new Map<DateTime,int>(),
+            */
+          ),
+        );
+      }
+    }
+
+    //return the array
+    return widgets;
+    
+    /*
     return [new DevicePattern(
       name: "Tile Tracker",
       id: "12:4A:8B:87:23:8A",
@@ -204,6 +237,7 @@ class PatternIdentify extends StatelessWidget {
       dtToRssi: new Map<DateTime,int>(),
       dtToIdealRssi: new Map<DateTime,int>(),
     )];
+    */
   }
 }
 
@@ -369,7 +403,7 @@ class DevicePattern extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.only(bottom: 8),
                       child: new Text(
-                        "Device ID | Device Type",
+                        id + " | " + type,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
