@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_page_indicator/flutter_page_indicator.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
@@ -49,8 +48,12 @@ class PatternIdentify extends StatelessWidget {
 
     //fill arrays/maps
     Map<String, PatternAnalyzer> devicesWithPattern = generateMap();
-    devicesWithPattern = sortMap(devicesWithPattern);
-    List<DevicePattern> potentialSelections = generateWidgets(devicesWithPattern, maxWidth);
+    List<String> sortedDevices = sortMap(devicesWithPattern);
+    List<DevicePattern> potentialSelections = generateWidgets(
+      sortedDevices, 
+      devicesWithPattern, 
+      maxWidth,
+    );
 
     //output UI
     return Scaffold(
@@ -188,19 +191,39 @@ class PatternIdentify extends StatelessWidget {
     return devicesWithPattern;
   }
 
-  Map<String, PatternAnalyzer> sortMap(Map<String, PatternAnalyzer> map){
-    return map;
+  List<String> sortMap(Map<String, PatternAnalyzer> map){
+    Map<String, DeviceData> allDevicesFound = ScannerStaticVars.allDevicesFound;
+    List<String> deviceIDs = map.keys.toList();
+
+    //seperate with and without name
+    List<String> withName = new List<String>();
+    List<String> withoutName = new List<String>();
+    
+    //add the devices in the map to each respective list
+    for(int i = 0; i < deviceIDs.length; i++){
+      String deviceID = deviceIDs[i];
+      if(allDevicesFound[deviceID].name != ""){
+        withName.add(deviceID);
+      }
+      else withoutName.add(deviceID);
+    }
+
+    //TODO... sort the withName by the devices name NOT it's id
+    return ([]..addAll(withName))..addAll(withoutName);
   }
 
-  List<DevicePattern> generateWidgets(Map<String, PatternAnalyzer> map, double maxWidth){
+  List<DevicePattern> generateWidgets(
+    List<String> sortedDevices, 
+    Map<String, PatternAnalyzer> map, 
+    double maxWidth,
+    ){
     //init the arrray
     List<DevicePattern> widgets = new List<DevicePattern>();
 
     //fill the array
     if(map.length != 0){
-      List<String> devicesIDs = map.keys.toList();
-      for(int i = 0; i < devicesIDs.length; i++){
-        String thisDeviceID = devicesIDs[i];
+      for(int i = 0; i < sortedDevices.length; i++){
+        String thisDeviceID = sortedDevices[i];
         DeviceData thisDevice  = ScannerStaticVars.allDevicesFound[thisDeviceID];
         String thisDeviceName = thisDevice.name;
         String thisDeviceType = shortBDT(thisDevice.type);
@@ -213,10 +236,8 @@ class PatternIdentify extends StatelessWidget {
             minRssi: map[thisDeviceID].rssiMin,
             maxRssi: map[thisDeviceID].rssiMax,
             intervalTimes: intervalTimes,
-            /*
-            dtToRssi: new Map<DateTime,int>(),
-            dtToIdealRssi: new Map<DateTime,int>(),
-            */
+            rssis: map[thisDeviceID].rssi,
+            dateTimes: map[thisDeviceID].dateTimes,
           ),
         );
       }
@@ -224,20 +245,6 @@ class PatternIdentify extends StatelessWidget {
 
     //return the array
     return widgets;
-    
-    /*
-    return [new DevicePattern(
-      name: "Tile Tracker",
-      id: "12:4A:8B:87:23:8A",
-      type: "Low Energy",
-      maxWidth: maxWidth,
-      minRssi: 2,
-      maxRssi: 9,
-      intervalTimes: new List<DateTime>(),
-      dtToRssi: new Map<DateTime,int>(),
-      dtToIdealRssi: new Map<DateTime,int>(),
-    )];
-    */
   }
 }
 
@@ -335,8 +342,8 @@ class DevicePattern extends StatelessWidget {
     //wait 0->1 | 2->3 | 4->5 | 6->7
     //intervals 1->2 | 3->4 | 5->6
     this.intervalTimes,
-    this.dtToRssi,
-    this.dtToIdealRssi,
+    this.rssis,
+    this.dateTimes,
   }) : super(key: key);
 
   //basic device info
@@ -352,9 +359,8 @@ class DevicePattern extends StatelessWidget {
   //AND limits x axis on graph
   final List<DateTime> intervalTimes;
   //points
-  final Map<DateTime, int> dtToRssi;
-  //ideal points
-  final Map<DateTime, int> dtToIdealRssi;
+  final List<int> rssis;
+  final List<DateTime> dateTimes;
 
   @override
   Widget build(BuildContext context) {

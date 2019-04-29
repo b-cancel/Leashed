@@ -176,7 +176,7 @@ class _BlePatternState extends State<BlePattern> {
                 alignment: Alignment.center,
                 child: (ScannerStaticVars.isScanning.value)
                 ? percent.LinearPercentIndicator(
-                  animation: true,
+                  animation: false,
                   animationDuration: 100,
                   animateFromLastPercent: true,
                   percent: progressThisStep,
