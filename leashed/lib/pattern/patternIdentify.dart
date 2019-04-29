@@ -210,10 +210,10 @@ class PatternIdentify extends StatelessWidget {
             id: thisDeviceID,
             type: thisDeviceType,
             maxWidth: maxWidth,
+            minRssi: map[thisDeviceID].rssiMin,
+            maxRssi: map[thisDeviceID].rssiMax,
+            intervalTimes: intervalTimes,
             /*
-            minRssi: 2,
-            maxRssi: 9,
-            intervalTimes: new List<DateTime>(),
             dtToRssi: new Map<DateTime,int>(),
             dtToIdealRssi: new Map<DateTime,int>(),
             */
@@ -332,6 +332,8 @@ class DevicePattern extends StatelessWidget {
     @required this.maxWidth,
     this.minRssi,
     this.maxRssi,
+    //wait 0->1 | 2->3 | 4->5 | 6->7
+    //intervals 1->2 | 3->4 | 5->6
     this.intervalTimes,
     this.dtToRssi,
     this.dtToIdealRssi,
