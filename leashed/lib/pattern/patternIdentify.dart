@@ -6,6 +6,17 @@ import 'package:leashed/pattern/blePattern.dart';
 import 'package:page_transition/page_transition.dart';
 
 class PatternIdentify extends StatelessWidget {
+  final List<DateTime> intervalTimes;
+  //NOTE: date times and what they mean
+  //at index 0: before the detection starts
+  //at index ODD: start of detection interval
+  //at index EVEN: end of detection interval
+  //at index length - 1(will be odd): 
+
+  PatternIdentify({
+    @required this.intervalTimes,
+  });
+
   final controller = PageController();
 
   @override
@@ -187,5 +198,52 @@ class DevicePattern extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class PatternAnalyzer{
+  APattern left;
+  APattern middle;
+  APattern right;
+
+  PatternAnalyzer(){
+    left = APattern();
+    middle = APattern();
+    right = APattern();
+  }
+}
+
+class APattern{
+  List<int> rssi;
+  List<DateTime> dateTimes;
+  int rssiMin;
+  int rssiMax;
+  double rssiAverage;
+
+  APattern(){
+    rssi = List<int>();
+    dateTimes = List<DateTime>();
+  }
+
+  void add(int theRssi, DateTime theDateTime){
+    //add data
+    rssi.add(theRssi);
+    dateTimes.add(theDateTime);
+
+    //set min
+    if(rssiMin == null) rssiMin = theRssi;
+    else rssiMin = (theRssi < rssiMin) ? theRssi : rssiMin;
+
+    //set max
+    if(rssiMax == null) rssiMax = theRssi;
+    else rssiMax = (theRssi > rssiMax) ? theRssi : rssiMax;
+
+    //average
+    if(rssiAverage == null) rssiAverage = theRssi.toDouble();
+    else{
+      double lastSum = rssiAverage / (rssi.length - 1);
+      double sum = lastSum + theRssi;
+      rssiAverage = sum / rssi.length;
+    }
   }
 }

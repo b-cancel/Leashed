@@ -12,7 +12,7 @@ import 'package:percent_indicator/percent_indicator.dart' as percent;
 class BlePattern extends StatefulWidget {
   final int secondsBetweenSteps;
   final int secondsPerStep;
-
+  
   BlePattern({
     this.secondsBetweenSteps: 1,
     this.secondsPerStep: 3,
@@ -23,6 +23,7 @@ class BlePattern extends StatefulWidget {
 }
 
 class _BlePatternState extends State<BlePattern> {
+  final List<DateTime> intervalTimes = new List<DateTime>();
 
   @override
   void initState() {
@@ -77,17 +78,23 @@ class _BlePatternState extends State<BlePattern> {
   recursion()async{
     //recursion
     if(instructionNumber > 3){ //base case
+      intervalTimes.add(DateTime.now());
       await Future.delayed(Duration(seconds: widget.secondsBetweenSteps));
+      intervalTimes.add(DateTime.now());
       if(mounted){
         Navigator.pushReplacement(context, PageTransition(
           type: PageTransitionType.fade,
           duration: Duration.zero, 
-          child: PatternIdentify(),
+          child: PatternIdentify(
+            intervalTimes: intervalTimes,
+          ),
         ));
       }
     }
     else{ //loop
+      intervalTimes.add(DateTime.now());
       await Future.delayed(Duration(seconds: widget.secondsBetweenSteps));
+      intervalTimes.add(DateTime.now());
       if(mounted){
         //grab data in this step
         int secondsPerStep = widget.secondsPerStep;
