@@ -59,21 +59,14 @@ class PatternIdentify extends StatelessWidget {
       ),
       body: Stack(
         children: <Widget>[
-          new Swiper(
-            loop: false,
-            itemBuilder: (BuildContext context,int index){
-              return potentialSelections[index];
-            },
-            itemCount: potentialSelections.length,
-            control: new SwiperControl(
-              padding: EdgeInsets.only(
-                top: 85, 
-                right: paddingLeftRight, 
-                left: paddingLeftRight,
-              ),
-              size: iconSize,
-            ),
-            //NOTE: no pagination we might have alot of pages (25+)
+          (potentialSelections.length == 0) ? new NoPatternFound()
+          : (potentialSelections.length == 1) ? new OnePatternFound(
+            potentialSelections: potentialSelections,
+          )
+          : new ManyPatternsFound(
+            potentialSelections: potentialSelections, 
+            paddingLeftRight: paddingLeftRight, 
+            iconSize: iconSize,
           ),
           Positioned(
             left: 0,
@@ -83,7 +76,9 @@ class PatternIdentify extends StatelessWidget {
               behavior: HitTestBehavior.deferToChild,
               child: Column(
                 children: <Widget>[
-                  Container(
+                  (potentialSelections.length == 1)
+                  ? Container()
+                  : Container(
                     padding: EdgeInsets.all(4),
                     child: new Text("Swipe To Manually Identify The Pattern"),
                   ),
@@ -209,6 +204,88 @@ class PatternIdentify extends StatelessWidget {
       dtToRssi: new Map<DateTime,int>(),
       dtToIdealRssi: new Map<DateTime,int>(),
     )];
+  }
+}
+
+class ManyPatternsFound extends StatelessWidget {
+  const ManyPatternsFound({
+    Key key,
+    @required this.potentialSelections,
+    @required this.paddingLeftRight,
+    @required this.iconSize,
+  }) : super(key: key);
+
+  final List<DevicePattern> potentialSelections;
+  final double paddingLeftRight;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Swiper(
+      loop: false,
+      itemBuilder: (BuildContext context,int index){
+        return potentialSelections[index];
+      },
+      itemCount: potentialSelections.length,
+      control: new SwiperControl(
+        padding: EdgeInsets.only(
+          top: 85, 
+          right: paddingLeftRight, 
+          left: paddingLeftRight,
+        ),
+        size: iconSize,
+      ),
+      //NOTE: no pagination we might have alot of pages (25+)
+    );
+  }
+}
+
+class OnePatternFound extends StatelessWidget {
+  const OnePatternFound({
+    Key key,
+    @required this.potentialSelections,
+  }) : super(key: key);
+
+  final List<DevicePattern> potentialSelections;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height,
+      child: potentialSelections[0],
+    );
+  }
+}
+
+class NoPatternFound extends StatelessWidget {
+  const NoPatternFound({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height,
+      child: Center(
+        child: DefaultTextStyle(
+          style: TextStyle(
+            color: Navigation.blueGrey,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              new Text("The Signal Pattern"),
+              new Text("Was Not Found"),
+              new Text("Please Try Again"),
+              new Text(""),
+              new Text(""),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
