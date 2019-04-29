@@ -1,17 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_page_indicator/flutter_page_indicator.dart';
+import 'package:leashed/helper/structs.dart';
 import 'package:leashed/navigation.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:leashed/pattern/blePattern.dart';
+import 'package:leashed/scanner.dart';
 import 'package:page_transition/page_transition.dart';
 
 class PatternIdentify extends StatelessWidget {
   final List<DateTime> intervalTimes;
+  //---General 
   //NOTE: date times and what they mean
   //at index 0: before the detection starts
   //at index ODD: start of detection interval
   //at index EVEN: end of detection interval
   //at index length - 1(will be odd): 
+
+  //---Detailed
+  //START-------------------------
+  //index 0: START                  (start of wait)   [loop 0]  0
+  //FIRST INTERVAL-------------------------
+  //index 1: Start of 1st Interval  (end of wait)     [loop 0]
+  //index 2: End of 1st Interval    (start of wait)   [loop 1]  1
+  //SECOND INTERVAL-------------------------
+  //index 3: Start of 2nd Interval  (end of wait)     [loop 1]
+  //index 4: End of 2nd Interval    (start of wait)   [loop 2]  2
+  //THIRD INTERVAL-------------------------
+  //index 5: Start of 3rd Interval  (end of wait)     [loop 2]
+  //index 6: End of 3rd Interval    (start of wait)   [before mount 1]
+  //END-------------------------
+  //index 7: End of Everythign      (end of wait)     [before mount 2]  
 
   PatternIdentify({
     @required this.intervalTimes,
@@ -21,28 +39,18 @@ class PatternIdentify extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
+    //basic settings
     double iconSize = 30;
     double paddingLeftRight = 8;
     double maxWidth = MediaQuery.of(context).size.width;
     maxWidth -= iconSize;
     maxWidth -= (paddingLeftRight * 6);
 
-    List<DevicePattern> options = [
-      new DevicePattern(
-        maxWidth: maxWidth,
-        name: "Tile Tracker",
-      ),
-      new DevicePattern(
-        maxWidth: maxWidth,
-        name: "XY Tracker",
-      ),
-      new DevicePattern(
-        maxWidth: maxWidth,
-        name: "Unknown",
-      ),
-    ];
+    //fill arrays/maps
+    Map<String, PatternAnalyzer> devicesWithPattern = generateMap();
+    List<DevicePattern> potentialSelections = generateWidgets(devicesWithPattern, maxWidth);
 
+    //output UI
     return Scaffold(
       appBar: AppBar(
         title: new Text("Patterns Found"),
@@ -52,9 +60,9 @@ class PatternIdentify extends StatelessWidget {
           new Swiper(
             loop: false,
             itemBuilder: (BuildContext context,int index){
-              return options[index];
+              return potentialSelections[index];
             },
-            itemCount: options.length,
+            itemCount: potentialSelections.length,
             control: new SwiperControl(
               padding: EdgeInsets.only(
                 top: 85, 
@@ -110,17 +118,94 @@ class PatternIdentify extends StatelessWidget {
       ),
     );
   }
+
+  Map<String, PatternAnalyzer> generateMap(){
+    //init return map
+    Map<String, PatternAnalyzer> devicesWithPattern = new Map<String, PatternAnalyzer>();
+
+    //iterate through all devices
+    List<String> deviceIDs = ScannerStaticVars.allDevicesFound.keys.toList();
+    for(int i = 0; i < deviceIDs.length; i++){
+      //grab this devices basic data
+      String thisDeviceID = deviceIDs[i];
+      DeviceData thisDevice = ScannerStaticVars.allDevicesFound[thisDeviceID];
+      int scanCountOfDevice = thisDevice.scanData.rssiUpdates.length;
+
+      //init devices analyzer
+      PatternAnalyzer analyzerOfDevice = new PatternAnalyzer();
+
+      //iterate through this devices scans
+      for(int scan = 0; scan < scanCountOfDevice; scan++){
+        //TODO... only add to this scan if its within our range
+        //TODO... once we know that we can add to this scan determine in which interval it is
+      }
+
+      //determine if this devices signals match our expected pattern
+
+      //---1 must have data in all 3 sections
+      bool hasLeft = analyzerOfDevice.left.hasItems();
+      bool hasMiddle = analyzerOfDevice.middle.hasItems();
+      bool hasRight = analyzerOfDevice.right.hasItems();
+      if(hasLeft && hasMiddle && hasRight){
+        //---2 middle average must be higher than left and right average
+        double leftAvg = analyzerOfDevice.left.average;
+        double midAvg = analyzerOfDevice.middle.average;
+        double rightAvg = analyzerOfDevice.right.average;
+        if(midAvg > leftAvg && midAvg > rightAvg){
+          devicesWithPattern[thisDeviceID] = analyzerOfDevice;
+        }
+      }
+    }
+
+    //return result
+    return devicesWithPattern;
+  }
+
+  List<DevicePattern> generateWidgets(Map<String, PatternAnalyzer> map, double maxWidth){
+    return [new DevicePattern(
+      name: "Tile Tracker",
+      id: "12:4A:8B:87:23:8A",
+      type: "Low Energy",
+      maxWidth: maxWidth,
+      minRssi: 2,
+      maxRssi: 9,
+      intervalTimes: new List<DateTime>(),
+      dtToRssi: new Map<DateTime,int>(),
+      dtToIdealRssi: new Map<DateTime,int>(),
+    )];
+  }
 }
 
 class DevicePattern extends StatelessWidget {
-  const DevicePattern({
+  DevicePattern({
     Key key,
     @required this.name,
+    this.id,
+    this.type,
     @required this.maxWidth,
+    this.minRssi,
+    this.maxRssi,
+    this.intervalTimes,
+    this.dtToRssi,
+    this.dtToIdealRssi,
   }) : super(key: key);
 
+  //basic device info
   final String name;
+  final String id;
+  final String type;
+  //avoid any device data being over arrows
   final double maxWidth;
+  //limit y axis on graph
+  final int minRssi;
+  final int maxRssi;
+  //highlight times between takes with black
+  //AND limits x axis on graph
+  List<DateTime> intervalTimes;
+  //points
+  Map<DateTime, int> dtToRssi;
+  //ideal points
+  Map<DateTime, int> dtToIdealRssi;
 
   @override
   Widget build(BuildContext context) {
@@ -198,52 +283,5 @@ class DevicePattern extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class PatternAnalyzer{
-  APattern left;
-  APattern middle;
-  APattern right;
-
-  PatternAnalyzer(){
-    left = APattern();
-    middle = APattern();
-    right = APattern();
-  }
-}
-
-class APattern{
-  List<int> rssi;
-  List<DateTime> dateTimes;
-  int rssiMin;
-  int rssiMax;
-  double rssiAverage;
-
-  APattern(){
-    rssi = List<int>();
-    dateTimes = List<DateTime>();
-  }
-
-  void add(int theRssi, DateTime theDateTime){
-    //add data
-    rssi.add(theRssi);
-    dateTimes.add(theDateTime);
-
-    //set min
-    if(rssiMin == null) rssiMin = theRssi;
-    else rssiMin = (theRssi < rssiMin) ? theRssi : rssiMin;
-
-    //set max
-    if(rssiMax == null) rssiMax = theRssi;
-    else rssiMax = (theRssi > rssiMax) ? theRssi : rssiMax;
-
-    //average
-    if(rssiAverage == null) rssiAverage = theRssi.toDouble();
-    else{
-      double lastSum = rssiAverage / (rssi.length - 1);
-      double sum = lastSum + theRssi;
-      rssiAverage = sum / rssi.length;
-    }
   }
 }

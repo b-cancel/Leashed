@@ -103,3 +103,75 @@ class ScanData{
     }
   }
 }
+
+enum Section {neither, left, middle, right}
+
+class PatternAnalyzer{
+  List<DateTime> dateTimes;
+  List<int> rssi;
+  int rssiMin;
+  int rssiMax;
+  AnAverage total;
+  AnAverage left;
+  AnAverage middle;
+  AnAverage right;
+
+  PatternAnalyzer(){
+    dateTimes = new List<DateTime>();
+    rssi = new List<int>();
+    total = AnAverage();
+    left = AnAverage();
+    middle = AnAverage();
+    right = AnAverage();
+  }
+
+  add(int theRssi, DateTime theDateTime, Section theSection){
+    //add data
+    rssi.add(theRssi);
+    dateTimes.add(theDateTime);
+
+    //set min
+    if(rssiMin == null) rssiMin = theRssi;
+    else rssiMin = (theRssi < rssiMin) ? theRssi : rssiMin;
+
+    //set max
+    if(rssiMax == null) rssiMax = theRssi;
+    else rssiMax = (theRssi > rssiMax) ? theRssi : rssiMax;
+
+    //update total average
+    total.add(theRssi);
+
+    //update any other averages
+    switch(theSection){
+      case Section.left: left.add(theRssi); break;
+      case Section.middle: middle.add(theRssi); break;
+      case Section.right: right.add(theRssi); break;
+      default: break;
+    }
+  }
+}
+
+class AnAverage{
+  double average;
+  int itemCount;
+
+  AnAverage(){
+    average = 0;
+    itemCount = 0;
+  }
+
+  add(int newRssi){
+    double lastSum = average * itemCount;
+    double thisSum = lastSum + newRssi;
+    itemCount++; //update the item count
+    average = thisSum / itemCount; //update the average
+  }
+
+  bool noItems(){
+    return (itemCount == 0) ? true : false;
+  }
+
+  bool hasItems(){
+    return (noItems() == false);
+  }
+}
