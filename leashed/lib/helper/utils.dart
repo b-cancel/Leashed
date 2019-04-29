@@ -487,3 +487,9 @@ Widget resetButton(BuildContext context){
       label: new Text("Re-Start Scan"),
     );
   }
+
+bool withinRange(DateTime lower, DateTime upper, DateTime value){
+  bool aboveLower = lower.microsecondsSinceEpoch <= value.microsecondsSinceEpoch;
+  bool belowUpper = value.microsecondsSinceEpoch <= upper.microsecondsSinceEpoch;
+  return (aboveLower && belowUpper);
+}

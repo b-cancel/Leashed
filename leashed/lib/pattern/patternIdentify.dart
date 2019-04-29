@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_page_indicator/flutter_page_indicator.dart';
 import 'package:leashed/helper/structs.dart';
+import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:leashed/pattern/blePattern.dart';
@@ -48,6 +49,7 @@ class PatternIdentify extends StatelessWidget {
 
     //fill arrays/maps
     Map<String, PatternAnalyzer> devicesWithPattern = generateMap();
+    devicesWithPattern = sortMap(devicesWithPattern);
     List<DevicePattern> potentialSelections = generateWidgets(devicesWithPattern, maxWidth);
 
     //output UI
@@ -120,6 +122,16 @@ class PatternIdentify extends StatelessWidget {
   }
 
   Map<String, PatternAnalyzer> generateMap(){
+    //easy to understand inteval digestion
+    DateTime lowerLimit = intervalTimes.first;
+    DateTime intStartLeft = intervalTimes[1];
+    DateTime intEndLeft = intervalTimes[2];
+    DateTime intStartMiddle = intervalTimes[3];
+    DateTime intEndMiddle = intervalTimes[4];
+    DateTime intStartRight = intervalTimes[5];
+    DateTime intEndRight = intervalTimes[6];
+    DateTime upperLimit = intervalTimes.last;
+
     //init return map
     Map<String, PatternAnalyzer> devicesWithPattern = new Map<String, PatternAnalyzer>();
 
@@ -129,6 +141,8 @@ class PatternIdentify extends StatelessWidget {
       //grab this devices basic data
       String thisDeviceID = deviceIDs[i];
       DeviceData thisDevice = ScannerStaticVars.allDevicesFound[thisDeviceID];
+      List<int> thisDeviceRssi = thisDevice.scanData.rssiUpdates;
+      List<DateTime> thisDeviceDateTimes = thisDevice.scanData.rssiUpdateDateTimes;
       int scanCountOfDevice = thisDevice.scanData.rssiUpdates.length;
 
       //init devices analyzer
@@ -136,12 +150,30 @@ class PatternIdentify extends StatelessWidget {
 
       //iterate through this devices scans
       for(int scan = 0; scan < scanCountOfDevice; scan++){
-        //TODO... only add to this scan if its within our range
-        //TODO... once we know that we can add to this scan determine in which interval it is
+        DateTime thisScanDateTime = thisDeviceDateTimes[scan];
+        //make sure that we only add sections of data that we care to analyze
+        if(withinRange(lowerLimit, upperLimit, thisScanDateTime)){
+
+          //determine what interval this scan is in
+          Section thisScanSection;
+          if(withinRange(intStartLeft, intEndLeft, thisScanDateTime)){
+            thisScanSection = Section.left;
+          }
+          else if(withinRange(intStartMiddle, intEndMiddle, thisScanDateTime)){
+            thisScanSection = Section.middle;
+          }
+          else if(withinRange(intStartRight, intEndRight, thisScanDateTime)){
+            thisScanSection = Section.right;
+          }
+          else thisScanSection = Section.neither;
+
+          //add this to the data we are analyzing
+          int thisScanRssi = thisDeviceRssi[scan];
+          analyzerOfDevice.add(thisScanRssi, thisScanDateTime, thisScanSection);
+        }
       }
 
       //determine if this devices signals match our expected pattern
-
       //---1 must have data in all 3 sections
       bool hasLeft = analyzerOfDevice.left.hasItems();
       bool hasMiddle = analyzerOfDevice.middle.hasItems();
@@ -159,6 +191,10 @@ class PatternIdentify extends StatelessWidget {
 
     //return result
     return devicesWithPattern;
+  }
+
+  Map<String, PatternAnalyzer> sortMap(Map<String, PatternAnalyzer> map){
+    return map;
   }
 
   List<DevicePattern> generateWidgets(Map<String, PatternAnalyzer> map, double maxWidth){
@@ -201,11 +237,11 @@ class DevicePattern extends StatelessWidget {
   final int maxRssi;
   //highlight times between takes with black
   //AND limits x axis on graph
-  List<DateTime> intervalTimes;
+  final List<DateTime> intervalTimes;
   //points
-  Map<DateTime, int> dtToRssi;
+  final Map<DateTime, int> dtToRssi;
   //ideal points
-  Map<DateTime, int> dtToIdealRssi;
+  final Map<DateTime, int> dtToIdealRssi;
 
   @override
   Widget build(BuildContext context) {
