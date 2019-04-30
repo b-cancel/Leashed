@@ -59,7 +59,9 @@ class PatternIdentify extends StatelessWidget {
     //output UI
     return Scaffold(
       appBar: AppBar(
-        title: new Text(sortedDevices.length.toString() +  " Matching Signal Patterns"),
+        title: new Text(sortedDevices.length.toString() 
+        +  " Matching Signal Pattern"
+        + ((sortedDevices.length == 1) ? "" : "s")),
       ),
       body: Stack(
         children: <Widget>[
@@ -419,7 +421,7 @@ class NoPatternFound extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              new Text("The Signal Pattern"),
+              new Text("A Matching Signal Pattern"),
               new Text("Was Not Found"),
               new Text("Please Try Again"),
               new Text(""),
