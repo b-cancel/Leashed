@@ -70,7 +70,7 @@ class Chart extends StatelessWidget {
       createCharts(
         dateTimes,
         scanRSSIs,
-        [3],
+        [1],
         [charts.MaterialPalette.blue.shadeDefault],
         [10],
       )
@@ -90,14 +90,13 @@ class Chart extends StatelessWidget {
     return Stack(
       children: <Widget>[
         Container(
+          padding: EdgeInsets.only(bottom: 16, top: 16),
           color: Colors.grey[350],
           child: charts.LineChart(
             theCharts,
             animate: false,
             layoutConfig: charts.LayoutConfig(
-              topMarginSpec: charts.MarginSpec.fixedPixel(0),
               leftMarginSpec: charts.MarginSpec.fixedPixel(0),
-              bottomMarginSpec: charts.MarginSpec.fixedPixel(0),
               rightMarginSpec: charts.MarginSpec.fixedPixel(0),
             ),
             defaultRenderer: new charts.LineRendererConfig(

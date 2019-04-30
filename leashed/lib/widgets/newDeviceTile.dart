@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:leashed/addNew.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
+import 'package:page_transition/page_transition.dart';
 
 class NewDeviceTile extends StatelessWidget {
   final Map<String, DeviceData> devices;
@@ -21,52 +23,65 @@ class NewDeviceTile extends StatelessWidget {
     var type = shortBDT(device.type);
 
     //TODO... add inkwell or gesture detector with print... see performance difference
-    return Column(
-      children: <Widget>[
-        Row(
-          children: <Widget>[
-            Stack(
-              children: <Widget>[
-                SignalPulse(
-                  interval: Duration(milliseconds: 100),
-                  scanData: device.scanData,
-                ),
-                Positioned.fill(
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: CurrentRSSI(
-                        interval: Duration(milliseconds: 500),
-                        scanData: device.scanData,
-                      ),
-                    ),
-                ),
-              ],
-            ),
-            Container(
-              padding: EdgeInsets.all(8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      onTap: (){
+        Navigator.push(context, PageTransition(
+          type: PageTransitionType.fade,
+          duration: Duration.zero, 
+          child: AddNew(
+            name: name,
+            id: id,
+            type: type,
+          ),
+        ));
+      },
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Stack(
                 children: <Widget>[
-                  new Text(
-                    noName ? "No Name Available" : name,
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontSize: 18,
-                    ),
-                  ),
-                  new Text(id + " | " + type),
-                  new TimeSince(
-                    interval: Duration(milliseconds: 500),
+                  SignalPulse(
+                    interval: Duration(milliseconds: 100),
                     scanData: device.scanData,
+                  ),
+                  Positioned.fill(
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: CurrentRSSI(
+                          interval: Duration(milliseconds: 500),
+                          scanData: device.scanData,
+                        ),
+                      ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-        Divider(),
-      ],
+              Container(
+                padding: EdgeInsets.all(8),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    new Text(
+                      noName ? "No Name Available" : name,
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontSize: 18,
+                      ),
+                    ),
+                    new Text(id + " | " + type),
+                    new TimeSince(
+                      interval: Duration(milliseconds: 500),
+                      scanData: device.scanData,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Divider(),
+        ],
+      ),
     );
   }
 }

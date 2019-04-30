@@ -32,6 +32,7 @@ dependencies:
   percent_indicator: ^1.0.15
   page_transition: '^1.0.9'
   flutter_swiper: ^1.1.6
+  
 
 flutter_icons:
   android: "launcher_icon"
@@ -75,6 +76,9 @@ flutter:
     - assets/pngs/bleLeftTurn.png
     - assets/pngs/bleMiddleTurn.png
     - assets/pngs/bleRightTurn.png
+    - assets/pngs/imageNotFound.png
+    - assets/pngs/logoTransparent.png
+    - assets/pngs/devicePlaceholder.png
 
 
 

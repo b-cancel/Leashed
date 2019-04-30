@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:leashed/addNew.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
@@ -494,7 +495,6 @@ class DevicePattern extends StatelessWidget {
                 averageMiddle: averageMiddle.toInt(),
                 averageRight: averageRight.toInt(),
                 intervalDateTimes: intervalTimes,
-                showIntervals: true,
               ),
             ),
           ),
@@ -529,8 +529,16 @@ class DevicePattern extends StatelessWidget {
                     RaisedButton(
                       color: Navigation.blueGrey,
                       onPressed: (){
-                        Navigator.of(context).pop();
                         Navigation.timeToDetectPattern.value = Navigation.defaultTimeToDetectPattern.value; //RESET
+                        Navigator.pushReplacement(context, PageTransition(
+                          type: PageTransitionType.fade,
+                          duration: Duration.zero, 
+                          child: AddNew(
+                            name: name,
+                            id: id,
+                            type: type,
+                          ),
+                        ));
                       },
                       child: new Text(
                         "Select This Device",
