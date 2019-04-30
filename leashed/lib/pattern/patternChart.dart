@@ -8,61 +8,103 @@ class Chart extends StatelessWidget {
     Key key,
     @required this.scanDateTimes,
     @required this.scanRSSIs,
+    @required this.minRSSI,
+    @required this.maxRSSI,
+    @required this.averageLeft,
+    @required this.averageMiddle,
+    @required this.averageRight,
     @required this.intervalDateTimes,
+    this.showIntervals: false,
   }) : super(key: key);
 
   final List<DateTime> scanDateTimes;
   final List<int> scanRSSIs;
+  final int minRSSI;
+  final int maxRSSI;
+  final int averageLeft;
+  final int averageMiddle;
+  final int averageRight;
   final List<DateTime> intervalDateTimes;
+  final bool showIntervals;
 
   @override
   Widget build(BuildContext context) {
+    //interval
+    List<common.AnnotationSegment> annotations = new List<common.AnnotationSegment>();
+    if(showIntervals){
+      annotations.addAll(
+        createIntervalHighlights(listDateTimeToListInt(intervalDateTimes)),
+      );
+    }
 
-    //---Min Max RSSIs
-    int minValue = scanRSSIs[0];
-    int maxValue = scanRSSIs[0];
-    for(int i = 1; i < scanRSSIs.length; i++){
-      int thisValue = scanRSSIs[i];
-      if(thisValue < minValue){
-        minValue = thisValue;
+    //basic intervals
+    int endOfLeft = dateTimeToInt(intervalDateTimes[2]);
+    int endOfMiddle = dateTimeToInt(intervalDateTimes[4]);
+
+    //range
+    int minDateTime = dateTimeToInt(scanDateTimes[0]);
+    int maxDateTime = dateTimeToInt(scanDateTimes.last);
+    List<int> dateTimes = listDateTimeToListInt(scanDateTimes);
+
+    //expected domain
+    print(averageLeft.toString() + " < " + averageMiddle.toString() + " < " + averageRight.toString());
+    List<int> expectedRssi = new List<int>();
+    for(int i = 0; i < scanRSSIs.length; i++){
+      int thisRssiDateTime = dateTimes[i];
+      if(thisRssiDateTime < endOfLeft){
+        expectedRssi.add(averageLeft);
       }
-      if(thisValue > maxValue){
-        maxValue = thisValue;
+      else if(thisRssiDateTime < endOfMiddle){
+        expectedRssi.add(averageMiddle);
+      }
+      else{
+        expectedRssi.add(averageRight);
       }
     }
-    int range = maxValue - minValue;
 
-    //---Enforce Min Max Range (DONT USE PARAM MIN MAX)
-    int minRange = 2;
-    int maxRange = 25;
-    if(range < minRange) range = minRange;
-    if(range > maxRange) range = maxRange;
+    //generate all charts
+    List<charts.Series<Data, int>> theCharts = new List<charts.Series<Data, int>>();
+
+    //plot what we received
+    theCharts.addAll(
+      createCharts(
+        dateTimes,
+        scanRSSIs,
+        [3],
+        [charts.MaterialPalette.blue.shadeDefault],
+        [10],
+      )
+    );
+
+    //plot what we expected
+    theCharts.addAll(
+      createCharts(
+        dateTimes,
+        expectedRssi,
+        [1],
+        [charts.MaterialPalette.black],
+        [10],
+      ),
+    );
 
     return Stack(
       children: <Widget>[
         Container(
-          child: new Text("chart will be here"),
-          
-          /*charts.LineChart(
-            createCharts(
-              scanDateTimes,
-              scanRSSIs,
-              [1,3,7],
-            ),
+          color: Colors.grey[350],
+          child: charts.LineChart(
+            theCharts,
             animate: false,
+            layoutConfig: charts.LayoutConfig(
+              topMarginSpec: charts.MarginSpec.fixedPixel(0),
+              leftMarginSpec: charts.MarginSpec.fixedPixel(0),
+              bottomMarginSpec: charts.MarginSpec.fixedPixel(0),
+              rightMarginSpec: charts.MarginSpec.fixedPixel(0),
+            ),
             defaultRenderer: new charts.LineRendererConfig(
               roundEndCaps: false, //makes patterns more clear 
               includePoints: false, //makes patterns more clear
             ),
             behaviors: [
-              new charts.PanAndZoomBehavior(),
-              /*
-              new charts.SeriesLegend(
-                entryTextStyle: charts.TextStyleSpec(
-                  color: charts.MaterialPalette.white,
-                )
-              ),
-              */
               new charts.RangeAnnotation(
                 annotations,
               ),
@@ -70,65 +112,22 @@ class Chart extends StatelessWidget {
             domainAxis: new charts.NumericAxisSpec(
               showAxisLine: false,
               viewport: new charts.NumericExtents(
-                scanDateTimes.first, 
-                scanDateTimes.last,
+                minDateTime, 
+                maxDateTime,
               ),
-              renderSpec: new charts.SmallTickRendererSpec(
-                labelStyle: charts.TextStyleSpec(
-                  //fontSize: 12,
-                  color: charts.MaterialPalette.white,
-                ),
-              ),
+              renderSpec: new charts.NoneRenderSpec(),
             ),
             primaryMeasureAxis: new charts.NumericAxisSpec(
               showAxisLine: false,
               viewport: new charts.NumericExtents(
-                minValue, 
-                maxValue,
+                minRSSI,
+                maxRSSI,
               ),
-              renderSpec: charts.GridlineRendererSpec(
-                lineStyle: charts.LineStyleSpec(
-                  dashPattern: [4, 4],
-                ),
-                labelStyle: charts.TextStyleSpec(
-                  //fontSize: 12,
-                  color: charts.MaterialPalette.white,
-                ),
-              ),
-              tickProviderSpec: new charts.BasicNumericTickProviderSpec(
-                //zeroBound: false, //BREAKS STUFF
-                //dataIsInWholeNumbers: true, //our running averages may be floats
-                desiredTickCount: range,
-              ),
+              renderSpec: new charts.NoneRenderSpec(),
             ),
           ),
-          */
         ),
       ],
     );
-  }
-
-  List<common.AnnotationSegment> createTapHighlights(
-    List<int> x,
-    List<int> y,
-    int lastX,
-  ){
-    List<common.AnnotationSegment> ranges = new List<common.AnnotationSegment>();
-    charts.Color shade = charts.MaterialPalette.gray.shade600;
-    for(int i = 0; i < (y.length - 1); i++){
-      int thisX = x[i];
-      int nextX = i + 1;
-
-      //add to list
-      ranges.add(
-        new charts.RangeAnnotationSegment(
-          thisX, 
-          nextX, 
-          charts.RangeAnnotationAxisType.domain,
-          color: shade,
-        )
-      );
-    }
-    return ranges;
   }
 }

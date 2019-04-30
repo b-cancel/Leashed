@@ -4,6 +4,7 @@ import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:leashed/pattern/blePattern.dart';
+import 'package:leashed/pattern/patternChart.dart';
 import 'package:leashed/scanner.dart';
 import 'package:page_transition/page_transition.dart';
 
@@ -58,18 +59,49 @@ class PatternIdentify extends StatelessWidget {
     //output UI
     return Scaffold(
       appBar: AppBar(
-        title: new Text("Patterns Found"),
+        title: new Text(sortedDevices.length.toString() +  " Matching Signal Patterns"),
       ),
       body: Stack(
         children: <Widget>[
           (potentialSelections.length == 0) ? new NoPatternFound()
-          : (potentialSelections.length == 1) ? new OnePatternFound(
-            potentialSelections: potentialSelections,
-          )
-          : new ManyPatternsFound(
-            potentialSelections: potentialSelections, 
-            paddingLeftRight: paddingLeftRight, 
-            iconSize: iconSize,
+          : Stack(
+            children: <Widget>[
+              (potentialSelections.length == 1)
+              ? new OnePatternFound(
+                potentialSelections: potentialSelections,
+              )
+              : new ManyPatternsFound(
+                potentialSelections: potentialSelections, 
+                paddingLeftRight: paddingLeftRight, 
+                iconSize: iconSize,
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                child: IgnorePointer(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    alignment: Alignment.topLeft,
+                    child: new Column(
+                      children: <Widget>[
+                        new LegendColorDescription(
+                          color: Colors.blue,
+                          text: "Observed",
+                        ),
+                        Container(
+                          height: 8,
+                        ),
+                        new LegendColorDescription(
+                          color: Colors.black,
+                          text: "Expected",
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           Positioned(
             left: 0,
@@ -90,7 +122,7 @@ class PatternIdentify extends StatelessWidget {
                   child: RaisedButton(
                     onPressed: (){
                       //change how long you are waiting for pattern detection
-                      Navigation.timeToDetectPattern.value += 1;
+                      Navigation.timeToDetectPattern.value += Navigation.addToTimeToDetectPattern.value;
 
                       //try again but waiting a little longer
                       Navigator.pushReplacement(context, PageTransition(
@@ -178,9 +210,10 @@ class PatternIdentify extends StatelessWidget {
       bool hasRight = analyzerOfDevice.right.hasItems();
       if(hasLeft && hasMiddle && hasRight){
         //---2 middle average must be higher than left and right average
-        double leftAvg = analyzerOfDevice.left.average;
-        double midAvg = analyzerOfDevice.middle.average;
-        double rightAvg = analyzerOfDevice.right.average;
+        //NOTE: we use ints so some difference is visible
+        int leftAvg = analyzerOfDevice.left.average.toInt();
+        int midAvg = analyzerOfDevice.middle.average.toInt();
+        int rightAvg = analyzerOfDevice.right.average.toInt();
         if(midAvg > leftAvg && midAvg > rightAvg){
           devicesWithPattern[thisDeviceID] = analyzerOfDevice;
         }
@@ -193,15 +226,57 @@ class PatternIdentify extends StatelessWidget {
 
   List<String> sortMap(Map<String, PatternAnalyzer> map){
     Map<String, DeviceData> allDevicesFound = ScannerStaticVars.allDevicesFound;
-    List<String> deviceIDs = map.keys.toList();
+    List<String> deviceIDsFromMap = map.keys.toList();
 
-    //seperate with and without name
+    //-------------------------sort by rssi average during entire interval
+    //grab all signal averages (of whatever devices are in the map)
+    List<double> rssiAverages = new List<double>();
+    for(int i = 0; i < map.length; i++){
+      String deviceID = deviceIDsFromMap[i];
+      rssiAverages.add(map[deviceID].total.average);
+    }
+    
+    //sort device averages
+    List<double> sortedRssiAverage = new List<double>();
+    sortedRssiAverage.addAll(rssiAverages);
+    sortedRssiAverage.sort();
+
+    //order the devices IDs as averages
+    List<String> sortedDeviceIDs = new List<String>();
+    for(int i = 0; i < sortedRssiAverage.length; i++){
+      double thisAverage = sortedRssiAverage[i];
+
+      //search for all the IDs that have this sorted Rssi Average
+      //NOTE: highly unlikely but we have to cover the edge case
+      List<String> devicesWithThisAverage = new List<String>();
+      for(int i = 0; i < deviceIDsFromMap.length; i++){
+        String deviceID = deviceIDsFromMap[i];
+        if(map[deviceID].total.average == thisAverage){
+          devicesWithThisAverage.add(deviceID);
+        }
+      }
+
+      //loop all the IDs that have this sorted Rssi Average
+      //NOTE: so we have one device for every sorted average place in the sortedDeviceIDs array
+      for(int i = 0; i < devicesWithThisAverage.length; i++){
+        String deviceID = devicesWithThisAverage[i];
+        if(sortedDeviceIDs.contains(deviceID) == false){
+          sortedDeviceIDs.add(deviceID);
+          break;
+        }
+      }
+    }
+
+    //use the sorted device IDs for the next step
+    deviceIDsFromMap = sortedDeviceIDs;
+
+    //-------------------------sort by with and without name
     List<String> withName = new List<String>();
     List<String> withoutName = new List<String>();
     
     //add the devices in the map to each respective list
-    for(int i = 0; i < deviceIDs.length; i++){
-      String deviceID = deviceIDs[i];
+    for(int i = 0; i < deviceIDsFromMap.length; i++){
+      String deviceID = deviceIDsFromMap[i];
       if(allDevicesFound[deviceID].name != ""){
         withName.add(deviceID);
       }
@@ -235,6 +310,9 @@ class PatternIdentify extends StatelessWidget {
             maxWidth: maxWidth,
             minRssi: map[thisDeviceID].rssiMin,
             maxRssi: map[thisDeviceID].rssiMax,
+            averageLeft: map[thisDeviceID].left.average,
+            averageMiddle: map[thisDeviceID].middle.average,
+            averageRight: map[thisDeviceID].right.average,
             intervalTimes: intervalTimes,
             rssis: map[thisDeviceID].rssi,
             dateTimes: map[thisDeviceID].dateTimes,
@@ -245,6 +323,30 @@ class PatternIdentify extends StatelessWidget {
 
     //return the array
     return widgets;
+  }
+}
+
+class LegendColorDescription extends StatelessWidget {
+  const LegendColorDescription({
+    @required this.color,
+    @required this.text,
+  });
+
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Row(
+      children: <Widget>[
+        Container(
+          color: color,
+          height: 18,
+          width: 18,
+        ),
+        new Text(" " + text),
+      ],
+    );
   }
 }
 
@@ -334,16 +436,19 @@ class DevicePattern extends StatelessWidget {
   DevicePattern({
     Key key,
     @required this.name,
-    this.id,
-    this.type,
+    @required this.id,
+    @required this.type,
     @required this.maxWidth,
-    this.minRssi,
-    this.maxRssi,
+    @required this.minRssi,
+    @required this.maxRssi,
+    @required this.averageLeft,
+    @required this.averageMiddle,
+    @required this.averageRight,
     //wait 0->1 | 2->3 | 4->5 | 6->7
     //intervals 1->2 | 3->4 | 5->6
-    this.intervalTimes,
-    this.rssis,
-    this.dateTimes,
+    @required this.intervalTimes,
+    @required this.rssis,
+    @required this.dateTimes,
   }) : super(key: key);
 
   //basic device info
@@ -355,6 +460,9 @@ class DevicePattern extends StatelessWidget {
   //limit y axis on graph
   final int minRssi;
   final int maxRssi;
+  final double averageLeft;
+  final double averageMiddle;
+  final double averageRight;
   //highlight times between takes with black
   //AND limits x axis on graph
   final List<DateTime> intervalTimes;
@@ -371,23 +479,22 @@ class DevicePattern extends StatelessWidget {
       child: new Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Stack(
-            children: <Widget>[
-              Container(
-                color: Colors.blue,
-                height: height,
-                width: width,
-                child: new Center(
-                  child: new Text("Graph Here"),
-                ),
+          Container(
+            height: height,
+            width: width,
+            child: new Center(
+              child: Chart(
+                scanDateTimes: dateTimes,
+                scanRSSIs: rssis,
+                minRSSI: minRssi,
+                maxRSSI: maxRssi,
+                averageLeft: averageLeft.toInt(),
+                averageMiddle: averageMiddle.toInt(),
+                averageRight: averageRight.toInt(),
+                intervalDateTimes: intervalTimes,
+                showIntervals: true,
               ),
-              Positioned.fill(
-                child: Container(
-                  alignment: Alignment.topLeft,
-                  child: new Text("Legend Here"),
-                ),
-              )
-            ],
+            ),
           ),
           Container(
             child: ConstrainedBox(
@@ -421,7 +528,7 @@ class DevicePattern extends StatelessWidget {
                       color: Navigation.blueGrey,
                       onPressed: (){
                         Navigator.of(context).pop();
-                        Navigation.timeToDetectPattern.value = 3; //RESET
+                        Navigation.timeToDetectPattern.value = Navigation.defaultTimeToDetectPattern.value; //RESET
                       },
                       child: new Text(
                         "Select This Device",

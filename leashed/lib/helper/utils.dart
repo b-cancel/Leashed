@@ -268,17 +268,19 @@ List<common.AnnotationSegment> createTapHighlights(
     List<int> x,
     List<int> y,
     List<int> valuesForRollingAverage, //MAX OF 5
+    List<charts.Color> rollingAverageColors,
+    List<int> rollingAverageStrokes,
   ) {
     List<charts.Series<Data, int>> chartList = new List<charts.Series<Data, int>>();
-    for(int i = 0; i < 5; i++){ //MAX OF 5
+    for(int i = 0; i < valuesForRollingAverage.length; i++){ //MAX OF 5
       int value = valuesForRollingAverage[i];
       chartList.add(
         charts.Series<Data, int>(
           //set manually
           id: value.toString(),
-          colorFn: (_, __) => indexToColor(i),
+          colorFn: (_, __) => rollingAverageColors[i],
           data: xyToList(x, rollingAverage(y, value)),
-          strokeWidthPxFn: (Data sales, _) => indextoStroke(i),
+          strokeWidthPxFn: (Data sales, _) => rollingAverageStrokes[i],
           //set "automatically"
           domainFn: (Data sales, _) => sales.x,
           measureFn: (Data sales, _) => sales.y,
@@ -493,3 +495,35 @@ bool withinRange(DateTime lower, DateTime upper, DateTime value){
   bool belowUpper = value.microsecondsSinceEpoch <= upper.microsecondsSinceEpoch;
   return (aboveLower && belowUpper);
 }
+
+int dateTimeToInt(DateTime dt){
+  return dt.microsecondsSinceEpoch;
+}
+
+List<int> listDateTimeToListInt(List<DateTime> dts){
+  List<int> listInt = new List<int>();
+  for(int i = 0; i < dts.length; i++){
+    listInt.add(dateTimeToInt(dts[i]));
+  }
+  return listInt;
+}
+
+List<common.AnnotationSegment> createIntervalHighlights(List<int> intervals){
+    List<common.AnnotationSegment> ranges = new List<common.AnnotationSegment>();
+    for(int i = 0; i < (intervals.length - 1); i += 2){
+      charts.Color shade = charts.MaterialPalette.gray.shade500;
+      int thisX = intervals[i];
+      int nextX = intervals[i + 1];
+
+      //add to list
+      ranges.add(
+        new charts.RangeAnnotationSegment(
+          thisX, 
+          nextX, 
+          charts.RangeAnnotationAxisType.domain,
+          color: shade,
+        )
+      );
+    }
+    return ranges;
+  }
