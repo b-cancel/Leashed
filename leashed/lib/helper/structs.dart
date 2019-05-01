@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/helper/utils.dart';
 
@@ -43,6 +44,7 @@ class ScanData{
   //since RSSI values can vary heavily
   //we care more about how the value is changing (rate and all)
   List<int> rssiUpdates;
+  ValueNotifier<int> rssiUpdateCount;
   List<DateTime> rssiUpdateDateTimes;
   List<Duration> rssiIntervalDurations;
   Duration minIntervalDuration;
@@ -53,6 +55,7 @@ class ScanData{
   
   ScanData(){
     rssiUpdates = new List<int>();
+    rssiUpdateCount = ValueNotifier<int>(0);
     rssiUpdateDateTimes = new List<DateTime>();
     rssiIntervalDurations = new List<Duration>();
   }
@@ -61,13 +64,18 @@ class ScanData{
 
   void add(int newRSSI){
     //RSSI Update max
+    /*
+    //only do the above if required
     if(rssiUpdates.length > maxSamples){
       rssiUpdates.clear();
+      rssiUpdateCount.value = 0;
       rssiUpdateDateTimes.clear();
       rssiIntervalDurations.clear();
     }
+    */
 
     rssiUpdates.add(newRSSI);
+    rssiUpdateCount.value = rssiUpdates.length;
     rssiUpdateDateTimes.add(DateTime.now());
     if(rssiUpdateDateTimes.length > 1){ //add duration if possible
       int lastIndex = rssiUpdateDateTimes.length - 1;

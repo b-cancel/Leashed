@@ -269,7 +269,7 @@ List<common.AnnotationSegment> createTapHighlights(
     List<int> y,
     List<int> valuesForRollingAverage, //MAX OF 5
     List<charts.Color> rollingAverageColors,
-    List<int> rollingAverageStrokes,
+    List<num> rollingAverageStrokes,
   ) {
     List<charts.Series<Data, int>> chartList = new List<charts.Series<Data, int>>();
     for(int i = 0; i < valuesForRollingAverage.length; i++){ //MAX OF 5
@@ -509,21 +509,21 @@ List<int> listDateTimeToListInt(List<DateTime> dts){
 }
 
 List<common.AnnotationSegment> createIntervalHighlights(List<int> intervals){
-    List<common.AnnotationSegment> ranges = new List<common.AnnotationSegment>();
-    for(int i = 0; i < (intervals.length - 1); i += 2){
-      charts.Color shade = charts.MaterialPalette.gray.shade500;
-      int thisX = intervals[i];
-      int nextX = intervals[i + 1];
+  List<common.AnnotationSegment> ranges = new List<common.AnnotationSegment>();
+  for(int i = 0; i < (intervals.length - 1); i += 2){
+    charts.Color shade = charts.MaterialPalette.gray.shade500;
+    int thisX = intervals[i];
+    int nextX = intervals[i + 1];
 
-      //add to list
-      ranges.add(
-        new charts.RangeAnnotationSegment(
-          thisX, 
-          nextX, 
-          charts.RangeAnnotationAxisType.domain,
-          color: shade,
-        )
-      );
-    }
-    return ranges;
+    //add to list
+    ranges.add(
+      new charts.RangeAnnotationSegment(
+        thisX, 
+        nextX, 
+        charts.RangeAnnotationAxisType.domain,
+        color: shade,
+      )
+    );
   }
+  return ranges;
+}
