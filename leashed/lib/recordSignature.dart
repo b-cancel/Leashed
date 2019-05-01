@@ -76,7 +76,39 @@ class _RecordSignatureState extends State<RecordSignature> {
           "Recording Device Signature",
         ),
       ),
-      body: new Text("rec dev sig here"),
+      body: new Builder(builder: (BuildContext context) {
+        if(ScannerStaticVars.isScanning.value){
+          return Container(
+            child: Center(
+              child: new Text("Scanner is on"),
+            ),
+          );
+        }
+        else{
+          return InkWell(
+            onTap: (){
+              //Inform the user that it might fail
+              final SnackBar msg = SnackBar(
+                content: Text(
+                  'Trying To Re-Start The Scanner' 
+                  + '\n' 
+                  + 'If It Fails Please Try Again',
+                ),
+              );
+              Scaffold.of(context).showSnackBar(msg);
+              //Attempt to Start Up The Scanner
+              ScannerStaticVars.startScan();
+            },
+            child: Container(
+              child: Center(
+                child: new Text("waiting for scanner to turn on"),
+              ),
+            ),
+          );
+        }
+      }),
+      
+      
       
       /*new Column(
         children: <Widget>[
