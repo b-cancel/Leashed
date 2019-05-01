@@ -5,7 +5,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:math' as math;
 
 import 'package:leashed/navigation.dart';
+import 'package:leashed/recordSignature.dart';
+import 'package:leashed/scanner.dart';
+import 'package:leashed/widgets/bluetoothOffBanner.dart';
+import 'package:page_transition/page_transition.dart';
 //import 'package:image_picker/image_picker.dart';
+
+//TODO... use image_picker_saver 0.1.0
+//to also let users select images from the web
 
 class AddNew extends StatefulWidget {
   AddNew({
@@ -33,13 +40,19 @@ class _AddNewState extends State<AddNew> {
   
   @override
   void initState() {
+    //make sure bluetooth is on to stop users from recording the devices signture otherwise
+    ScannerStaticVars.bluetoothOn.addListener(customSetState);
+
+    //handle the image
     imageProvided.value = (widget.imageUrl == "");
     if(imageProvided.value){
       deviceImage.value = "assets/pngs/devicePlaceholder.png";
     }
 
+    //handle the name
     nameController.text = widget.name;
 
+    //the hanlder for the name being changed
     editingName.addListener((){
       if(editingName.value){
         FocusScope.of(context).requestFocus(nameFocusNode);
@@ -55,6 +68,18 @@ class _AddNewState extends State<AddNew> {
   }
 
   @override
+  void dispose() {
+    ScannerStaticVars.bluetoothOn.removeListener(customSetState);
+    super.dispose();
+  }
+
+  customSetState()async {
+    if(mounted){
+      setState((){});
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     //assets/pngs/imageNotFound.png
     //assets/pngs/logoTransparent.png
@@ -66,123 +91,152 @@ class _AddNewState extends State<AddNew> {
       appBar: AppBar(
         title: new Text("Add New Device"),
       ),
-      body: Container(
-        child: ListView(
-          children: <Widget>[
-            new Container(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Stack(
+      body: Column(
+        children: <Widget>[
+          (ScannerStaticVars.bluetoothOn.value)
+          ? Container()
+          : new BluetoothOffBanner(),
+          Expanded(
+            child: ListView(
+              children: <Widget>[
+                new Container(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Container(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 20.0, bottom: 4),
-                          child: new Container(
-                            width: imageSize,
-                            height: imageSize,
-                            child: new Image.asset(
-                              deviceImage.value,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.bottomRight,
-                          child: Container(
-                            padding: EdgeInsets.only(right: 16),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(80.0),
-                                color: Navigation.blueGrey,
-                                border: Border.all(
-                                  color: Navigation.blueGrey,
-                                  width: 4.0,
+                      Stack(
+                        children: <Widget>[
+                          Container(
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 20.0, bottom: 4),
+                              child: new Container(
+                                width: imageSize,
+                                height: imageSize,
+                                child: new Image.asset(
+                                  deviceImage.value,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                              child: Icon(
-                                Icons.edit,
-                                color: Colors.white,
-                                size: 16,
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: Align(
+                              alignment: Alignment.bottomRight,
+                              child: Container(
+                                padding: EdgeInsets.only(right: 16),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(80.0),
+                                    color: Navigation.blueGrey,
+                                    border: Border.all(
+                                      color: Navigation.blueGrey,
+                                      width: 4.0,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                          Positioned.fill(
+                            child: GestureDetector(
+                              onTap: () => imagePicker(),
+                            ),
+                          ),
+                        ],
                       ),
-                      Positioned.fill(
-                        child: GestureDetector(
-                          onTap: () => imagePicker(),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width - imageSize - (16 * 3),
+                              child: Stack(
+                                children: <Widget>[
+                                  TextFormField(
+                                    controller: nameController,
+                                    focusNode: nameFocusNode,
+                                    enabled: editingName.value,
+                                    onFieldSubmitted: (str){
+                                      nameController.text = str;
+                                      editingName.value = false;
+                                    },
+                                    decoration: InputDecoration(
+                                      contentPadding: EdgeInsets.all(0),
+                                      border: InputBorder.none,
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    bottom: 0,
+                                    right: 0,
+                                    child: IconButton(
+                                      onPressed: (){
+                                        editingName.value = true;
+                                      },
+                                      icon: Icon(Icons.edit),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            DefaultTextStyle(
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  new Text(widget.id),
+                                  new Text(widget.type),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width - imageSize - (16 * 3),
-                          child: Stack(
-                            children: <Widget>[
-                              TextFormField(
-                                controller: nameController,
-                                focusNode: nameFocusNode,
-                                enabled: editingName.value,
-                                onFieldSubmitted: (str){
-                                  nameController.text = str;
-                                  editingName.value = false;
-                                },
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.all(0),
-                                  border: InputBorder.none,
-                                ),
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Positioned(
-                                top: 0,
-                                bottom: 0,
-                                right: 0,
-                                child: IconButton(
-                                  onPressed: (){
-                                    editingName.value = true;
-                                  },
-                                  icon: Icon(Icons.edit),
-                                ),
-                              ),
-                            ],
+                ),
+                Container(
+                  child: (ScannerStaticVars.bluetoothOn.value)
+                  ? Container(
+                    child: InkWell(
+                      onTap: (){
+                        Navigator.push(context, PageTransition(
+                          type: PageTransitionType.fade,
+                          duration: Duration.zero, 
+                          child: RecordSignature(
+                            deviceID: widget.id,
                           ),
+                        ));
+                      },
+                      child: Container(
+                        child: Center(
+                          child: new Text("tap to record the devices signature"),
                         ),
-                        DefaultTextStyle(
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              new Text(widget.id),
-                              new Text(widget.type),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
+                    ),
+                  )
+                  : Container(
+                    child: Center(
+                      child: new Text("Turn Bluetooth On To Record The Device's Signature"),
                     ),
                   ),
-                ],
-              ),
+                )
+              ],
             ),
-            Container(
-              color: Colors.blue,
-              child: Text("other stuff"),
-            )
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

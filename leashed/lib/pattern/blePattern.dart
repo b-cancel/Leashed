@@ -185,26 +185,28 @@ class _BlePatternState extends State<BlePattern> {
                   progressColor: Colors.lightGreenAccent,
                 )
                 : new Builder(builder: (BuildContext context) {
-                  return InkWell(
-                    onTap: (){
-                      //Inform the user that it might fail
-                      final SnackBar msg = SnackBar(
-                        content: Text(
-                          'Trying To Re-Start The Scanner' 
-                          + '\n' 
-                          + 'If It Fails Please Try Again',
-                        ),
-                      );
-                      Scaffold.of(context).showSnackBar(msg);
-                      //Attempt to Start Up The Scanner
-                      ScannerStaticVars.startScan();
-                    },
-                    child: Container(
-                      child: Text(
-                        "Waiting For The Scanner To Start Up",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Navigation.blueGrey,
+                  return Container(
+                    child: InkWell(
+                      onTap: (){
+                        //Inform the user that it might fail
+                        final SnackBar msg = SnackBar(
+                          content: Text(
+                            'Trying To Re-Start The Scanner' 
+                            + '\n' 
+                            + 'If It Fails Please Try Again',
+                          ),
+                        );
+                        Scaffold.of(context).showSnackBar(msg);
+                        //Attempt to Start Up The Scanner
+                        ScannerStaticVars.startScan();
+                      },
+                      child: Container(
+                        child: Text(
+                          "Waiting For The Scanner To Start Up",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Navigation.blueGrey,
+                          ),
                         ),
                       ),
                     ),
