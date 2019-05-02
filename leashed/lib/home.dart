@@ -1,5 +1,7 @@
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
+import 'package:leashed/helper/utils.dart';
+import 'package:leashed/manualLib/flutter_xlider.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 
@@ -7,6 +9,7 @@ import 'dart:math' as math;
 
 import 'package:leashed/sliverModifications/sliverPersistentHeader.dart' as sliverPersistentHeader;
 import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSpaceBar;
+import 'package:leashed/widgets/bluetoothOffBanner.dart';
 
 //NOTE: so Material App Works properly
 class HomeStateLess extends StatelessWidget {
@@ -137,7 +140,7 @@ class NoDevices extends StatelessWidget {
   }
 }
 
-class Devices extends StatelessWidget {
+class Devices extends StatefulWidget {
   const Devices({
     Key key,
     @required this.bottomOfIntroImage,
@@ -155,7 +158,16 @@ class Devices extends StatelessWidget {
   final ValueNotifier<int> deviceCount;
 
   @override
+  _DevicesState createState() => _DevicesState();
+}
+
+class _DevicesState extends State<Devices> {
+  @override
   Widget build(BuildContext context) {
+
+    double screenWidth = MediaQuery.of(context).size.width;
+    print("Screen Width: " + screenWidth.toString());
+
     return Scaffold(
       body: CustomScrollView(
         slivers: <Widget>[
@@ -175,10 +187,10 @@ class Devices extends StatelessWidget {
                 fit: StackFit.expand,
                 children: <Widget>[
                   Container(
-                    color: bottomOfIntroImage,
+                    color: widget.bottomOfIntroImage,
                   ),
                   Transform.translate(
-                    offset: Offset(0, -warningThickness -alignmentPush),
+                    offset: Offset(0, -widget.warningThickness -widget.alignmentPush),
                     child: OverflowBox(
                       alignment: Alignment.bottomCenter,
                       maxHeight: 1000,
@@ -194,7 +206,7 @@ class Devices extends StatelessWidget {
                     ),
                   ),
                   new Container(
-                    color: introOverlay,
+                    color: widget.introOverlay,
                   ),
                   new Container(
                     decoration: BoxDecoration(
@@ -220,32 +232,12 @@ class Devices extends StatelessWidget {
                     //---------Nav Bar (24 size, with 8 padding on both sides)
                     NavBar(
                       warningThickness: 40,
-                      deviceCount: deviceCount,
+                      deviceCount: widget.deviceCount,
                     ),
-                    //----------ERROR
-                    Container(
-                      color: Colors.red,
-                      child: FlatButton(
-                        onPressed: () => print("open up bluetooth"),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: Icon(
-                                Icons.warning,
-                              ),
-                            ),
-                            new Text(
-                              "Please Tap Here To Turn On Your Bluetooth",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    //---------Error
+                    (ScannerStaticVars.bluetoothOn.value)
+                    ? Container()
+                    : BluetoothOffBanner(),
                   ],
                 ),
               ),
@@ -253,6 +245,64 @@ class Devices extends StatelessWidget {
           ),
           new SliverList(
             delegate: new SliverChildListDelegate([
+              Stack(
+                children: <Widget>[
+                  new SliderBackground(
+                    height: 50,
+                  ),
+                  Positioned.fill(
+                    child: Container(
+                      padding: EdgeInsets.all(8),
+                      color: Colors.red,
+                      child: Center(
+                        child: Container(
+                          color: Colors.blue,
+                          child: FittedBox(
+                            fit: BoxFit.fitWidth,
+                            child: Container(
+                              color: Colors.pink,
+                              child: FlutterSlider(
+                                min: 1,
+                                max: 4,
+                                values: [1,2,3,4],
+                                /*
+                                handler: FlutterSliderHandler(
+                                  decoration: BoxDecoration(),
+                                  child: Container(
+                                    height: 75,
+                                    color: Navigation.blueGrey,
+                                    padding: EdgeInsets.all(4),
+                                    child: Icon(Icons.menu),
+                                  ),
+                                ),
+                                handlerHeight: 100,
+                                */
+                                //handlerWidth: screenWidth - (64*4),
+                                jump: true,
+                                onDragging: (handlerIndex, lowerValue, upperValue) {
+                                  print("value: " + lowerValue.toString());
+                                  setState(() {});
+                                },
+                                tooltip: noFlutterSlideTooltip(),
+                                handlerAnimation: FlutterSliderHandlerAnimation(
+                                  curve: Curves.elasticOut,
+                                  reverseCurve: Curves.bounceIn,
+                                  duration: Duration(milliseconds: 500),
+                                  scale: 1.5
+                                ),
+                                trackBar: FlutterSliderTrackBar(
+                                  activeTrackBarColor: Colors.red,
+                                  inactiveTrackBarColor: Colors.blue,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               Device(
                 image: "laptop.jpg", 
                 name: "Laptop", 
@@ -294,6 +344,102 @@ class Devices extends StatelessWidget {
     // half is a good size cuz that is realistically what most can access
     // but at the same time just having the image on half the screen isn't going to look great
     return (halfHeight - (halfHeight * (1/5)));
+  }
+}
+
+class SliderBackground extends StatelessWidget {
+  final int height;
+
+  const SliderBackground({
+    this.height,
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.red,
+      padding: EdgeInsets.all(8),
+      width: MediaQuery.of(context).size.width,
+      height: height.toDouble(),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            new ColorSegment(
+              color: Colors.black,
+            ),
+            new GradientSegment(
+              left: Colors.black,
+              right: Colors.red,
+            ),
+            new ColorSegment(
+              color: Colors.red,
+            ),
+            new GradientSegment(
+              left: Colors.red,
+              right: Colors.yellow,
+            ),
+            new ColorSegment(
+              color: Colors.yellow,
+            ),
+            new GradientSegment(
+              left: Colors.yellow,
+              right: Colors.green,
+            ),
+            new ColorSegment(
+              color: Colors.green,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ColorSegment extends StatelessWidget {
+  final Color color;
+
+  const ColorSegment({
+    this.color,
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        color: color,
+      )
+    );
+  }
+}
+
+class GradientSegment extends StatelessWidget {
+  final Color left;
+  final Color right;
+
+  const GradientSegment({
+    this.left,
+    this.right,
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [left, right], // whitish to gray
+            tileMode: TileMode.repeated, // repeats the gradient over the canvas
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -407,7 +553,9 @@ class NavBar extends StatelessWidget {
               color: Colors.white,
             ),
             onPressed: (){
-              Navigation.appRouter.navigateTo(context, "settings", transition: TransitionType.inFromBottom);
+              //toggle UI
+              deviceCount.value = (deviceCount.value > 0) ? 0 : 1;
+              //Navigation.appRouter.navigateTo(context, "settings", transition: TransitionType.inFromBottom);
             },
           )
         ],

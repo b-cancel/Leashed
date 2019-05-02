@@ -36,7 +36,7 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
       child: Container(
         padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
         width: MediaQuery.of(context).size.width,
-        color: Colors.redAccent,
+        color: Colors.red,
         child: Row(
           children: <Widget>[
             new Icon(
@@ -47,6 +47,7 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
               ' The Bluetooth Adapter Is ' + bleStateString,
               style: TextStyle(
                 color: Colors.black,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],

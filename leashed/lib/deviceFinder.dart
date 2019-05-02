@@ -1,12 +1,13 @@
-import 'package:charts_common/common.dart';
 import 'package:flutter/material.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
+import 'package:leashed/manualLib/flutter_xlider.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:charts_common/common.dart' as common;
+import 'package:intl/intl.dart' as intl;
 
 //TODO...
 
@@ -29,18 +30,18 @@ import 'package:charts_common/common.dart' as common;
 
 //NOTE: we know for a fact that when we arrive at this widget our bluetooth is on
 
-class LiveScanner extends StatefulWidget {
+class UpdatingScanner extends StatefulWidget {
   final String deviceID;
 
-  LiveScanner({
+  UpdatingScanner({
     this.deviceID,
   });
 
   @override
-  _LiveScannerState createState() => _LiveScannerState();
+  _UpdatingScannerState createState() => _UpdatingScannerState();
 }
 
-class _LiveScannerState extends State<LiveScanner> {
+class _UpdatingScannerState extends State<UpdatingScanner> {
 
   @override
   void initState() {
@@ -108,7 +109,133 @@ class _LiveScannerState extends State<LiveScanner> {
 
     DateTime lastScan = scanData.rssiUpdateDateTimes.last;
 
+    //---Sizing for our Scanner
+    double width = MediaQuery.of(context).size.width;
+    double height = width * (3/4);
+
+    //---Return Our Widget
     return Column(
+      children: <Widget>[
+        Stack(
+          children: <Widget>[
+            Container(
+              height: height,
+              width: width,
+              color: Navigation.blueGrey,
+              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 0),
+              child: charts.LineChart(
+                createCharts(
+                  dateTimes,
+                  scanRSSIs,
+                  [1],
+                  [charts.MaterialPalette.blue.shadeDefault],
+                  [5],
+                ),
+                animate: false,
+                layoutConfig: charts.LayoutConfig(
+                  topMarginSpec: charts.MarginSpec.fixedPixel(0),
+                  rightMarginSpec: charts.MarginSpec.fixedPixel(0),
+                  bottomMarginSpec: charts.MarginSpec.fixedPixel(0),
+                  leftMarginSpec: charts.MarginSpec.fixedPixel(0),
+                ),
+                defaultRenderer: new charts.LineRendererConfig(
+                  roundEndCaps: false, //makes patterns more clear 
+                  includePoints: false, //makes patterns more clear
+                ),
+                domainAxis: new charts.NumericAxisSpec(
+                  showAxisLine: false,
+                  viewport: new charts.NumericExtents(
+                    minDateTime, 
+                    maxDateTime,
+                  ),
+                  renderSpec: new charts.NoneRenderSpec(),
+                ),
+                primaryMeasureAxis: new charts.NumericAxisSpec(
+                  showAxisLine: false,
+                  viewport: new charts.NumericExtents(
+                    minRSSI,
+                    maxRSSI,
+                  ),
+                  renderSpec: new charts.NoneRenderSpec(),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              top: 0,
+              child: new WhiteCircle(
+                value: "max"
+              ),
+            ),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: new WhiteCircle(
+                value: "min"
+              ),
+            ),
+          ],
+        ),
+        FlutterSlider(
+          values: [300],
+          max: 500,
+          min: 0,
+          onDragging: (handlerIndex, lowerValue, upperValue) {
+            /*
+            _lowerValue = lowerValue;
+            _upperValue = upperValue;
+            */
+            setState(() {});
+          },
+          handler: FlutterSliderHandler(
+            decoration: BoxDecoration(),
+            child: Material(
+              type: MaterialType.canvas,
+              color: Colors.orange,
+              elevation: 3,
+              child: Container(
+                padding: EdgeInsets.all(5),
+                child: Icon(
+                  Icons.adjust, 
+                  size: 25,
+                ),
+              ),
+            ),
+          ),
+          rightHandler: FlutterSliderHandler(
+            child: Icon(Icons.chevron_left, color: Colors.red, size: 24,),
+          ),
+          handlerAnimation: FlutterSliderHandlerAnimation(
+            curve: Curves.elasticOut,
+            reverseCurve: Curves.bounceIn,
+            duration: Duration(milliseconds: 500),
+            scale: 1.5
+          ),
+          trackBar: FlutterSliderTrackBar(
+            activeTrackBarColor: Colors.redAccent,
+            activeTrackBarHeight: 5,
+            inactiveTrackBarColor: Colors.greenAccent.withOpacity(0.5),
+          ),
+          tooltip: FlutterSliderTooltip(
+            textStyle: TextStyle(fontSize: 17, color: Colors.white),
+            leftPrefix: Icon(Icons.attach_money, size: 19, color: Colors.black45,),
+            rightSuffix: Icon(Icons.attach_money, size: 19, color: Colors.black45,),
+            boxStyle: FlutterSliderTooltipBox(
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withOpacity(0.7)
+              )
+            ),
+            numberFormat: intl.NumberFormat(),
+            // numberFormat: intl.NumberFormat(),
+          ),
+        ),
+        Expanded(
+          child: Container(),
+        ),
+      ],
+    );
+    
+    /*Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Container(
@@ -140,50 +267,13 @@ class _LiveScannerState extends State<LiveScanner> {
           child: Column(
             children: <Widget>[
               Expanded(
-                child: charts.LineChart(
-                  createCharts(
-                    dateTimes,
-                    scanRSSIs,
-                    [1],
-                    [charts.MaterialPalette.blue.shadeDefault],
-                    [5],
-                  ),
-                  animate: false,
-                  /*
-                  layoutConfig: charts.LayoutConfig(
-                    topMarginSpec: charts.MarginSpec.fixedPixel(0),
-                    rightMarginSpec: charts.MarginSpec.fixedPixel(0),
-                    bottomMarginSpec: charts.MarginSpec.fixedPixel(0),
-                    leftMarginSpec: charts.MarginSpec.fixedPixel(0),
-                  ),
-                  */
-                  defaultRenderer: new charts.LineRendererConfig(
-                    roundEndCaps: false, //makes patterns more clear 
-                    includePoints: false, //makes patterns more clear
-                  ),
-                  domainAxis: new charts.NumericAxisSpec(
-                    showAxisLine: false,
-                    viewport: new charts.NumericExtents(
-                      minDateTime, 
-                      maxDateTime,
-                    ),
-                    renderSpec: new charts.NoneRenderSpec(),
-                  ),
-                  primaryMeasureAxis: new charts.NumericAxisSpec(
-                    //showAxisLine: false,
-                    viewport: new charts.NumericExtents(
-                      minRSSI,
-                      maxRSSI,
-                    ),
-                    //renderSpec: new charts.NoneRenderSpec(),
-                  ),
-                ),
+                child: 
               )
             ],
           )
         ),
       ],
-    );
+    );*/
   }
 
   /*
@@ -207,4 +297,33 @@ class _LiveScannerState extends State<LiveScanner> {
     return ranges;
   }
   */
+}
+
+class WhiteCircle extends StatelessWidget {
+  final String value;
+
+  const WhiteCircle({
+    this.value,
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(8),
+      child: Container(
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(100),
+          color: Colors.white,
+        ),
+        child: new Text(
+          value,
+          style: TextStyle(
+            color: Navigation.blueGrey,
+          ),
+        ),
+      ),
+    );
+  }
 }

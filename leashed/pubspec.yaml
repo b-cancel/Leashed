@@ -30,8 +30,9 @@ dependencies:
   font_awesome_flutter: ^8.4.0
   gif_ani: ^0.0.2
   percent_indicator: ^1.0.15
-  page_transition: '^1.0.9'
+  page_transition: ^1.0.9
   flutter_swiper: ^1.1.6
+  flutter_xlider: ^2.4.3
   
 
 flutter_icons:

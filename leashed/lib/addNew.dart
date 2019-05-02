@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:leashed/deviceFinder.dart';
+import 'package:leashed/deviceScanner.dart';
 import 'dart:math' as math;
 
 import 'package:leashed/navigation.dart';
@@ -215,8 +217,12 @@ class _AddNewState extends State<AddNew> {
                         Navigator.push(context, PageTransition(
                           type: PageTransitionType.fade,
                           duration: Duration.zero, 
-                          child: RecordSignature(
+                          child: DeviceScanner(
+                            title: "Grabbing Device Signature",
                             deviceID: widget.id,
+                            child: new LiveScanner( 
+                              deviceID: widget.id,
+                            ),
                           ),
                         ));
                       },
@@ -237,6 +243,22 @@ class _AddNewState extends State<AddNew> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: new FloatingActionButton(
+        onPressed: (){
+          Navigator.push(context, PageTransition(
+            type: PageTransitionType.fade,
+            duration: Duration.zero, 
+            child: DeviceScanner(
+              title: "Searching For Device",
+              deviceID: widget.id,
+              child: new UpdatingScanner( 
+                deviceID: widget.id,
+              ),
+            ),
+          ));
+        },
+        child: Icon(Icons.settings_bluetooth),
       ),
     );
   }
