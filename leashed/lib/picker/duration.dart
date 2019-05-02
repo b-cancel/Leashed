@@ -1,6 +1,6 @@
 import 'dart:math';
 
-List getFormattedDuration(Duration time){
+List<int> getFormattedDuration(Duration time){
   int days, hours, minutes, seconds, milliseconds, microseconds;
 
   //Returns a string with hours, minutes, seconds, and microseconds, in the following format: HH:MM:SS.mmmmmm

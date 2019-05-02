@@ -397,15 +397,16 @@ class NavBar extends StatelessWidget {
               gaplessPlayback: false,
             ),
           ),
-          IconButton(
-            icon: Icon(
+          InkWell(
+            child: Icon(
               Icons.settings,
               color: Colors.white,
             ),
-            onPressed: (){
-              //toggle UI
+            onTap: (){
+              Navigation.appRouter.navigateTo(context, "settings", transition: TransitionType.inFromBottom);
+            },
+            onLongPress: (){ //TODO... remove debug (toggle UI)
               deviceCount.value = (deviceCount.value > 0) ? 0 : 1;
-              //Navigation.appRouter.navigateTo(context, "settings", transition: TransitionType.inFromBottom);
             },
           )
         ],

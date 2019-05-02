@@ -4,9 +4,23 @@ import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:charts_common/common.dart' as common;
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/helper/structs.dart';
+import 'package:leashed/picker/duration.dart';
 import 'package:leashed/scanner.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
+
+String durationShortMinutesSeconds(Duration duration){
+  List dur = getFormattedDuration(duration);
+  int minutes = dur[2];
+  int seconds = dur[3];
+  String minStr = minutes.toString() + "m";
+  String secStr = seconds.toString() + "s";
+  if(minutes != 0 && seconds != 0) return minStr + secStr;
+  else{
+    if(minutes != 0) return minStr;
+    else return secStr;
+  }
+}
 
 String durationPrint(dynamic dtOrDur, {bool short = false}){
   //if we pass a datetime we assume
