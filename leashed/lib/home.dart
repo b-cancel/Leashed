@@ -291,26 +291,95 @@ class _DevicesState extends State<Devices> {
   }
 }
 
-class EntireSlider extends StatelessWidget {
+class EntireSlider extends StatefulWidget {
   const EntireSlider({
     Key key,
   }) : super(key: key);
 
   @override
+  _EntireSliderState createState() => _EntireSliderState();
+}
+
+class _EntireSliderState extends State<EntireSlider> {
+  final ValueNotifier<int> sliderValue = new ValueNotifier<int>(1);
+
+  @override
+  void initState() {
+    sliderValue.addListener(reactToSliderChange);
+    super.initState();
+  }
+
+  @override
+  void dispose() { 
+    sliderValue.removeListener(reactToSliderChange);
+    super.dispose();
+  }
+
+  reactToSliderChange(){
+    print("CHANGED TO ->");
+    switch(sliderValue.value){
+      case 0: print("0 POP UP"); break;
+      case 1: print("1"); break;
+      case 2: print("2"); break;
+      default: print("3"); break;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    //all the things that affect the travel of the tick
+    double tickWidth = 30; //total
+    double whitePaddingLR = 16; //per side
+    double paddingWithinSlider = 8; //per side
+    double tickTravel = MediaQuery.of(context).size.width; //total
+
+    //calculate where to place the tick
+    tickTravel -= (whitePaddingLR * 2);
+    tickTravel -= (paddingWithinSlider * 2);
+    tickTravel -= tickWidth;
+    double tickPadding = sliderValue.value * (tickTravel / 3);
+
     return Container(
       color: Colors.white,
-      padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
+      padding: EdgeInsets.fromLTRB(whitePaddingLR, 0, whitePaddingLR, 0),
       child: Stack(
         children: <Widget>[
-          new SliderBackground(
-            height: 24,
-            padding: EdgeInsets.fromLTRB(8,16,8,16),
+          Container(
+            padding: EdgeInsets.fromLTRB(0, 16, 0, 16),
+            child: new SliderBackground(
+              height: 24,
+            ),
           ),
           Positioned.fill(
-            child: Slider(
-              rightPadding: 0,
-              shiftUp: 6,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(paddingWithinSlider, 0, paddingWithinSlider, 0),
+              child: Stack(
+                children: <Widget>[
+                  Opacity(
+                    opacity: 0,
+                    child: Slider(
+                      onChanged: (newValue) {
+                        setState(() => sliderValue.value = newValue.toInt());
+                      },
+                      value: sliderValue.value.toDouble(),
+                      min: 0,
+                      max: 3,
+                      divisions: 3,
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        padding: EdgeInsets.only(left: tickPadding),
+                        alignment: Alignment.centerLeft,
+                        child: Tick(
+                          width: tickWidth,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -319,11 +388,11 @@ class EntireSlider extends StatelessWidget {
   }
 }
 
-class Slider extends StatelessWidget {
+class CustomSlider extends StatelessWidget {
   final double rightPadding;
   final double shiftUp;
 
-  const Slider({
+  const CustomSlider({
     this.rightPadding,
     this.shiftUp,
   });
@@ -339,29 +408,19 @@ class Slider extends StatelessWidget {
           max: 4,
           values: [1,2,3,4],
           handler: FlutterSliderHandler(
-            child: Container(
-              padding: EdgeInsets.fromLTRB(0, 8, 0, 8),
-              decoration: new BoxDecoration(
-                color: Navigation.blueGrey,
-                borderRadius: BorderRadius.circular(10),
-                border: new Border.all(
-                  color: Colors.white,
-                ),
-              ),
-              child: Icon(
-                Icons.menu,
-                color: Colors.white,
-              ),
-            ),
+            child: new Tick(),
           ),
           handlerWidth: 25,
           handlerHeight: 45,
           jump: true,
+          onDragStarted: (i, d1, d2){
+            print("START");
+          },
           onDragging: (handlerIndex, lowerValue, upperValue) {
-            print("value: " + lowerValue.toString());
-            /*
-            setState(() {});
-            */
+            print(handlerIndex.toString() + " -> " + lowerValue.toString());
+          },
+          onDragCompleted: (i, d1, d2){
+            //print("STOP");
           },
           tooltip: noFlutterSlideTooltip(),
           trackBar: FlutterSliderTrackBar(
@@ -383,22 +442,43 @@ class Slider extends StatelessWidget {
   }
 }
 
-class SliderBackground extends StatelessWidget {
-  final double height;
-  final EdgeInsetsGeometry padding;
-
-  const SliderBackground({
-    this.height,
-    this.padding,
+class Tick extends StatelessWidget {
+  final double width;
+  const Tick({
+    this.width,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
-      padding: padding,
-      width: MediaQuery.of(context).size.width,
-      height: height.toDouble() + padding.vertical,
+      width: width - (1* 2), //1 pixel border on 2 sides
+      padding: EdgeInsets.fromLTRB(0, 8, 0, 8),
+      decoration: new BoxDecoration(
+        color: Navigation.blueGrey,
+        borderRadius: BorderRadius.circular(10),
+        border: new Border.all(
+          color: Colors.white,
+        ),
+      ),
+      child: Icon(
+        Icons.menu,
+        color: Colors.white,
+      ),
+    );
+  }
+}
+
+class SliderBackground extends StatelessWidget {
+  final double height;
+
+  const SliderBackground({
+    this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height.toDouble(),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: Row(
