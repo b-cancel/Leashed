@@ -238,6 +238,8 @@ class _DevicesState extends State<Devices> {
                     (ScannerStaticVars.bluetoothOn.value)
                     ? Container()
                     : BluetoothOffBanner(),
+                    //----------Slider
+                    new EntireSlider(),
                   ],
                 ),
               ),
@@ -245,64 +247,6 @@ class _DevicesState extends State<Devices> {
           ),
           new SliverList(
             delegate: new SliverChildListDelegate([
-              Stack(
-                children: <Widget>[
-                  new SliderBackground(
-                    height: 50,
-                  ),
-                  Positioned.fill(
-                    child: Container(
-                      padding: EdgeInsets.all(8),
-                      color: Colors.red,
-                      child: Center(
-                        child: Container(
-                          color: Colors.blue,
-                          child: FittedBox(
-                            fit: BoxFit.fitWidth,
-                            child: Container(
-                              color: Colors.pink,
-                              child: FlutterSlider(
-                                min: 1,
-                                max: 4,
-                                values: [1,2,3,4],
-                                /*
-                                handler: FlutterSliderHandler(
-                                  decoration: BoxDecoration(),
-                                  child: Container(
-                                    height: 75,
-                                    color: Navigation.blueGrey,
-                                    padding: EdgeInsets.all(4),
-                                    child: Icon(Icons.menu),
-                                  ),
-                                ),
-                                handlerHeight: 100,
-                                */
-                                //handlerWidth: screenWidth - (64*4),
-                                jump: true,
-                                onDragging: (handlerIndex, lowerValue, upperValue) {
-                                  print("value: " + lowerValue.toString());
-                                  setState(() {});
-                                },
-                                tooltip: noFlutterSlideTooltip(),
-                                handlerAnimation: FlutterSliderHandlerAnimation(
-                                  curve: Curves.elasticOut,
-                                  reverseCurve: Curves.bounceIn,
-                                  duration: Duration(milliseconds: 500),
-                                  scale: 1.5
-                                ),
-                                trackBar: FlutterSliderTrackBar(
-                                  activeTrackBarColor: Colors.red,
-                                  inactiveTrackBarColor: Colors.blue,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
               Device(
                 image: "laptop.jpg", 
                 name: "Laptop", 
@@ -347,21 +291,114 @@ class _DevicesState extends State<Devices> {
   }
 }
 
-class SliderBackground extends StatelessWidget {
-  final int height;
-
-  const SliderBackground({
-    this.height,
+class EntireSlider extends StatelessWidget {
+  const EntireSlider({
     Key key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.red,
-      padding: EdgeInsets.all(8),
+      color: Colors.white,
+      padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
+      child: Stack(
+        children: <Widget>[
+          new SliderBackground(
+            height: 24,
+            padding: EdgeInsets.fromLTRB(8,16,8,16),
+          ),
+          Positioned.fill(
+            child: Slider(
+              rightPadding: 0,
+              shiftUp: 6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class Slider extends StatelessWidget {
+  final double rightPadding;
+  final double shiftUp;
+
+  const Slider({
+    this.rightPadding,
+    this.shiftUp,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.translate(
+      offset: Offset(0, -shiftUp),
+      child: Container(
+        padding: EdgeInsets.only(right: rightPadding),
+        child: FlutterSlider(
+          min: 1,
+          max: 4,
+          values: [1,2,3,4],
+          handler: FlutterSliderHandler(
+            child: Container(
+              padding: EdgeInsets.fromLTRB(0, 8, 0, 8),
+              decoration: new BoxDecoration(
+                color: Navigation.blueGrey,
+                borderRadius: BorderRadius.circular(10),
+                border: new Border.all(
+                  color: Colors.white,
+                ),
+              ),
+              child: Icon(
+                Icons.menu,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          handlerWidth: 25,
+          handlerHeight: 45,
+          jump: true,
+          onDragging: (handlerIndex, lowerValue, upperValue) {
+            print("value: " + lowerValue.toString());
+            /*
+            setState(() {});
+            */
+          },
+          tooltip: noFlutterSlideTooltip(),
+          trackBar: FlutterSliderTrackBar(
+            activeTrackBarColor: Colors.red.withOpacity(0),
+            inactiveTrackBarColor: Colors.blue.withOpacity(0),
+          ),
+          /*
+          handlerAnimation: FlutterSliderHandlerAnimation(
+            curve: Curves.elasticOut,
+            reverseCurve: Curves.bounceIn,
+            duration: Duration(milliseconds: 500),
+            scale: 1.5
+          ),
+          */
+          //NO HatchMark
+        ),
+      ),
+    );
+  }
+}
+
+class SliderBackground extends StatelessWidget {
+  final double height;
+  final EdgeInsetsGeometry padding;
+
+  const SliderBackground({
+    this.height,
+    this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: padding,
       width: MediaQuery.of(context).size.width,
-      height: height.toDouble(),
+      height: height.toDouble() + padding.vertical,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: Row(
@@ -474,7 +511,7 @@ class _DeviceState extends State<Device> {
       children: <Widget>[
       ListTile(
         isThreeLine: true,
-        contentPadding: EdgeInsets.all(16.0),
+        contentPadding: EdgeInsets.fromLTRB(16,0,16,16),
         leading: new Container(
           color: Navigation.blueGrey,
           width: imageSize,
@@ -504,7 +541,10 @@ class _DeviceState extends State<Device> {
           color: Colors.blueGrey[900],
           height: 2,
         ),
-      )
+      ),
+      Container(
+        height: 16,
+      ),
     ],
   );
   }
