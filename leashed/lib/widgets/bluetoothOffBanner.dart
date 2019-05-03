@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/scanner.dart';
-//import 'package:app_settings/app_settings.dart';
-//import 'package:access_settings_menu/access_settings_menu.dart';
 
 class BluetoothOffBanner extends StatefulWidget {
   @override
@@ -33,10 +31,6 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
     return InkWell(
       onTap: (){
         //call the function to open the desired Android menu
-        openSettingsMenu("ACTION_BLUETOOTH_SETTINGS");
-        //AppSettings.openLocationSettings();
-        //AppSettings.openAppSettings();
-        //SystemSetting.goto(SettingTarget.BLUETOOTH);
       },
       child: Container(
         padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -49,7 +43,7 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
               color: Colors.black,
             ),
             new Text(
-              ' The Bluetooth Adapter Is ', //+ bleStateString,
+              ' The Bluetooth Adapter Is ' + bleStateString,
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
@@ -60,17 +54,4 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
       ),
     );
   }
-}
-
-// create an async void to call the API function with settings name as parameter
-openSettingsMenu(settingsName) async {
-    var resultSettingsOpening = false;
-  /*
-    try {
-      resultSettingsOpening =
-          await AccessSettingsMenu.openSettings(settingsType: settingsName);
-    } catch (e) {
-      resultSettingsOpening = false;
-    }
-    */
 }
