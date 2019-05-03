@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/picker/durationPicker.dart';
 import 'package:leashed/settingsHelper/leashTightness.dart';
+import 'package:contact_picker/contact_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:sms/sms.dart';
 
 class Settings extends StatefulWidget { 
   @override
@@ -13,23 +17,33 @@ class _SettingsState extends State<Settings> {
   final Color darkGrey = Colors.grey[900];
   //LIGHT: Color.fromRGBO(237, 240, 242, 1);
   //DARK: Color.fromRGBO(197, 201, 205, 1);
-  DurationPicker picker;
 
   //message
   final TextEditingController messageField = new TextEditingController();
+  final SmsSender sender = new SmsSender();
+  final String defaultMessage = "Someone is taking my stuff"
+  + "\n" + "I might be unconscious"
+  + "\n" + "Please help me"
+  + "\n" + "My location is below";
   final ValueNotifier<bool> editingField = new ValueNotifier<bool>(false);
-  
-  Duration getTimeBetweenUpdates(){
-    return new Duration(minutes: 23, seconds: 34);
-  }
 
-  int getSearchAttemptsBefore(){
-    return 3;
+  //contact list
+  final ContactPicker contactPicker = new ContactPicker();
+  List<Contact> emergencyContacts;
+  final Map<int, TableColumnWidth> colWidths = {
+    0: IntrinsicColumnWidth(),
+    1: IntrinsicColumnWidth(),
+    2: FlexColumnWidth(1.0),
+  };
+  
+  @override
+  void initState() {
+    emergencyContacts = new List<Contact>();
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    String text = "MODE";
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Navigation.blueGrey,
@@ -59,7 +73,7 @@ class _SettingsState extends State<Settings> {
                     setState(() {}); //show done button
                   },
                   decoration: InputDecoration(
-                    hintText: "Type Your S.O.S Message Here",
+                    hintText: defaultMessage,
                     border: InputBorder.none,
                   ),
                   keyboardType: TextInputType.multiline,
@@ -71,6 +85,128 @@ class _SettingsState extends State<Settings> {
                 lightGrey: lightGrey, 
                 darkGrey: darkGrey,
                 sectionName: "EMERGENCY CONTACTS",
+              ),
+              Column(
+                children: List.generate(emergencyContacts.length, (index){
+                  String label = emergencyContacts[index].phoneNumber.label ?? "";
+                  if(label != "") label = "(" + label + ")";
+                  return Dismissible(
+                    key: UniqueKey(),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      padding: EdgeInsets.only(right: 16),
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      child: Icon(FontAwesomeIcons.trashAlt),
+                    ),
+                    onDismissed: (direction){
+                      setState(() {
+                        emergencyContacts.removeAt(index);
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Colors.grey.withOpacity(0.5),
+                            width: 2,
+                          )
+                        )
+                      ),
+                      child: ListTile(
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Row(
+                                  children: <Widget>[
+                                    Text(
+                                      emergencyContacts[index].fullName.toString(),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    Text(label),
+                                  ],
+                                ),
+                                Text(emergencyContacts[index].phoneNumber.number)
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                                Icon(
+                                  FontAwesomeIcons.chevronLeft,
+                                  color: Colors.grey,
+                                  size: 16,
+                                ),
+                                Container(
+                                  width: 4,
+                                ),
+                                Icon(
+                                  FontAwesomeIcons.trash,
+                                  color: Colors.grey,
+                                  size: 16,
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              Container(
+                padding: EdgeInsets.fromLTRB(16,8,16,8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    new RaisedButton.icon(
+                      color: Colors.red,
+                      icon: Icon(Icons.warning),
+                      label: new Text("Test S.O.S"),
+                      onPressed: (){
+                        //determine what message to send our contacts
+                        String message = messageField.text ?? "";
+                        if(message == ""){
+                          message = defaultMessage;
+                        }
+
+                        //send the message to all of your contacts
+                        for(int i = 0; i < emergencyContacts.length; i++){
+                          _textMe(
+                            emergencyContacts[i].phoneNumber.number, 
+                            message,
+                          );
+                        }
+                      },
+                    ),
+                    new RaisedButton.icon(
+                      color: Navigation.blueGrey,
+                      icon: Icon(
+                        Icons.add,
+                        color: Colors.white,
+                      ),
+                      label: new Text(
+                        "Add Contact",
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                      onPressed: () async {
+                        Contact contact = await contactPicker.selectContact();
+                        emergencyContacts.add(contact);
+                        setState(() {}); //show new contact
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -103,6 +239,39 @@ class _SettingsState extends State<Settings> {
         ],
       ),
     );
+  }
+
+  _textMe(String number, String text){
+    print("sending text to " + number);
+    
+    //---Collect Message Data
+    String basicLink = 'https://www.google.com/maps/search/?api=1&query=';
+    String someCoordinate = '26.27443,-98.1830293';
+    String textMessage = text + "\n" + basicLink + someCoordinate;
+
+    //---Send The Message
+    SmsMessage message = new SmsMessage(
+      number, 
+      textMessage,
+    );
+    //To be notified when the message is sent and/or delivered
+    /*
+    message.onStateChanged.listen((state) {
+      if (state == SmsMessageState.Sent) {
+        print("SMS is sent!");
+      } else if (state == SmsMessageState.Delivered) {
+        print("SMS is delivered!");
+      }
+    });
+    */
+    //actual send the message
+    sender.sendSms(message);
+    //To be notified when the message is received
+    /*
+    sender.onSmsDelivered.listen((SmsMessage message){
+      print('${message.address} received your message.');
+    });
+    */
   }
 }
 

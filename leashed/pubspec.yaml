@@ -34,8 +34,9 @@ dependencies:
   flutter_swiper: ^1.1.6
   numberpicker: ^1.0.0
   flutter_xlider: ^2.4.3
+  contact_picker: ^0.0.2
+  sms: ^0.2.4
   
-
 flutter_icons:
   android: "launcher_icon"
   adaptive_icon_background: "#ffffff"

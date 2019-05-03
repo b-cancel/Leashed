@@ -96,8 +96,10 @@ class Chart extends StatelessWidget {
             theCharts,
             animate: false,
             layoutConfig: charts.LayoutConfig(
-              leftMarginSpec: charts.MarginSpec.fixedPixel(0),
+              topMarginSpec: charts.MarginSpec.fixedPixel(0),
               rightMarginSpec: charts.MarginSpec.fixedPixel(0),
+              bottomMarginSpec: charts.MarginSpec.fixedPixel(0),
+              leftMarginSpec: charts.MarginSpec.fixedPixel(0),
             ),
             defaultRenderer: new charts.LineRendererConfig(
               roundEndCaps: false, //makes patterns more clear 
