@@ -15,7 +15,7 @@ String durationShortMinutesSeconds(Duration duration){
   int seconds = dur[3];
   String minStr = minutes.toString() + "m";
   String secStr = seconds.toString() + "s";
-  if(minutes != 0 && seconds != 0) return minStr + secStr;
+  if(minutes != 0 && seconds != 0) return minStr + " " + secStr;
   else{
     if(minutes != 0) return minStr;
     else return secStr;
