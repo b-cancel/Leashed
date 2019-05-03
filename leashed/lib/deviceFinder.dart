@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
-import 'package:leashed/manualLib/flutter_xlider.dart';
+import 'package:flutter_xlider/flutter_xlider.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';

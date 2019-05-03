@@ -33,7 +33,7 @@ dependencies:
   page_transition: ^1.0.9
   flutter_swiper: ^1.1.6
   numberpicker: ^1.0.0
-  # flutter_xlider: ^2.4.3 in manualLib
+  flutter_xlider: ^2.4.3
   
 
 flutter_icons:

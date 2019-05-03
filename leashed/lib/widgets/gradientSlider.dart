@@ -1,15 +1,5 @@
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
-import 'package:leashed/helper/utils.dart';
-import 'package:leashed/manualLib/flutter_xlider.dart';
 import 'package:leashed/navigation.dart';
-import 'package:leashed/scanner.dart';
-
-import 'dart:math' as math;
-
-import 'package:leashed/sliverModifications/sliverPersistentHeader.dart' as sliverPersistentHeader;
-import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSpaceBar;
-import 'package:leashed/widgets/bluetoothOffBanner.dart';
 
 class EntireSlider extends StatefulWidget {
   const EntireSlider({

@@ -3,6 +3,7 @@ import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/picker/durationDisplay.dart';
 import 'package:leashed/picker/durationPicker.dart';
+import 'package:numberpicker/numberpicker.dart';
 
 
 class Settings extends StatefulWidget { 
@@ -54,13 +55,54 @@ class _SettingsState extends State<Settings> {
                 TableRow(
                   children: [
                     TableCell(
-                      child: new TableHeader(text: "MODE"),
+                      child: new TableHeader(
+                        title: "MODE",
+                        description: "Constantly Using Bluetooth"
+                        + "\n" + "Is A Battery Life Killer"
+                        + "\n"
+                        + "\n" + "But It Might Be Necessary"
+                        + "\n" + "If You Are Afraid Of Theft"
+                        + "\n" 
+                        + "\n" + "Leashed Let's You Choose"
+                        + "\n"
+                        + "\n" + "When You Want To"
+                        + "\n" + "Use Your Battery Life"
+                        + "\n" + "For That Extra Bit Of Security",
+                      ),
                     ),
                     TableCell(
-                      child: new TableHeader(text: "CHECK DURATION"),
+                      child: new TableHeader(
+                        title: "CHECK DURATION",
+                        description: "Sometimes A Device"
+                        + "\n" + "May Be In Range"
+                        + "\n"
+                        + "\n" + "But There Is So Much Interferance"
+                        + "\n" + "It Has Trouble Reporting Back"
+                        + "\n" 
+                        + "\n" + "Leashed Let's You Choose"
+                        + "\n" + "For Each Mode"
+                        + "\n"
+                        + "\n" + "How Long Your Phone"
+                        + "\n" + "Waits For A Device"
+                        + "\n" + "Until It's Considered Disconnected"
+                        + "\n" + "And You Are Alerted",
+                      ),
                     ),
                     TableCell(
-                      child: new TableHeader(text: "INTERVAL BETWEEN"),
+                      child: new TableHeader(
+                        title: "INTERVAL BETWEEN",
+                        description: "Because Using Bluetooth"
+                        + "\n" + "Is A Battery Life Killer"
+                        + "\n"
+                        + "\n" + "We Only Want To Have It On"
+                        + "\n" + "When Absolutely Necessary"
+                        + "\n" 
+                        + "\n" + "Leashed Let's You Choose"
+                        + "\n" + "For Each Mode"
+                        + "\n"
+                        + "\n" + "How Long Your Phone Waits"
+                        + "\n" + "Between Device Check-Ins",
+                      ),
                     ),
                   ]
                 ),
@@ -174,24 +216,29 @@ class _SettingsState extends State<Settings> {
   }
 }
 
-class TableHeader extends StatelessWidget {
+class TableHeader extends StatefulWidget {
   const TableHeader({
     Key key,
-    @required this.text,
+    @required this.title,
+    @required this.description,
   }) : super(key: key);
 
-  final String text;
+  final String title;
+  final String description;
 
+  @override
+  _TableHeaderState createState() => _TableHeaderState();
+}
+
+class _TableHeaderState extends State<TableHeader> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: (){
-        print("description");
-      },
+      onTap: () => moreInfo(),
       child: Container(
         padding: EdgeInsets.only(top: 16, bottom: 16),
         child: new Text(
-          text,
+          widget.title,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -200,9 +247,71 @@ class TableHeader extends StatelessWidget {
       ),
     );
   }
+
+  moreInfo(){
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                color: Navigation.blueGrey,
+                width: MediaQuery.of(context).size.width,
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      padding: EdgeInsets.only(right: 8),
+                      child: Icon(
+                        Icons.info,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      widget.title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      child: Text(widget.description),
+                    ),
+                    Container(
+                      alignment: Alignment.bottomRight,
+                      padding: EdgeInsets.all(8),
+                      child: FlatButton(
+                        child: Text('Neat!'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
-class ButtonCell extends StatelessWidget {
+class ButtonCell extends StatefulWidget {
   const ButtonCell({
     Key key,
     @required this.time,
@@ -211,10 +320,35 @@ class ButtonCell extends StatelessWidget {
   final Duration time;
 
   @override
+  _ButtonCellState createState() => _ButtonCellState();
+}
+
+class _ButtonCellState extends State<ButtonCell> {
+  double _currentPrice = 2;
+
+   void _showDialog() {
+    showDialog<int>(
+      context: context,
+      builder: (BuildContext context) {
+        return new NumberPickerDialog.decimal(
+          minValue: 1,
+          maxValue: 10,
+          title: new Text("Pick a new price"),
+          initialDoubleValue: _currentPrice,
+        );
+      }
+    ).then((int value) {
+      if (value != null) {
+        setState(() => _currentPrice = value.toDouble());
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: (){
-        asfsf
+        _showDialog();
       },
       child: Container(
         padding: EdgeInsets.all(8),
@@ -222,7 +356,7 @@ class ButtonCell extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text(durationShortMinutesSeconds(time)),
+            Text(durationShortMinutesSeconds(widget.time)),
             Icon(Icons.arrow_drop_down),
           ],
         ),
@@ -239,7 +373,7 @@ class ColorCellText extends StatelessWidget {
     this.text,
     this.flip: false,
   });
-
+ 
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -278,10 +412,6 @@ class SectionLabel extends StatelessWidget {
             color: lightGrey,
             border: Border(
               bottom: BorderSide(
-                color: darkGrey,
-                width: 2,
-              ),
-              top: BorderSide(
                 color: darkGrey,
                 width: 2,
               ),

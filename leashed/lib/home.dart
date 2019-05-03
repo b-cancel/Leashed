@@ -398,9 +398,14 @@ class NavBar extends StatelessWidget {
             ),
           ),
           InkWell(
-            child: Icon(
-              Icons.settings,
-              color: Colors.white,
+            child: Container(
+              padding: EdgeInsets.only(right: 12),
+              child: Center(
+                child: Icon(
+                  Icons.settings,
+                  color: Colors.white,
+                ),
+              ),
             ),
             onTap: (){
               Navigation.appRouter.navigateTo(context, "settings", transition: TransitionType.inFromBottom);
