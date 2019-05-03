@@ -1,12 +1,12 @@
-import 'package:charts_common/common.dart';
+//import 'package:charts_common/common.dart';
 import 'package:flutter/material.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:charts_common/common.dart' as common;
+//import 'package:charts_flutter/flutter.dart' as charts;
+//import 'package:charts_common/common.dart' as common;
 
 //TODO...
 
@@ -136,6 +136,7 @@ class _LiveScannerState extends State<LiveScanner> {
             ),
           ),
         ),
+        /*
         Expanded(
           child: Column(
             children: <Widget>[
@@ -149,14 +150,6 @@ class _LiveScannerState extends State<LiveScanner> {
                     [5],
                   ),
                   animate: false,
-                  /*
-                  layoutConfig: charts.LayoutConfig(
-                    topMarginSpec: charts.MarginSpec.fixedPixel(0),
-                    rightMarginSpec: charts.MarginSpec.fixedPixel(0),
-                    bottomMarginSpec: charts.MarginSpec.fixedPixel(0),
-                    leftMarginSpec: charts.MarginSpec.fixedPixel(0),
-                  ),
-                  */
                   defaultRenderer: new charts.LineRendererConfig(
                     roundEndCaps: false, //makes patterns more clear 
                     includePoints: false, //makes patterns more clear
@@ -182,6 +175,7 @@ class _LiveScannerState extends State<LiveScanner> {
             ],
           )
         ),
+        */
       ],
     );
   }

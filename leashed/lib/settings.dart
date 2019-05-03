@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+//import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/picker/durationPicker.dart';
 import 'package:leashed/settingsHelper/leashTightness.dart';
-import 'package:contact_picker/contact_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:sms/sms.dart';
+//import 'package:contact_picker/contact_picker.dart';
+//import 'package:url_launcher/url_launcher.dart';
+//import 'package:sms/sms.dart';
+//import 'package:geolocator/geolocator.dart';
 
 class Settings extends StatefulWidget { 
   @override
@@ -20,7 +21,7 @@ class _SettingsState extends State<Settings> {
 
   //message
   final TextEditingController messageField = new TextEditingController();
-  final SmsSender sender = new SmsSender();
+  //final SmsSender sender = new SmsSender();
   final String defaultMessage = "Someone is taking my stuff"
   + "\n" + "I might be unconscious"
   + "\n" + "Please help me"
@@ -28,6 +29,7 @@ class _SettingsState extends State<Settings> {
   final ValueNotifier<bool> editingField = new ValueNotifier<bool>(false);
 
   //contact list
+  /*
   final ContactPicker contactPicker = new ContactPicker();
   List<Contact> emergencyContacts;
   final Map<int, TableColumnWidth> colWidths = {
@@ -35,10 +37,11 @@ class _SettingsState extends State<Settings> {
     1: IntrinsicColumnWidth(),
     2: FlexColumnWidth(1.0),
   };
+  */
   
   @override
   void initState() {
-    emergencyContacts = new List<Contact>();
+    //emergencyContacts = new List<Contact>();
     super.initState();
   }
 
@@ -86,6 +89,7 @@ class _SettingsState extends State<Settings> {
                 darkGrey: darkGrey,
                 sectionName: "EMERGENCY CONTACTS",
               ),
+              /*
               Column(
                 children: List.generate(emergencyContacts.length, (index){
                   String label = emergencyContacts[index].phoneNumber.label ?? "";
@@ -180,7 +184,7 @@ class _SettingsState extends State<Settings> {
 
                         //send the message to all of your contacts
                         for(int i = 0; i < emergencyContacts.length; i++){
-                          _textMe(
+                          sendTextMessage(
                             emergencyContacts[i].phoneNumber.number, 
                             message,
                           );
@@ -208,6 +212,7 @@ class _SettingsState extends State<Settings> {
                   ],
                 ),
               ),
+              */
             ],
           ),
           (editingField.value)
@@ -241,19 +246,27 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  _textMe(String number, String text){
+  sendTextMessage(String number, String text) async{
     print("sending text to " + number);
     
     //---Collect Message Data
     String basicLink = 'https://www.google.com/maps/search/?api=1&query=';
+    /*
+    Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    print("----- " + position.toString());
+    */
     String someCoordinate = '26.27443,-98.1830293';
     String textMessage = text + "\n" + basicLink + someCoordinate;
 
+    
+
     //---Send The Message
+    /*
     SmsMessage message = new SmsMessage(
       number, 
       textMessage,
     );
+    */
     //To be notified when the message is sent and/or delivered
     /*
     message.onStateChanged.listen((state) {
@@ -265,7 +278,7 @@ class _SettingsState extends State<Settings> {
     });
     */
     //actual send the message
-    sender.sendSms(message);
+    //sender.sendSms(message);
     //To be notified when the message is received
     /*
     sender.onSmsDelivered.listen((SmsMessage message){

@@ -3,7 +3,7 @@ import 'package:leashed/addNew.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
-import 'package:flutter_swiper/flutter_swiper.dart';
+//import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:leashed/pattern/blePattern.dart';
 import 'package:leashed/pattern/patternChart.dart';
 import 'package:leashed/scanner.dart';
@@ -367,7 +367,9 @@ class ManyPatternsFound extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new Swiper(
+    return Container();
+    
+    /*new Swiper(
       loop: false,
       itemBuilder: (BuildContext context,int index){
         return potentialSelections[index];
@@ -383,6 +385,7 @@ class ManyPatternsFound extends StatelessWidget {
       ),
       //NOTE: no pagination we might have alot of pages (25+)
     );
+    */
   }
 }
 

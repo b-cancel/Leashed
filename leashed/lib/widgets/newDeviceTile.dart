@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+//import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/addNew.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
@@ -230,7 +230,8 @@ class _SignalPulseState extends State<SignalPulse> {
       height: 65,
       child: Center(
         child: Icon(
-          FontAwesomeIcons.solidHeart,
+          Icons.warning, //TODO... remove thing
+          //FontAwesomeIcons.solidHeart,
           color: heartColor,
           size: heartSize,
         ),

@@ -43,7 +43,13 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return new AnimatedBuilder(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("test"),
+      ),
+    );
+    
+    /*new AnimatedBuilder(
       animation: deviceCount,
       builder: (context, child){
         if(deviceCount.value == 0){
@@ -63,7 +69,7 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
           );
         }
       },
-    );
+    );*/
   }
 }
 

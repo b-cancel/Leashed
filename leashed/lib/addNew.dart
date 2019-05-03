@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+//import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/deviceFinder.dart';
 import 'package:leashed/deviceScanner.dart';
 import 'dart:math' as math;
@@ -272,7 +272,7 @@ class _AddNewState extends State<AddNew> {
           content: new Row(
             children: <Widget>[
               bigIcon(true, Icons.camera_alt),
-              bigIcon(false, FontAwesomeIcons.images),
+              //bigIcon(false, FontAwesomeIcons.images),
             ],
           ),
         );

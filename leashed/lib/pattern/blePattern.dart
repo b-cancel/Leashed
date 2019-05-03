@@ -5,7 +5,7 @@ import 'package:leashed/navigation.dart';
 import 'package:leashed/pattern/patternIdentify.dart';
 import 'package:leashed/scanner.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:percent_indicator/percent_indicator.dart' as percent;
+//import 'package:percent_indicator/percent_indicator.dart' as percent;
 
 //NOTE: we KNOW that bluetooth is one when we arrive at this page
 
@@ -174,7 +174,7 @@ class _BlePatternState extends State<BlePattern> {
               child: Container(
                 padding: EdgeInsets.fromLTRB(indicatorPadding, 0, indicatorPadding, 0),
                 alignment: Alignment.center,
-                child: (ScannerStaticVars.isScanning.value)
+                child: /*(ScannerStaticVars.isScanning.value)
                 ? percent.LinearPercentIndicator(
                   animation: false,
                   animationDuration: 100,
@@ -184,7 +184,7 @@ class _BlePatternState extends State<BlePattern> {
                   lineHeight: 16, 
                   progressColor: Colors.lightGreenAccent,
                 )
-                : new Builder(builder: (BuildContext context) {
+                : */ new Builder(builder: (BuildContext context) {
                   return Container(
                     child: InkWell(
                       onTap: (){
