@@ -17,6 +17,9 @@ class _SettingsState extends State<Settings> {
   //LIGHT: Color.fromRGBO(237, 240, 242, 1);
   //DARK: Color.fromRGBO(197, 201, 205, 1);
   DurationPicker picker;
+
+  final TextEditingController messageField = new TextEditingController();
+  final ValueNotifier<bool> editingField = new ValueNotifier<bool>(false);
   
   Duration getTimeBetweenUpdates(){
     return new Duration(minutes: 23, seconds: 34);
@@ -33,6 +36,16 @@ class _SettingsState extends State<Settings> {
   };
 
   @override
+  void initState() {
+    //messageField.addListener((listener))
+    super.initState();
+  }
+
+  void typing(){
+
+  }
+
+  @override
   Widget build(BuildContext context) {
     String text = "MODE";
     return Scaffold(
@@ -40,118 +53,170 @@ class _SettingsState extends State<Settings> {
         backgroundColor: Navigation.blueGrey,
         title: new Text("Settings"),
       ),
-      body: Column(
+      body: Stack(
         children: <Widget>[
-          new SectionLabel(
-            lightGrey: lightGrey, 
-            darkGrey: darkGrey,
-            sectionName: "LEASH TIGHTNESS",
-          ),
-          Container(
-            padding: EdgeInsets.only(top: 8, bottom: 16),
-            child: Table(
-              columnWidths: colWidths,
-              children: [
-                TableRow(
+          ListView(
+            children: <Widget>[
+              new SectionLabel(
+                lightGrey: lightGrey, 
+                darkGrey: darkGrey,
+                sectionName: "LEASH TIGHTNESS",
+              ),
+              Container(
+                padding: EdgeInsets.only(top: 0, bottom: 16),
+                child: Table(
+                  columnWidths: colWidths,
                   children: [
-                    TableCell(
-                      child: new TableHeader(
-                        title: "MODE",
-                        description: "Constantly Using Bluetooth"
-                        + "\n" + "Is A Battery Life Killer"
-                        + "\n"
-                        + "\n" + "But It Might Be Necessary"
-                        + "\n" + "If You Are Afraid Of Theft"
-                        + "\n" 
-                        + "\n" + "Leashed Let's You Choose"
-                        + "\n"
-                        + "\n" + "When You Want To"
-                        + "\n" + "Use Your Battery Life"
-                        + "\n" + "For That Extra Bit Of Security",
-                      ),
+                    TableRow(
+                      children: [
+                        TableCell(
+                          child: new TableHeader(
+                            title: "MODE",
+                            description: "Constantly Using Bluetooth"
+                            + "\n" + "Is A Battery Life Killer"
+                            + "\n"
+                            + "\n" + "But It Might Be Necessary"
+                            + "\n" + "If You Are Afraid Of Theft"
+                            + "\n" 
+                            + "\n" + "Leashed Let's You Choose"
+                            + "\n"
+                            + "\n" + "When You Want To"
+                            + "\n" + "Use Your Battery Life"
+                            + "\n" + "For That Extra Bit Of Security",
+                          ),
+                        ),
+                        TableCell(
+                          child: new TableHeader(
+                            title: "CHECK DURATION",
+                            description: "Sometimes A Device"
+                            + "\n" + "May Be In Range"
+                            + "\n"
+                            + "\n" + "But There Is So Much Interferance"
+                            + "\n" + "It Has Trouble Reporting Back"
+                            + "\n" 
+                            + "\n" + "Leashed Let's You Choose"
+                            + "\n" + "For Each Mode"
+                            + "\n"
+                            + "\n" + "How Long Your Phone"
+                            + "\n" + "Waits For A Device"
+                            + "\n" + "Until It's Considered Disconnected"
+                            + "\n" + "And You Are Alerted",
+                          ),
+                        ),
+                        TableCell(
+                          child: new TableHeader(
+                            title: "INTERVAL BETWEEN",
+                            description: "Because Using Bluetooth"
+                            + "\n" + "Is A Battery Life Killer"
+                            + "\n"
+                            + "\n" + "We Only Want To Have It On"
+                            + "\n" + "When Absolutely Necessary"
+                            + "\n" 
+                            + "\n" + "Leashed Let's You Choose"
+                            + "\n" + "For Each Mode"
+                            + "\n"
+                            + "\n" + "How Long Your Phone Waits"
+                            + "\n" + "Between Device Check-Ins",
+                          ),
+                        ),
+                      ]
                     ),
-                    TableCell(
-                      child: new TableHeader(
-                        title: "CHECK DURATION",
-                        description: "Sometimes A Device"
-                        + "\n" + "May Be In Range"
-                        + "\n"
-                        + "\n" + "But There Is So Much Interferance"
-                        + "\n" + "It Has Trouble Reporting Back"
-                        + "\n" 
-                        + "\n" + "Leashed Let's You Choose"
-                        + "\n" + "For Each Mode"
-                        + "\n"
-                        + "\n" + "How Long Your Phone"
-                        + "\n" + "Waits For A Device"
-                        + "\n" + "Until It's Considered Disconnected"
-                        + "\n" + "And You Are Alerted",
+                    buildTableRow(
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [Colors.black, Colors.red], // whitish to gray
+                            tileMode: TileMode.repeated, // repeats the gradient over the canvas
+                          ),
+                        ),
+                        child: new ColorCellText(
+                          text: "TIGHT",
+                        ),
                       ),
+                      Duration(seconds: 5),
+                      Duration(seconds: 15),
                     ),
-                    TableCell(
-                      child: new TableHeader(
-                        title: "INTERVAL BETWEEN",
-                        description: "Because Using Bluetooth"
-                        + "\n" + "Is A Battery Life Killer"
-                        + "\n"
-                        + "\n" + "We Only Want To Have It On"
-                        + "\n" + "When Absolutely Necessary"
-                        + "\n" 
-                        + "\n" + "Leashed Let's You Choose"
-                        + "\n" + "For Each Mode"
-                        + "\n"
-                        + "\n" + "How Long Your Phone Waits"
-                        + "\n" + "Between Device Check-Ins",
+                    buildTableRow(
+                      Container(
+                        color: Colors.yellow,
+                        child: new ColorCellText(
+                          text: "SECURE",
+                          flip: true,
+                        ),
                       ),
+                      Duration(seconds: 30),
+                      Duration(minutes: 7, seconds: 30),
+                    ),
+                    buildTableRow(
+                      Container(
+                        color: Colors.green,
+                        child: new ColorCellText(
+                          text: "LOOSE",
+                        ),
+                      ),
+                      Duration(minutes: 1),
+                      Duration(minutes: 15),
                     ),
                   ]
                 ),
-                buildTableRow(
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [Colors.black, Colors.red], // whitish to gray
-                        tileMode: TileMode.repeated, // repeats the gradient over the canvas
-                      ),
-                    ),
-                    child: new ColorCellText(
-                      text: "TIGHT",
-                    ),
+              ),
+              new SectionLabel(
+                lightGrey: lightGrey, 
+                darkGrey: darkGrey,
+                sectionName: "EMERGENCY MESSAGE",
+              ),
+              Container(
+                padding: EdgeInsets.fromLTRB(16,8,16,8),
+                child: new TextField(
+                  controller: messageField,
+                  onTap: (){
+                    editingField.value = true;
+                    setState(() {}); //show done button
+                  },
+                  decoration: InputDecoration(
+                    hintText: "Type Your S.O.S Message Here",
+                    border: InputBorder.none,
                   ),
-                  Duration(seconds: 5),
-                  Duration(seconds: 15),
+                  keyboardType: TextInputType.multiline,
+                  maxLines: null,
+                  scrollPadding: EdgeInsets.only(bottom: 64), //For The Done Button
                 ),
-                buildTableRow(
-                  Container(
-                    color: Colors.yellow,
-                    child: new ColorCellText(
-                      text: "SECURE",
-                      flip: true,
-                    ),
+              ),
+              new SectionLabel(
+                lightGrey: lightGrey, 
+                darkGrey: darkGrey,
+                sectionName: "EMERGENCY CONTACTS",
+              ),
+            ],
+          ),
+          (editingField.value)
+          ? Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.all(8),
+              child: RaisedButton(
+                color: Navigation.blueGrey,
+                onPressed: (){
+                  editingField.value = false;
+                  //remove focus
+                  FocusScope.of(context).requestFocus(new FocusNode());
+                  //hide done button
+                  setState(() {}); 
+                },
+                child: new Text(
+                  "Done",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Duration(seconds: 30),
-                  Duration(minutes: 7, seconds: 30),
                 ),
-                buildTableRow(
-                  Container(
-                    color: Colors.green,
-                    child: new ColorCellText(
-                      text: "LOOSE",
-                    ),
-                  ),
-                  Duration(minutes: 1),
-                  Duration(minutes: 15),
-                ),
-              ]
+              ),
             ),
-          ),
-          new SectionLabel(
-            lightGrey: lightGrey, 
-            darkGrey: darkGrey,
-            sectionName: "EMERGENCY CONTACTS",
-          ),
+          )
+          : Container(),
         ],
       )
       
