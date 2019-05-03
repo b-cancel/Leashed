@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/picker/duration.dart';
-//import 'package:numberpicker/numberpicker.dart';
+import 'package:numberpicker/numberpicker.dart';
 
 class LeashTightness extends StatelessWidget {
   //durations max time
@@ -341,7 +341,6 @@ class _ButtonCellState extends State<ButtonCell> {
                   ),
                 ),
               ),
-              /*
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
@@ -363,7 +362,6 @@ class _ButtonCellState extends State<ButtonCell> {
                   ),
                 ],
               ),
-              */
               Container(
                 padding: EdgeInsets.all(8),
                 child: Row(

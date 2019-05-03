@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-//import 'package:charts_flutter/flutter.dart' as charts;
-//import 'package:charts_common/common.dart' as common;
+import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:charts_common/common.dart' as common;
 import 'package:leashed/helper/utils.dart';
 
 class Chart extends StatelessWidget {
@@ -30,14 +30,12 @@ class Chart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //interval
-    /*
     List<common.AnnotationSegment> annotations = new List<common.AnnotationSegment>();
     if(showIntervals){
       annotations.addAll(
         createIntervalHighlights(listDateTimeToListInt(intervalDateTimes)),
       );
     }
-    */
 
     //basic intervals
     int endOfLeft = dateTimeToInt(intervalDateTimes[2]);
@@ -64,7 +62,6 @@ class Chart extends StatelessWidget {
       }
     }
     
-    /*
     //generate all charts
     List<charts.Series<Data, int>> theCharts = new List<charts.Series<Data, int>>();
 
@@ -89,11 +86,9 @@ class Chart extends StatelessWidget {
         [10],
       ),
     );
-    */
 
     return Stack(
       children: <Widget>[
-        /*
         Container(
           padding: EdgeInsets.only(bottom: 16, top: 16),
           color: Colors.grey[350],
@@ -133,7 +128,6 @@ class Chart extends StatelessWidget {
             ),
           ),
         ),
-        */
       ],
     );
   }

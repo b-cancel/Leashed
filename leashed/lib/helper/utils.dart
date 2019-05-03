@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-//import 'package:charts_flutter/flutter.dart' as charts;
-//import 'package:charts_common/common.dart' as common;
+import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:charts_common/common.dart' as common;
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/picker/duration.dart';
 import 'package:leashed/scanner.dart';
-//import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:math';
 
 String durationShortMinutesSeconds(Duration duration){
@@ -197,7 +197,6 @@ double getAverage(List<int> values, int endInclusive, int largestCount){
   return sum / actualCount;
 }
 
-/*
 charts.Color intToShade(int num){
   if(num == 1) return charts.MaterialPalette.black;
   else if(num == 0) return charts.MaterialPalette.gray.shade800;
@@ -266,7 +265,6 @@ List<common.AnnotationSegment> createTapHighlights(
       default: return charts.MaterialPalette.purple.shadeDefault;
     }
   }
-  */
 
   int indextoStroke(int val){
     switch(val){
@@ -279,7 +277,6 @@ List<common.AnnotationSegment> createTapHighlights(
   }
 
   //1,3,7,15,31
-  /*
   List<charts.Series<Data, int>> createCharts(
     List<int> x,
     List<int> y,
@@ -305,7 +302,6 @@ List<common.AnnotationSegment> createTapHighlights(
     }
     return chartList;
   }
-  */
 
 List<Map> xyToJson(List<int> x, List<int> y){
   List<Map> res = new List<Map>();
@@ -325,7 +321,6 @@ outputData(String data, BuildContext context) async {
   String url = 'mailto:bryan.o.cancel@gmail.com?subject=BLUETOOTH: &body=' + data;
 
   bool launched = true;
-  /*
   try {
     if(await canLaunch(url)){
       try {
@@ -338,7 +333,6 @@ outputData(String data, BuildContext context) async {
   } catch (e) {
     launched = false;
   }
-  */
 
   //-----TRY to copy to clipboard
   bool copied = true;
@@ -518,7 +512,6 @@ List<int> listDateTimeToListInt(List<DateTime> dts){
   return listInt;
 }
 
-/*
 List<common.AnnotationSegment> createIntervalHighlights(List<int> intervals){
   List<common.AnnotationSegment> ranges = new List<common.AnnotationSegment>();
   for(int i = 0; i < (intervals.length - 1); i += 2){
@@ -538,4 +531,3 @@ List<common.AnnotationSegment> createIntervalHighlights(List<int> intervals){
   }
   return ranges;
 }
-*/

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
@@ -188,8 +188,7 @@ class _SearchNewState extends State<SearchNew> with RouteAware {
         ));
       },
       icon: new Icon(
-        Icons.warning, //TODO... remove
-        //FontAwesomeIcons.questionCircle,
+        FontAwesomeIcons.questionCircle,
         size: 18,
       ),
       label: new Text(

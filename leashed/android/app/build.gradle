@@ -37,8 +37,8 @@ android {
         //multiDexEnabled true
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.example.leashed"
-        //update to 28 from 19
-        minSdkVersion 28
+        //update to 27 from 19
+        minSdkVersion 19 //CANNOT BE 28
         //Updated from 27 to 28 for android x
         targetSdkVersion 28
         versionCode flutterVersionCode.toInteger()

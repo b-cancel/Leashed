@@ -1,12 +1,12 @@
-//import 'package:charts_common/common.dart';
+import 'package:charts_common/common.dart';
 import 'package:flutter/material.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
-//import 'package:charts_flutter/flutter.dart' as charts;
-//import 'package:charts_common/common.dart' as common;
+import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:charts_common/common.dart' as common;
 
 //TODO...
 
@@ -136,7 +136,6 @@ class _LiveScannerState extends State<LiveScanner> {
             ),
           ),
         ),
-        /*
         Expanded(
           child: Column(
             children: <Widget>[
@@ -175,30 +174,7 @@ class _LiveScannerState extends State<LiveScanner> {
             ],
           )
         ),
-        */
       ],
     );
   }
-
-  /*
-  List<common.AnnotationSegment> highlightErrorRanges(List<int> intervals, int value){
-    List<common.AnnotationSegment> ranges = new List<common.AnnotationSegment>();
-    for(int i = 0; i < (intervals.length - 1); i += 2){
-      charts.Color shade = charts.MaterialPalette.gray.shade500;
-      int thisX = intervals[i];
-      int nextX = intervals[i + 1];
-
-      //add to list
-      ranges.add(
-        new charts.RangeAnnotationSegment(
-          thisX, 
-          nextX, 
-          charts.RangeAnnotationAxisType.domain,
-          color: shade,
-        )
-      );
-    }
-    return ranges;
-  }
-  */
 }

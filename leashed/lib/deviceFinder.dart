@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
-//import 'package:flutter_xlider/flutter_xlider.dart';
+import 'package:flutter_xlider/flutter_xlider.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
-/*
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:charts_common/common.dart' as common;
 import 'package:intl/intl.dart' as intl;
-*/
 
 //TODO...
 
@@ -120,7 +118,6 @@ class _UpdatingScannerState extends State<UpdatingScanner> {
       children: <Widget>[
         Stack(
           children: <Widget>[
-            /*
             Container(
               height: height,
               width: width,
@@ -163,7 +160,6 @@ class _UpdatingScannerState extends State<UpdatingScanner> {
                 ),
               ),
             ),
-            */
             Positioned(
               right: 0,
               top: 0,
@@ -180,7 +176,6 @@ class _UpdatingScannerState extends State<UpdatingScanner> {
             ),
           ],
         ),
-        /*
         FlutterSlider(
           values: [300],
           max: 500,
@@ -234,55 +229,13 @@ class _UpdatingScannerState extends State<UpdatingScanner> {
             // numberFormat: intl.NumberFormat(),
           ),
         ),
-        */
         Expanded(
           child: Container(),
         ),
       ],
     );
-    
-    /*Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Container(
-          alignment: Alignment.centerLeft,
-          padding: EdgeInsets.all(16),
-          child: Text("Samlpe Count: " + sampleCount.toString()),
-        ),
-        Container(
-          padding: EdgeInsets.all(16),
-          child: TextFormField(
-            controller: rollingAverageValue,
-            decoration: InputDecoration(
-              prefix: new Text("Rolling Value: ")
-            ),
-            onFieldSubmitted: (str){
-              rollingAverageValue.text = str;
-              //set state so we can remake thegraph with this rolling average value
-              setState(() {
-                
-              });
-            },
-            keyboardType: TextInputType.numberWithOptions(
-              signed: false,
-              decimal: false,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Column(
-            children: <Widget>[
-              Expanded(
-                child: 
-              )
-            ],
-          )
-        ),
-      ],
-    );*/
   }
 
-  /*
   List<common.AnnotationSegment> highlightErrorRanges(List<int> intervals, int value){
     List<common.AnnotationSegment> ranges = new List<common.AnnotationSegment>();
     for(int i = 0; i < (intervals.length - 1); i += 2){
@@ -302,7 +255,6 @@ class _UpdatingScannerState extends State<UpdatingScanner> {
     }
     return ranges;
   }
-  */
 }
 
 class WhiteCircle extends StatelessWidget {

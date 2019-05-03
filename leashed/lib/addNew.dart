@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-//import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/deviceFinder.dart';
 import 'package:leashed/deviceScanner.dart';
 import 'dart:math' as math;
@@ -272,7 +272,7 @@ class _AddNewState extends State<AddNew> {
           content: new Row(
             children: <Widget>[
               bigIcon(true, Icons.camera_alt),
-              //bigIcon(false, FontAwesomeIcons.images),
+              bigIcon(false, FontAwesomeIcons.images),
             ],
           ),
         );
@@ -304,14 +304,13 @@ class _AddNewState extends State<AddNew> {
     */
 
     if(image != null){
-      //Navigator.of(context).pop();
+      Navigator.of(context).pop();
 
       print("not null");
 
       /*
-
       var urlMod = widget.appData.url + "/api/v1/my_account/profile_image";
-
+      
       FormData formData = new FormData.from({
         "token": widget.appData.token,
         "image": new UploadFileInfo(image, "profile.jpeg"),
@@ -347,111 +346,3 @@ class _AddNewState extends State<AddNew> {
     }
   }
 }
-
-/*
-Row(
-              /*
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              */
-              children: <Widget>[
-                Container(
-                  color: Colors.red,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 16.0),
-                    child: new Container(
-                      width: imageSize,
-                      height: imageSize,
-                      child: new Image.asset(
-                        image,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-                
-              ],
-            ),
-            */
-
-/*
-Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Container(
-                      color: Colors.green,
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width - imageSize - (16 * 3),
-                        child: Text("Sdf"),
-                        
-                        /*TextFormField(
-                          controller: nameController,
-                          onFieldSubmitted: (str){
-                            nameController.text = str;
-                          },
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                          ),
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        */
-                        
-                        
-                        /*Stack(
-                          children: <Widget>[
-                            TextFormField(
-                              controller: nameController,
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                              ),
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            GestureDetector(
-                              behavior: HitTestBehavior.deferToChild,
-                              child: Positioned(
-                                right: 0,
-                                left: 0,
-                                bottom: 0,
-                                child: IconButton(
-                                  onPressed: (){
-                                    print("edit our name");
-                                  },
-                                  icon: Icon(Icons.edit),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        */
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        color: Colors.purple,
-                        child: DefaultTextStyle(
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              new Text(widget.id),
-                              new Text(widget.type),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-*/

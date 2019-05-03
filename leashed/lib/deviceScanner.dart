@@ -1,12 +1,12 @@
-//import 'package:charts_common/common.dart';
+import 'package:charts_common/common.dart';
 import 'package:flutter/material.dart';
 import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
-//import 'package:charts_flutter/flutter.dart' as charts;
-//import 'package:charts_common/common.dart' as common;
+import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:charts_common/common.dart' as common;
 
 //NOTE: for full screen scaner this handles tellin the user that the scanner is turning on
 

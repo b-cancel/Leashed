@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-//import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/scanner.dart';
-/*
-import 'package:app_settings/app_settings.dart';
-import 'package:access_settings_menu/access_settings_menu.dart';
-*/
+//import 'package:app_settings/app_settings.dart';
+//import 'package:access_settings_menu/access_settings_menu.dart';
 
 class BluetoothOffBanner extends StatefulWidget {
   @override
@@ -23,7 +21,6 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
 
   @override
   Widget build(BuildContext context) {
-    /*
     BluetoothState bleState = ScannerStaticVars.getBluetoothState();
     String bleStateString = "";
     if(bleState == BluetoothState.turningOn) bleStateString = "Turning On";
@@ -32,7 +29,6 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
       bleStateString = bleState.toString().substring(15);
       bleStateString = bleStateString[0].toUpperCase() + bleStateString.substring(1);
     }
-    */
 
     return InkWell(
       onTap: (){
@@ -68,9 +64,8 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
 
 // create an async void to call the API function with settings name as parameter
 openSettingsMenu(settingsName) async {
-  /*
     var resultSettingsOpening = false;
-
+  /*
     try {
       resultSettingsOpening =
           await AccessSettingsMenu.openSettings(settingsType: settingsName);
