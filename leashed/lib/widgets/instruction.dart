@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:leashed/helper/utils.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';

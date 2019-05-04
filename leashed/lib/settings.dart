@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/navigation.dart';
-import 'package:leashed/picker/durationPicker.dart';
 import 'package:leashed/settingsHelper/leashTightness.dart';
 import 'package:contact_picker/contact_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:sms/sms.dart';
 //import 'package:geolocator/geolocator.dart';
 
