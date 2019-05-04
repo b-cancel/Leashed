@@ -60,15 +60,18 @@ class Navigation extends StatelessWidget {
 
     //-----define the different routes within the router
     //NOTE: I can assign transition type here If needed
+    /*
     router.define("home", handler: homeHandler);
     router.define("settings", handler: settingsHandler);
     router.define("searchNew", handler: searchNewHandler);
     router.define("addNew", handler: addNewHandler);
+    */
   }
 
   //---------------------Router Handlers--------------------
   /// NOTE: with Fluro you can pass parameters between routes like you do with Ruby
 
+  /*
   final homeHandler = new Handler(
     handlerFunc: (BuildContext context, Map<String, List<String>> params) {
       return new Home();
@@ -92,4 +95,5 @@ class Navigation extends StatelessWidget {
       return new AddNew();
     }
   );
+  */
 }
