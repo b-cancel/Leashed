@@ -28,13 +28,13 @@ android {
     //update to 28 from 27 to make compatible
     compileSdkVersion 28 
 
+    buildToolsVersion "27.0.3"
+
     lintOptions {
         disable 'InvalidPackage'
     }
 
     defaultConfig {
-        //trying to fix Dex Archive Error
-        //multiDexEnabled true
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.example.leashed"
         //update to 27 from 19
@@ -45,6 +45,8 @@ android {
         versionName flutterVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //top used to be: "android.support.test.runner.AndroidJUnitRunner"
+        //trying to fix Dex Archive Error
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -61,11 +63,34 @@ flutter {
 }
 
 dependencies {
-    //try to fix error caused by android x issue
-    //implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    //---for the location plugin
+    implementation "android.arch.core:runtime:1.1.1"
+    implementation "android.arch.core:common:1.1.1"
+    //implementation "android.arch.core:runtime:$version"
+    //implementation "android.arch.core:common:$version"
+    compile 'com.android.support:multidex:1.0.0'
+
+    //---for everything else
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.1'
     //top used to be: 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     //top used to be: 'com.android.support.test.espresso:espresso-core:3.0.2'
+    //to be used for the location plugin
+
+    //---confirmed to be causing break
+    //implementation 'com.google.firebase:firebase-core:16.0.1'
+    //implementation 'com.android.support:appcompat-v7:27.1.1'
+
+    //---other location stuff
+    //implementation 'com.google.android.gms:play-services-base:15.0.2'
+    //implementation 'com.google.android.gms:play-services-vision:15.0.2'
+    /*
+    implementation ('com.google.android.gms:play-services-places:11.8.0') {
+        force = true
+    }
+    implementation ('com.google.android.gms:play-services-location:11.8.0') {
+        force = true
+    }
+    */
 }

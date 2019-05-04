@@ -38,9 +38,13 @@ dependencies:
   # project ':system_setting' -> org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.71
   # system_setting: ^0.1.2
   access_settings_menu: ^0.0.1 #ONLY Android (but nothing else does this job)
-  # geolocator: ^4.0.2 #uncomment uses
-  # app_settings: ^1.0.6 #try to make this work again
-  # access_settings_menu: ^0.0.1 #try to make this work again
+  # Not Used Since ERROR
+  # Execution failed for task ':app:transformDexArchiveWithExternalLibsDexMergerForDebug'.
+  # > com.android.builder.dexing.DexArchiveMergerException: Error while merging dex archives:
+  # geolocator: ^4.0.2
+  # geo_location_finder: ^1.0.7
+  # Not Used Since Error On Start Up
+  # location: ^2.3.5
   
 flutter_icons:
   android: "launcher_icon"

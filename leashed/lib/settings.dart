@@ -4,7 +4,6 @@ import 'package:leashed/navigation.dart';
 import 'package:leashed/settingsHelper/leashTightness.dart';
 import 'package:contact_picker/contact_picker.dart';
 import 'package:sms/sms.dart';
-//import 'package:geolocator/geolocator.dart';
 
 class Settings extends StatefulWidget { 
   @override
