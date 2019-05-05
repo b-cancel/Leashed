@@ -107,22 +107,115 @@ class Devices extends StatefulWidget {
 }
 
 class _DevicesState extends State<Devices> {
-
   final Completer<GoogleMapController> _controller = Completer();
-
-  final CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
+  static final LatLng backpack2 = LatLng(26.306773, -98.173589);
+  static final LatLng headphones = LatLng(26.278324, -98.179618);
+  static final LatLng ditto = LatLng(26.306134, -98.174892);
+  final CameraPosition startingCameraPosition = CameraPosition(
+    target: avgLatLng([backpack2, headphones, ditto]),
+    zoom: 45,
   );
 
-  final CameraPosition _kLake = CameraPosition(
-      bearing: 192.8334901395799,
-      target: LatLng(37.43296265331129, -122.08832357078792),
-      tilt: 59.440717697143555,
-      zoom: 19.151926040649414);
+  static LatLng avgLatLng(List<LatLng> locs){
+    double latitude = 0;
+    double longitude = 0;
+    for(int i = 0; i < locs.length; i++){
+      latitude += locs[i].latitude;
+      longitude += locs[i].longitude;
+    }
+    return LatLng(latitude, longitude);
+  }
+
+  ValueNotifier<int> menuNum = ValueNotifier<int>(0);
+
+  void _onItemTapped(int index) {
+    setState(() {
+      menuNum.value = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    var menuItems = [
+      SliverList(
+        delegate: new SliverChildListDelegate([
+          Device(
+            image: "laptop.jpg", 
+            name: "Laptop", 
+            status:"In Range: 3m away",
+          ),
+          Device(
+            image: "keys.jpg", 
+            name: "Keys", 
+            status: "Last Seen: 2/28/19",
+          ),
+          Device(
+            image: "wallet.jpg", 
+            name: "Wallet", 
+            status: "Waiting at: 1322 Cage St.",
+          ),
+          Device(
+            image: "headphones.jpg", 
+            name: "Headphones", 
+            status: "Turned off: on 2/14/19",
+          ),
+          Device(
+            image: "backpack.jpg", 
+            name: "Backpack", 
+            status: "In Range: 1m away",
+          ),
+        ]),
+      ),
+      SliverFillRemaining(
+        child: Stack(
+          children: <Widget>[
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Expanded(
+                  child: GoogleMap(
+                    myLocationEnabled: true, //show your location on the map
+                    compassEnabled: true,
+                    mapType: MapType.normal, 
+                    initialCameraPosition: startingCameraPosition, 
+                    onMapCreated: (GoogleMapController controller) {
+                    _controller.complete(controller);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              bottom: 16,
+              left: 16,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  FloatingActionButton(
+                    heroTag: 'signalAnalysis',
+                    onPressed: (){
+                    },
+                    child: Icon(FontAwesomeIcons.signature), //signature //signal
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: FloatingActionButton(
+                heroTag: 'addNew',
+                onPressed: (){
+                },
+                child: Icon(Icons.settings),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
+
     return Scaffold(
       body: CustomScrollView(
         slivers: <Widget>[
@@ -200,89 +293,45 @@ class _DevicesState extends State<Devices> {
               ),
             ),
           ),
-          /*
-          SliverFillRemaining(
-            child: Stack(
-              children: <Widget>[
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Expanded(
-                      child: GoogleMap(
-                        myLocationEnabled: true, //show your location on the map
-                        compassEnabled: true,
-                        mapType: MapType.normal, 
-                        initialCameraPosition: _kGooglePlex, 
-                        onMapCreated: (GoogleMapController controller) {
-                        _controller.complete(controller);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                Positioned(
-                  bottom: 16,
-                  left: 16,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      FloatingActionButton(
-                        heroTag: 'signalAnalysis',
-                        onPressed: (){
-                        },
-                        child: Icon(FontAwesomeIcons.signature), //signature //signal
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: FloatingActionButton(
-                    heroTag: 'addNew',
-                    onPressed: (){
-                    },
-                    child: Icon(Icons.settings),
-                  ),
-                ),
-              ],
-            ),
-          )
-          */
-          new SliverList(
-            delegate: new SliverChildListDelegate([
-              Device(
-                image: "laptop.jpg", 
-                name: "Laptop", 
-                status:"In Range: 3m away",
-              ),
-              Device(
-                image: "keys.jpg", 
-                name: "Keys", 
-                status: "Last Seen: 2/28/19",
-              ),
-              Device(
-                image: "wallet.jpg", 
-                name: "Wallet", 
-                status: "Waiting at: 1322 Cage St.",
-              ),
-              Device(
-                image: "headphones.jpg", 
-                name: "Headphones", 
-                status: "Turned off: on 2/14/19",
-              ),
-              Device(
-                image: "backpack.jpg", 
-                name: "Backpack", 
-                status: "In Range: 1m away",
-              ),
-            ]),
-          ),
-          new SliverPadding(
-            padding: EdgeInsets.all(16),
-          ),
+          menuItems.elementAt(menuNum.value),
         ],
+      ),
+      bottomNavigationBar: Theme(
+        data: ThemeData.dark().copyWith(
+          canvasColor: Navigation.blueGrey,
+        ),
+        child: BottomNavigationBar(
+          fixedColor: Colors.white,
+          type: BottomNavigationBarType.fixed,
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.list,
+                //color: Colors.white,
+              ), 
+              title: Text(
+                'List',
+                style: TextStyle(
+                  fontSize: 0,
+                ),
+              ),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                FontAwesomeIcons.map,
+                //color: Colors.white,
+              ), 
+              title: Text(
+                'Map',
+                style: TextStyle(
+                  fontSize: 0,
+                ),
+              ),
+            ),
+          ],
+          currentIndex: menuNum.value,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
