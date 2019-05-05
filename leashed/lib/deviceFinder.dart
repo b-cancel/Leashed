@@ -42,18 +42,24 @@ class UpdatingScanner extends StatefulWidget {
 }
 
 class _UpdatingScannerState extends State<UpdatingScanner> {
+  ValueNotifier<bool> keyFound = ValueNotifier<bool>(true);
 
   @override
   void initState() {
     //allows live updating scanner
-    ScannerStaticVars.allDevicesFound[widget.deviceID].scanData.rssiUpdateCount.addListener(customSetState);
+    keyFound.value = ScannerStaticVars.allDevicesFound.containsKey(widget.deviceID);
+    if(keyFound.value){
+      ScannerStaticVars.allDevicesFound[widget.deviceID].scanData.rssiUpdateCount.addListener(customSetState);
+    }
     super.initState();
   }
 
   @override
   void dispose() { 
     //allow live updating scanner
-    ScannerStaticVars.allDevicesFound[widget.deviceID].scanData.rssiUpdateCount.removeListener(customSetState);
+    if(keyFound.value){
+      ScannerStaticVars.allDevicesFound[widget.deviceID].scanData.rssiUpdateCount.removeListener(customSetState);
+    }
     super.dispose();
   }
 

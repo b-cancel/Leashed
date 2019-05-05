@@ -22,12 +22,14 @@ class AddNew extends StatefulWidget {
     this.id,
     this.type,
     this.imageUrl: "",
+    this.newDevice: true,
   });
 
   final String name;
   final String id;
   final String type; 
   final String imageUrl;
+  final bool newDevice;
 
   @override
   _AddNewState createState() => _AddNewState();
@@ -46,8 +48,11 @@ class _AddNewState extends State<AddNew> {
     ScannerStaticVars.bluetoothOn.addListener(customSetState);
 
     //handle the image
-    imageProvided.value = (widget.imageUrl == "");
+    imageProvided.value = (widget.imageUrl != "");
     if(imageProvided.value){
+      deviceImage.value = widget.imageUrl;
+    }
+    else{
       deviceImage.value = "assets/pngs/devicePlaceholder.png";
     }
 
@@ -91,7 +96,11 @@ class _AddNewState extends State<AddNew> {
 
     return Scaffold(
       appBar: AppBar(
-        title: new Text("Add New Device"),
+        title: new Text(
+          (widget.newDevice)
+          ? "Add New Device"
+          : "Device Settings",
+        ),
       ),
       body: Column(
         children: <Widget>[
@@ -209,6 +218,7 @@ class _AddNewState extends State<AddNew> {
                     ],
                   ),
                 ),
+                /*
                 Container(
                   child: (ScannerStaticVars.bluetoothOn.value)
                   ? Container(
@@ -239,11 +249,13 @@ class _AddNewState extends State<AddNew> {
                     ),
                   ),
                 )
+                */
               ],
             ),
           ),
         ],
       ),
+      /*
       floatingActionButton: new FloatingActionButton(
         onPressed: (){
           Navigator.push(context, PageTransition(
@@ -260,6 +272,7 @@ class _AddNewState extends State<AddNew> {
         },
         child: Icon(Icons.settings_bluetooth),
       ),
+      */
     );
   }
 

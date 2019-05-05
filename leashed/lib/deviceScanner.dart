@@ -11,12 +11,10 @@ import 'package:charts_common/common.dart' as common;
 //NOTE: for full screen scaner this handles tellin the user that the scanner is turning on
 
 class DeviceScanner extends StatefulWidget {
-  final String deviceID;
   final Widget child;
   final String title;
 
   const DeviceScanner({
-    this.deviceID,  
     this.child,
     this.title,
   });

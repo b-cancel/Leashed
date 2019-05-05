@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:leashed/homeHelper/deviceItem.dart';
 import 'package:leashed/homeHelper/navBar.dart';
 import 'package:leashed/homeHelper/noDevices.dart';
@@ -12,6 +16,7 @@ import 'package:leashed/sliverModifications/sliverPersistentHeader.dart' as sliv
 import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSpaceBar;
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:leashed/widgets/gradientSlider.dart';
+import 'package:page_transition/page_transition.dart';
 
 //NOTE: so Material App Works properly
 class HomeStateLess extends StatelessWidget {
@@ -102,6 +107,20 @@ class Devices extends StatefulWidget {
 }
 
 class _DevicesState extends State<Devices> {
+
+  final Completer<GoogleMapController> _controller = Completer();
+
+  final CameraPosition _kGooglePlex = CameraPosition(
+    target: LatLng(37.42796133580664, -122.085749655962),
+    zoom: 14.4746,
+  );
+
+  final CameraPosition _kLake = CameraPosition(
+      bearing: 192.8334901395799,
+      target: LatLng(37.43296265331129, -122.08832357078792),
+      tilt: 59.440717697143555,
+      zoom: 19.151926040649414);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -181,6 +200,56 @@ class _DevicesState extends State<Devices> {
               ),
             ),
           ),
+          /*
+          SliverFillRemaining(
+            child: Stack(
+              children: <Widget>[
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Expanded(
+                      child: GoogleMap(
+                        myLocationEnabled: true, //show your location on the map
+                        compassEnabled: true,
+                        mapType: MapType.normal, 
+                        initialCameraPosition: _kGooglePlex, 
+                        onMapCreated: (GoogleMapController controller) {
+                        _controller.complete(controller);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      FloatingActionButton(
+                        heroTag: 'signalAnalysis',
+                        onPressed: (){
+                        },
+                        child: Icon(FontAwesomeIcons.signature), //signature //signal
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: FloatingActionButton(
+                    heroTag: 'addNew',
+                    onPressed: (){
+                    },
+                    child: Icon(Icons.settings),
+                  ),
+                ),
+              ],
+            ),
+          )
+          */
           new SliverList(
             delegate: new SliverChildListDelegate([
               Device(
@@ -212,7 +281,7 @@ class _DevicesState extends State<Devices> {
           ),
           new SliverPadding(
             padding: EdgeInsets.all(16),
-          )
+          ),
         ],
       ),
     );
