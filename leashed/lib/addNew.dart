@@ -11,7 +11,7 @@ import 'package:leashed/recordSignature.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:page_transition/page_transition.dart';
-//import 'package:image_picker/image_picker.dart';
+import 'package:image_picker/image_picker.dart';
 
 //TODO... use image_picker_saver 0.1.0
 //to also let users select images from the web
@@ -298,10 +298,9 @@ class _AddNewState extends State<AddNew> {
   Future changeImage(bool fromCamera) async {
     File image = null; 
     
-    /*await ImagePicker.pickImage(
+    await ImagePicker.pickImage(
       source: (fromCamera) ? ImageSource.camera : ImageSource.gallery,
     );
-    */
 
     if(image != null){
       Navigator.of(context).pop();

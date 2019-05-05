@@ -16,34 +16,47 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_launcher_icons: ^0.7.0
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
-  flutter_blue: ^0.5.0
+  flutter_blue: ^0.4.1
+  system_setting: ^0.1.2
+  path_provider: ^0.5.0+1
   fluro: ^1.4.0
   path: ^1.6.2
+  clipboard_manager: ^0.0.1
+  url_launcher: ^5.0.2
   charts_flutter: ^0.6.0
   font_awesome_flutter: ^8.4.0
+  gif_ani: ^0.0.2
   percent_indicator: ^1.0.15
   page_transition: ^1.0.9
   flutter_swiper: ^1.1.6
   numberpicker: ^1.0.0
   flutter_xlider: ^2.4.3
-  url_launcher: ^5.0.2
-  sms: ^0.2.4
   contact_picker: ^0.0.2
-  path_provider: ^0.5.0+1
+  sms: ^0.2.4
+  #-----Older Version that don't touch android X
+  image_picker: ^0.4.12+1 #latest version of this plugin that doesn't use android x
+  google_maps_flutter: ^0.0.2
+
+  #---
   # ----- System Settings Plugins Tried
-  app_settings: ^1.0.6 #For Anything But Bluetooth
+  # app_settings: ^1.0.6 #For Anything But Bluetooth
   # Not Used Since ERROR
   # The Android Gradle plugin supports only Kotlin Gradle plugin version 1.3.0 and higher.
   # The following dependencies do not satisfy the required version:
   # project ':system_setting' -> org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.71
   # system_setting: ^0.1.2
-  access_settings_menu: ^0.0.1 #ONLY Android (but nothing else does this job)
+  access_settings_menu: '0.0.1' #ONLY Android (but nothing else does this job)
   # ----- Get Location Plugins Tried
   # Not Used Since ERROR
   # Execution failed for task ':app:transformDexArchiveWithExternalLibsDexMergerForDebug'.
   # > com.android.builder.dexing.DexArchiveMergerException: Error while merging dex archives:
-  # geolocator: ^4.0.2
+  # @ above issues with android x
+  # @2.1.0 error: resource android:attr/fontVariationSettings not found.
+  # @0.0.1 Android dependency 'com.android.support:support-compat' has different version for the compile (27.1.0) and runtime (27.1.1) classpath. You should manually set the same version via DependencyResolution
+  # geolocator: ^0.0.1
   # geo_location_finder: ^1.0.7
   # Not Used Since Error On Start Up
   # location: ^2.3.5
@@ -57,6 +70,8 @@ dependencies:
   # Trying To Use Newer Plugin First
   # google_maps: ^3.3.3
   # google_maps_flutter: ^0.5.11+1
+  #---
+  
   
 flutter_icons:
   android: "launcher_icon"

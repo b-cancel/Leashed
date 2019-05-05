@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:leashed/scanner.dart';
-import 'package:access_settings_menu/access_settings_menu.dart';
+import 'package:system_setting/system_setting.dart';
 
 class BluetoothOffBanner extends StatefulWidget {
   @override
@@ -31,9 +31,7 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
 
     return InkWell(
       onTap: (){
-        openSettingsMenu(
-          "ACTION_BLUETOOTH_SETTINGS",
-        );
+        SystemSetting.goto(SettingTarget.BLUETOOTH);
       },
       child: Container(
         padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -59,6 +57,7 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
   }
 }
 
+/*
 // create an async void to call the API function with settings name as parameter
 openSettingsMenu(settingsName) async {
     var resultSettingsOpening = false;
@@ -70,3 +69,4 @@ openSettingsMenu(settingsName) async {
       resultSettingsOpening = false;
     }
 }
+*/

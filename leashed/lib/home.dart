@@ -6,6 +6,8 @@ import 'package:leashed/homeHelper/noDevices.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 
+//import 'package:geolocator/geolocator.dart';
+
 import 'package:leashed/sliverModifications/sliverPersistentHeader.dart' as sliverPersistentHeader;
 import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSpaceBar;
 import 'package:leashed/widgets/bluetoothOffBanner.dart';

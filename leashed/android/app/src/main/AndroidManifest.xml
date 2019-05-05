@@ -6,10 +6,6 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- For The Location Plugin -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <!-- OR -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <!-- io.flutter.app.FlutterApplication is an android.app.Application that
          calls FlutterMain.startInitialization(this); in its onCreate method.
@@ -20,6 +16,8 @@
         android:name="io.flutter.app.FlutterApplication"
         android:label="leashed"
         android:icon="@mipmap/launcher_icon">
+        <meta-data android:name="com.google.android.geo.API_KEY"
+               android:value="AIzaSyCHI75vJQrOiaRj_718HEcL8WH9UdWStq8"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
