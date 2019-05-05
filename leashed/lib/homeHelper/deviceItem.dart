@@ -9,12 +9,14 @@ class Device extends StatefulWidget {
   final String image;
   final String name;
   final String status;
+  final bool open;
 
   Device({
     Key key, 
     this.image,
     this.name,
     this.status,
+    this.open: true,
   }) : super(key: key);
 
   _DeviceState createState() => _DeviceState();
@@ -38,14 +40,19 @@ class _DeviceState extends State<Device> {
       children: <Widget>[
         InkWell(
           onTap: (){
-            Navigator.push(context, PageTransition(
-              type: PageTransitionType.downToUp,
-              child: DeviceMap(
-                image: image, 
-                name: widget.name,
-                status: widget.status,
-              ),
-            ));
+            if(widget.open){
+              Navigator.push(context, PageTransition(
+                type: PageTransitionType.downToUp,
+                child: DeviceMap(
+                  image: image, 
+                  name: widget.name,
+                  status: widget.status,
+                ),
+              ));
+            }
+            else{
+              Navigator.maybePop(context);
+            }
           },
           child: new Container(
             padding: const EdgeInsets.only(left: 16.0, right: 16),
@@ -96,7 +103,11 @@ class _DeviceState extends State<Device> {
                     padding: EdgeInsets.only(left: 16),
                     child: Transform.rotate(
                       angle: math.pi / 2,
-                      child: new Icon(Icons.chevron_right),
+                      child: new Icon(
+                        (widget.open)
+                        ? Icons.chevron_right
+                        : Icons.chevron_left,
+                      ),
                     ),
                   ),
                 ],

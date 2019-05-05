@@ -171,23 +171,6 @@ class _SettingsState extends State<Settings> {
                       icon: Icon(Icons.warning),
                       label: new Text("Test S.O.S"),
                       onPressed: ()async{
-                        var currentLocation;
-                        var location = new Location();
-
-                        // Platform messages may fail, so we use a try/catch PlatformException.
-                        try {
-                          currentLocation = await location.getLocation();
-                        } catch (e) {
-                          currentLocation = null;
-                        }
-
-                        print(currentLocation?.toString() + "-----");
-
-                        messageField.text = currentLocation?.toString();
-                        setState(() {
-                          
-                        });
-                        /*
                         //determine what message to send our contacts
                         String message = messageField.text ?? "";
                         if(message == ""){
@@ -201,7 +184,6 @@ class _SettingsState extends State<Settings> {
                             message,
                           );
                         }
-                        */
                       },
                     ),
                     new RaisedButton.icon(
@@ -259,21 +241,26 @@ class _SettingsState extends State<Settings> {
   }
 
   sendTextMessage(String number, String text) async{
-    print("sending text to " + number);
+    //---grab location
+    Map<String, double> currentLocation;
+    Location location = new Location();
+    try {
+      currentLocation = await location.getLocation();
+    } catch (e) {
+      currentLocation = null;
+    }
 
-
-
-    
     //---Collect Message Data
-    String basicLink = 'https://www.google.com/maps/search/?api=1&query=';
-    /*
-    Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    print("----- " + position.toString());
-    */
-    String someCoordinate = '26.27443,-98.1830293';
-    String textMessage = text + "\n" + basicLink + someCoordinate;
-
+    String googleMapsLink = "My GPS Is Off. Please Find Me!";
+    if(currentLocation != null){
+      googleMapsLink = 'https://www.google.com/maps/search/?api=1&query=';
+      double lat = currentLocation["latitude"];
+      double lon = currentLocation["longitude"];
+      googleMapsLink += (lat.toString() + "," + lon.toString());
+    }
     
+    //---Build Message    
+    String textMessage = text + "\n" + googleMapsLink;
 
     //---Send The Message
     SmsMessage message = new SmsMessage(
