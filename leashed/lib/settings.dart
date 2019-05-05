@@ -4,6 +4,7 @@ import 'package:leashed/navigation.dart';
 import 'package:leashed/settingsHelper/leashTightness.dart';
 import 'package:contact_picker/contact_picker.dart';
 import 'package:sms/sms.dart';
+import 'package:location/location.dart';
 
 class Settings extends StatefulWidget { 
   @override
@@ -169,7 +170,24 @@ class _SettingsState extends State<Settings> {
                       color: Colors.red,
                       icon: Icon(Icons.warning),
                       label: new Text("Test S.O.S"),
-                      onPressed: (){
+                      onPressed: ()async{
+                        var currentLocation;
+                        var location = new Location();
+
+                        // Platform messages may fail, so we use a try/catch PlatformException.
+                        try {
+                          currentLocation = await location.getLocation();
+                        } catch (e) {
+                          currentLocation = null;
+                        }
+
+                        print(currentLocation?.toString() + "-----");
+
+                        messageField.text = currentLocation?.toString();
+                        setState(() {
+                          
+                        });
+                        /*
                         //determine what message to send our contacts
                         String message = messageField.text ?? "";
                         if(message == ""){
@@ -183,6 +201,7 @@ class _SettingsState extends State<Settings> {
                             message,
                           );
                         }
+                        */
                       },
                     ),
                     new RaisedButton.icon(
@@ -241,6 +260,9 @@ class _SettingsState extends State<Settings> {
 
   sendTextMessage(String number, String text) async{
     print("sending text to " + number);
+
+
+
     
     //---Collect Message Data
     String basicLink = 'https://www.google.com/maps/search/?api=1&query=';

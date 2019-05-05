@@ -37,8 +37,11 @@ dependencies:
   contact_picker: ^0.0.2
   sms: ^0.2.4
   #-----Older Version that don't touch android X
-  image_picker: ^0.4.12+1 #latest version of this plugin that doesn't use android x
-  google_maps_flutter: ^0.0.2
+  #latest version of this plugin that doesn't use android x
+  #note I have not checked all the versions above these
+  image_picker: ^0.4.12+1 
+  google_maps_flutter: ^0.2.0+6
+  location: ^1.4.1
 
   #---
   # ----- System Settings Plugins Tried

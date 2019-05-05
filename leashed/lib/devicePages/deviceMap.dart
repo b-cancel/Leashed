@@ -61,8 +61,8 @@ class MapSampleState extends State<MapSample> {
   Widget build(BuildContext context) {
     return new Scaffold(
       body: GoogleMap(
-        //mapType: MapType.hybrid, //TODO... pray I can get this feature
-        //initialCameraPosition: _kGooglePlex, //TODO... pray I can get this feature
+        mapType: MapType.hybrid, 
+        initialCameraPosition: _kGooglePlex, 
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
         },
