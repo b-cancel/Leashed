@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:leashed/addNew.dart';
 import 'package:leashed/home.dart';
 import 'package:leashed/searchNew.dart';
@@ -18,6 +21,7 @@ class Navigation extends StatelessWidget {
   static final ValueNotifier<int> defaultTimeToDetectPattern = new ValueNotifier<int>(5);
   static final ValueNotifier<int> addToTimeToDetectPattern = new ValueNotifier<int>(3);
   static final ValueNotifier<int> timeToDetectPattern = new ValueNotifier<int>(5);
+  static final Completer<GoogleMapController> mapController = Completer();
 
   //used to detect when we come back to
   //1. going back to ourDeviceScan should restart the scan

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:leashed/addNew.dart';
@@ -29,7 +30,6 @@ class MapWidget extends StatefulWidget {
 }
 
 class _MapWidgetState extends State<MapWidget> {
-  final Completer<GoogleMapController> _controller = Completer();
   CameraPosition targetCameraPosition;
 
   @override
@@ -98,7 +98,7 @@ class _MapWidgetState extends State<MapWidget> {
     List<String> subtitles,
     List<LatLng> locations,
   ) async {
-    final GoogleMapController controller = await _controller.future;
+    final GoogleMapController controller = await Navigation.mapController.future;
     int markerCount = titles.length;
     for(int i = 0; i < markerCount; i++){
       controller.addMarker(
@@ -117,7 +117,7 @@ class _MapWidgetState extends State<MapWidget> {
   }
 
   goToLocation(CameraPosition newPosition) async {
-    final GoogleMapController controller = await _controller.future;
+    final GoogleMapController controller = await Navigation.mapController.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(newPosition));
   }
 
@@ -131,7 +131,7 @@ class _MapWidgetState extends State<MapWidget> {
           mapType: MapType.normal, 
           initialCameraPosition: targetCameraPosition, 
           onMapCreated: (GoogleMapController controller) {
-            _controller.complete(controller);
+            Navigation.mapController.complete(controller);
           },
         ),
         Positioned(
