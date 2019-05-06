@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:leashed/navigation.dart';
 import 'package:leashed/searchNew.dart';
 import 'package:leashed/settings.dart';
 import 'package:page_transition/page_transition.dart';
@@ -6,21 +8,21 @@ import 'package:page_transition/page_transition.dart';
 class NavBar extends StatelessWidget {
   const NavBar({
     Key key,
-    @required this.warningThickness,
+    @required this.navBarHeight,
     this.deviceCount,
   }) : super(key: key);
 
-  final double warningThickness;
+  final double navBarHeight;
 
   final ValueNotifier<int> deviceCount;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: warningThickness,
-      width: MediaQuery.of(context).size.width,
+      height: navBarHeight,
       child: new Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.max,
         children: <Widget>[
           IconButton(
             icon: Icon(
@@ -39,7 +41,6 @@ class NavBar extends StatelessWidget {
             child: new Image.asset(
               'assets/pngs/leashedWhite.png',
               fit: BoxFit.fitHeight,
-              gaplessPlayback: false,
             ),
           ),
           InkWell(
@@ -62,6 +63,49 @@ class NavBar extends StatelessWidget {
               deviceCount.value = (deviceCount.value > 0) ? 0 : 1;
             },
           )
+        ],
+      ),
+    );
+  }
+}
+
+class BottomNavBar extends StatelessWidget {
+  const BottomNavBar({
+    Key key,
+    @required this.menuNum,
+    @required this.callback,
+  }) : super(key: key);
+
+  final ValueNotifier<int> menuNum;
+  final Function callback;
+
+  @override
+  Widget build(BuildContext context) {
+    Text noText = Text(
+      '',
+      style: TextStyle(
+        fontSize: 0,
+      ),
+    );
+
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        canvasColor: Navigation.blueGrey,
+      ),
+      child: BottomNavigationBar(
+        onTap: callback,
+        currentIndex: menuNum.value,
+        fixedColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list), 
+            title: noText,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(FontAwesomeIcons.map), 
+            title: noText,
+          ),
         ],
       ),
     );

@@ -1,22 +1,19 @@
 import 'dart:async';
-
-import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:leashed/homeHelper/deviceItem.dart';
 import 'package:leashed/homeHelper/navBar.dart';
 import 'package:leashed/homeHelper/noDevices.dart';
+import 'package:leashed/mapWidget.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
-
-//import 'package:geolocator/geolocator.dart';
-
-import 'package:leashed/sliverModifications/sliverPersistentHeader.dart' as sliverPersistentHeader;
-import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSpaceBar;
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:leashed/widgets/gradientSlider.dart';
 import 'package:page_transition/page_transition.dart';
+
+import 'package:leashed/sliverModifications/sliverPersistentHeader.dart' as sliverPersistentHeader;
+import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSpaceBar;
 
 //NOTE: so Material App Works properly
 class HomeStateLess extends StatelessWidget {
@@ -41,7 +38,7 @@ class Home extends StatefulWidget{
 }
 
 class HomeState extends State<Home>  with TickerProviderStateMixin {
-  double warningThickness = 40;
+  double topNavBarHeight = 40;
   double alignmentPush = 50;
   Color introOverlay = Color.fromARGB(128, 0, 0, 0);
   Color topOfIntroImage = Color.fromARGB(255, 146, 204, 241);
@@ -76,7 +73,7 @@ class HomeState extends State<Home>  with TickerProviderStateMixin {
       deviceCount: deviceCount,
     )
     : Devices(
-      warningThickness: warningThickness,
+      warningThickness: topNavBarHeight,
       introOverlay: introOverlay,
       bottomOfIntroImage: bottomOfIntroImage,
       alignmentPush: alignmentPush,
@@ -99,7 +96,6 @@ class Devices extends StatefulWidget {
   final double warningThickness;
   final double alignmentPush;
   final Color introOverlay;
-
   final ValueNotifier<int> deviceCount;
 
   @override
@@ -107,233 +103,159 @@ class Devices extends StatefulWidget {
 }
 
 class _DevicesState extends State<Devices> {
-  final Completer<GoogleMapController> _controller = Completer();
-  static final LatLng backpack2 = LatLng(26.306773, -98.173589);
-  static final LatLng headphones = LatLng(26.278324, -98.179618);
-  static final LatLng ditto = LatLng(26.306134, -98.174892);
-  final CameraPosition startingCameraPosition = CameraPosition(
-    target: avgLatLng([backpack2, headphones, ditto]),
-    zoom: 45,
-  );
-
-  static LatLng avgLatLng(List<LatLng> locs){
-    double latitude = 0;
-    double longitude = 0;
-    for(int i = 0; i < locs.length; i++){
-      latitude += locs[i].latitude;
-      longitude += locs[i].longitude;
-    }
-    return LatLng(latitude, longitude);
-  }
-
   ValueNotifier<int> menuNum = ValueNotifier<int>(0);
-
-  void _onItemTapped(int index) {
-    setState(() {
-      menuNum.value = index;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
-    var menuItems = [
-      SliverList(
-        delegate: new SliverChildListDelegate([
-          Device(
-            image: "laptop.jpg", 
-            name: "Laptop", 
-            status:"In Range: 3m away",
-          ),
-          Device(
-            image: "keys.jpg", 
-            name: "Keys", 
-            status: "Last Seen: 2/28/19",
-          ),
-          Device(
-            image: "wallet.jpg", 
-            name: "Wallet", 
-            status: "Waiting at: 1322 Cage St.",
-          ),
-          Device(
-            image: "headphones.jpg", 
-            name: "Headphones", 
-            status: "Turned off: on 2/14/19",
-          ),
-          Device(
-            image: "backpack.jpg", 
-            name: "Backpack", 
-            status: "In Range: 1m away",
-          ),
-        ]),
-      ),
-      SliverFillRemaining(
-        child: Stack(
-          children: <Widget>[
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Expanded(
-                  child: GoogleMap(
-                    myLocationEnabled: true, //show your location on the map
-                    compassEnabled: true,
-                    mapType: MapType.normal, 
-                    initialCameraPosition: startingCameraPosition, 
-                    onMapCreated: (GoogleMapController controller) {
-                    _controller.complete(controller);
-                    },
-                  ),
-                ),
-              ],
-            ),
-            Positioned(
-              bottom: 16,
-              left: 16,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  FloatingActionButton(
-                    heroTag: 'signalAnalysis',
-                    onPressed: (){
-                    },
-                    child: Icon(FontAwesomeIcons.signature), //signature //signal
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              bottom: 16,
-              right: 16,
-              child: FloatingActionButton(
-                heroTag: 'addNew',
-                onPressed: (){
-                },
-                child: Icon(Icons.settings),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ];
+    BottomNavBar bottomNavBar = new BottomNavBar(
+      menuNum: menuNum,
+      callback: (int index){
+        setState(() {
+          menuNum.value = index;
+        });
+      },
+    );
 
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: <Widget>[
-          sliverPersistentHeader.MySliverPersistentHeader(
-            //---behavior settings
-            snap: true,
-            pinned: true,
-            floating: true,
-            //---size settings
-            maxExtent: calcMaxExtent(context),
-            minExtentAddition:  40, //NOTE: found by simply trying out the app
-            //---background that shows up on min
-            backgroundColor: Colors.grey[900],
-            //---background that shows up on max
-            flexibleSpace: flexibleSpaceBar.MyFlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: <Widget>[
-                  Container(
-                    color: widget.bottomOfIntroImage,
-                  ),
-                  Transform.translate(
-                    offset: Offset(0, -widget.warningThickness -widget.alignmentPush),
-                    child: OverflowBox(
-                      alignment: Alignment.bottomCenter,
-                      maxHeight: 1000,
-                      child: new Container(
+    if(menuNum.value == 0){ 
+      return Scaffold(
+        body: CustomScrollView(
+          slivers: <Widget>[
+            sliverPersistentHeader.MySliverPersistentHeader(
+              //---behavior settings
+              snap: true,
+              pinned: true,
+              floating: true,
+              //---size settings
+              maxExtent: calcMaxExtent(context),
+              minExtentAddition:  40, //NOTE: found by simply trying out the app
+              //---background that shows up on min
+              backgroundColor: Navigation.blueGrey,
+              //---background that shows up on max
+              flexibleSpace: flexibleSpaceBar.MyFlexibleSpaceBar(
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    Container(
+                      color: widget.bottomOfIntroImage,
+                    ),
+                    Transform.translate(
+                      offset: Offset(0, -widget.warningThickness -widget.alignmentPush),
+                      child: OverflowBox(
                         alignment: Alignment.bottomCenter,
-                        height: 1000,
-                        color: Colors.pink,
-                        child: new Image.asset(
-                          'assets/pngs/intro2.png',
-                          fit: BoxFit.fitWidth,
+                        maxHeight: 1000,
+                        child: new Container(
+                          alignment: Alignment.bottomCenter,
+                          height: 1000,
+                          color: Colors.pink,
+                          child: new Image.asset(
+                            'assets/pngs/intro2.png',
+                            fit: BoxFit.fitWidth,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  new Container(
-                    color: widget.introOverlay,
-                  ),
-                  new Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          Colors.black,
-                        ],
-                        stops: [0.0, 1.0],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        tileMode: TileMode.repeated,
+                    new Container(
+                      color: widget.introOverlay,
+                    ),
+                    new Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Navigation.blueGrey,
+                          ],
+                          stops: [0.0, 1.0],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          tileMode: TileMode.repeated,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              collapseMode: flexibleSpaceBar.CollapseMode.pin,
-              title: SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    //---------Nav Bar (24 size, with 8 padding on both sides)
-                    NavBar(
-                      warningThickness: 40,
-                      deviceCount: widget.deviceCount,
-                    ),
-                    //---------Error
-                    (ScannerStaticVars.bluetoothOn.value)
-                    ? Container()
-                    : BluetoothOffBanner(),
-                    //----------Slider
-                    new EntireSlider(),
                   ],
                 ),
-              ),
-            ),
-          ),
-          menuItems.elementAt(menuNum.value),
-        ],
-      ),
-      bottomNavigationBar: Theme(
-        data: ThemeData.dark().copyWith(
-          canvasColor: Navigation.blueGrey,
-        ),
-        child: BottomNavigationBar(
-          fixedColor: Colors.white,
-          type: BottomNavigationBarType.fixed,
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.list,
-                //color: Colors.white,
-              ), 
-              title: Text(
-                'List',
-                style: TextStyle(
-                  fontSize: 0,
+                collapseMode: flexibleSpaceBar.CollapseMode.pin,
+                title: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      //---------Nav Bar (24 size, with 8 padding on both sides)
+                      NavBar(
+                        navBarHeight: 40,
+                        deviceCount: widget.deviceCount,
+                      ),
+                      //---------Error
+                      (ScannerStaticVars.bluetoothOn.value)
+                      ? Container()
+                      : BluetoothOffBanner(),
+                      //----------Slider
+                      new EntireSlider(),
+                    ],
+                  ),
                 ),
               ),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                FontAwesomeIcons.map,
-                //color: Colors.white,
-              ), 
-              title: Text(
-                'Map',
-                style: TextStyle(
-                  fontSize: 0,
+            SliverList(
+              delegate: new SliverChildListDelegate([
+                Device(
+                  image: "laptop.jpg", 
+                  name: "Laptop", 
+                  status:"In Range: 3m away",
                 ),
-              ),
+                Device(
+                  image: "keys.jpg", 
+                  name: "Keys", 
+                  status: "Last Seen: 2/28/19",
+                ),
+                Device(
+                  image: "wallet.jpg", 
+                  name: "Wallet", 
+                  status: "Waiting at: 1322 Cage St.",
+                ),
+                Device(
+                  image: "headphones.jpg", 
+                  name: "Headphones", 
+                  status: "Turned off: on 2/14/19",
+                ),
+                Device(
+                  image: "backpack.jpg", 
+                  name: "Backpack", 
+                  status: "In Range: 1m away",
+                ),
+              ]),
             ),
           ],
-          currentIndex: menuNum.value,
-          onTap: _onItemTapped,
         ),
-      ),
-    );
+        bottomNavigationBar: bottomNavBar,
+      );
+    }
+    else{
+      return Scaffold(
+        appBar: new AppBar(
+          title: NavBar(
+            navBarHeight: 40,
+            deviceCount: widget.deviceCount,
+          ),
+        ),
+        body: MapWidget(
+          titles: [
+            "Headphones", 
+            "Work Back Pack", 
+            "Ditto Tracker",
+          ],
+          subtitles: [
+            "Last Seen at: UTRGV Library", 
+            "Last Seen: 8 hrs ago", 
+            "In Range: 1-2 meters away",
+          ],
+          locations: [
+            LatLng(26.306773, -98.173589),
+            LatLng(26.278324, -98.179618),
+            LatLng(26.306134, -98.174892),
+          ],
+        ),
+        bottomNavigationBar: bottomNavBar,
+      );
+    }
   }
 
   double calcMaxExtent(BuildContext context){

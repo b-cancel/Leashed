@@ -21,7 +21,7 @@ class NoDevices extends StatelessWidget {
         titleSpacing: 0,
         backgroundColor: Navigation.blueGrey,
         title: NavBar(
-          warningThickness: 40,
+          navBarHeight: 40,
           deviceCount: deviceCount,
         ),
       ),
