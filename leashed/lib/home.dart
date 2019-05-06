@@ -140,7 +140,15 @@ class _DevicesState extends State<Devices> {
             //only activate it when its scrolled fast enough (avoids jitter)
             if(scrollNotification is ScrollUpdateNotification){
               //hacked aboslute value
-              double changeY = scrollNotification.dragDetails.primaryDelta.abs();
+              double changeY;
+
+              //calculate the change
+              if(scrollNotification?.dragDetails?.primaryDelta == null){
+                changeY = 0;
+              }
+              else{
+                changeY = scrollNotification.dragDetails.primaryDelta.abs();;
+              }
 
               //update
               if(changeY > minChangeY){

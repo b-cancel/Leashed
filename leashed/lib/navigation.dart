@@ -21,7 +21,6 @@ class Navigation extends StatelessWidget {
   static final ValueNotifier<int> defaultTimeToDetectPattern = new ValueNotifier<int>(5);
   static final ValueNotifier<int> addToTimeToDetectPattern = new ValueNotifier<int>(3);
   static final ValueNotifier<int> timeToDetectPattern = new ValueNotifier<int>(5);
-  static final Completer<GoogleMapController> mapController = Completer();
 
   //used to detect when we come back to
   //1. going back to ourDeviceScan should restart the scan

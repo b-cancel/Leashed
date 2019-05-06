@@ -30,11 +30,14 @@ class MapWidget extends StatefulWidget {
 }
 
 class _MapWidgetState extends State<MapWidget> {
+  Completer<GoogleMapController> mapCompleter;
   CameraPosition targetCameraPosition;
+  GoogleMapController mapController;
 
   @override
   void initState(){ 
     super.initState();
+    mapCompleter = Completer();
     setStartCameraPosition(widget.locations);
     addMarkers(
       widget.titles, 
@@ -84,13 +87,19 @@ class _MapWidgetState extends State<MapWidget> {
     }
 
     //use bounds to calculate zoom
-    double zoom = 15; //TODO... stop using guessed value
+    double zoom = 13; //TODO... stop using guessed value
 
     //set the target postion to the average position
     targetCameraPosition = CameraPosition(
       target: averageLocation,
-      zoom: 15, 
+      zoom: zoom, 
     );
+  }
+
+  startController()async{
+    if(mapController == null){
+      mapController = await mapCompleter.future;
+    }
   }
 
   addMarkers(
@@ -98,10 +107,13 @@ class _MapWidgetState extends State<MapWidget> {
     List<String> subtitles,
     List<LatLng> locations,
   ) async {
-    final GoogleMapController controller = await Navigation.mapController.future;
+    //start controller if it hasnt been started
+    await startController();
+
+    //create markers
     int markerCount = titles.length;
     for(int i = 0; i < markerCount; i++){
-      controller.addMarker(
+      mapController.addMarker(
         MarkerOptions(
           consumeTapEvents: false,
           flat: false, //so that the pin stays properly oriented
@@ -117,8 +129,17 @@ class _MapWidgetState extends State<MapWidget> {
   }
 
   goToLocation(CameraPosition newPosition) async {
-    final GoogleMapController controller = await Navigation.mapController.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(newPosition));
+    //start controller if it hasnt been started
+    await startController();
+    
+    //move to new camera position
+    mapController.animateCamera(CameraUpdate.newCameraPosition(newPosition));
+  }
+  
+  @override
+  void dispose() { 
+    mapController.dispose();
+    super.dispose();
   }
 
   @override
@@ -131,7 +152,7 @@ class _MapWidgetState extends State<MapWidget> {
           mapType: MapType.normal, 
           initialCameraPosition: targetCameraPosition, 
           onMapCreated: (GoogleMapController controller) {
-            Navigation.mapController.complete(controller);
+            mapCompleter.complete(controller);
           },
         ),
         Positioned(
