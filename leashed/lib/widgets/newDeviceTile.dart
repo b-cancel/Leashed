@@ -26,13 +26,17 @@ class NewDeviceTile extends StatelessWidget {
     return InkWell(
       onTap: (){
         Navigator.push(context, PageTransition(
-          type: PageTransitionType.fade,
-          duration: Duration.zero, 
-          child: AddEditDeviceDetails(
-            name: name,
-            id: id,
-            type: type,
-          ),
+          type: PageTransitionType.rightToLeft,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text("Add Bluetooth Device"),
+            ),
+            body: AddEditDeviceDetails(
+              name: name,
+              id: id,
+              type: type,
+            ),
+          )
         ));
       },
       child: Column(

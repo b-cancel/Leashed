@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:leashed/deviceScanner.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/pattern/blePattern.dart';
 import 'package:leashed/widgets/instruction.dart';
@@ -12,8 +13,8 @@ class BleGrab extends StatelessWidget {
       onDone: (){
         Navigator.pushReplacement(context, PageTransition(
           type: PageTransitionType.fade,
-          duration: Duration.zero, 
-          child: BlePattern(
+          duration: Duration.zero,
+          child: BlePatternPage(
             secondsPerStep: Navigation.timeToDetectPattern.value,
           ),
         ));

@@ -182,8 +182,7 @@ class _SearchNewState extends State<SearchNew> with RouteAware {
       onPressed: (){
         ScannerStaticVars.stopScan();
         Navigator.push(context, PageTransition(
-          type: PageTransitionType.fade,
-          duration: Duration.zero, 
+          type: PageTransitionType.rightToLeft,
           child: PhoneDown(),
         ));
       },

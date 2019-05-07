@@ -101,7 +101,173 @@ class _ScanStarterState extends State<ScanStarter>{
         double arrowWidth = (MediaQuery.of(context).size.width / 3) / 2;
 
         //---Show Scanner
-        return Column(
+        return widget.child;
+      }
+      else{
+        return new Builder(
+          builder: (BuildContext context) {
+            return InkWell(
+              onTap: (){
+                //Inform the user that it might fail
+                final SnackBar msg = SnackBar(
+                  content: Text(
+                    'Trying To Re-Start The Scanner' 
+                    + '\n' 
+                    + 'If It Fails Please Try Again',
+                  ),
+                );
+                Scaffold.of(context).showSnackBar(msg);
+                //Attempt to Start Up The Scanner
+                ScannerStaticVars.startScan();
+              },
+              child: Container(
+                color: Colors.white,
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: DefaultTextStyle(
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          'Please Wait',
+                          style: TextStyle(
+                            fontSize: 48,
+                          ),
+                        ),
+                        Container(
+                          height: 8,
+                        ),
+                        Image.asset(
+                          "assets/pngs/hourglass.png",
+                          width: 150,
+                        ),
+                        Container(
+                          height: 8,
+                        ),
+                        Text(
+                          "For The Bluetooth Scanner",
+                        ),
+                        Text(
+                          "To Start Up",
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              ),
+            );
+          }
+        );
+      }
+    }
+    else{
+      return BluetoothOff(
+        bluetoothOffWidget: BluetoothOffWidget.page,
+      );
+    }
+  }
+}
+
+class Hints extends StatelessWidget {
+  final List<String> lines;
+
+  const Hints({
+    this.lines,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> lineWidgets = new List<Widget>();
+    for(int i = 0; i < lines.length; i++){
+      lineWidgets.add(Text(lines[i]));
+    }
+
+    return Column(
+      children: lineWidgets,
+    );
+  }
+}
+
+class ArrowWidget extends StatelessWidget {
+  const ArrowWidget({
+    @required this.arrowWidth,
+    @required this.outlineWidth,
+    this.cleanOutline: false,
+    @required this.outlineColor,
+    @required this.arrowColor,
+  });
+
+  final double arrowWidth;
+  final double outlineWidth;
+  final bool cleanOutline;
+  final Color outlineColor;
+  final Color arrowColor;
+
+  @override
+  Widget build(BuildContext context) {
+    double arrowHeight = 0;
+
+    return Container(
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: <Widget>[
+          ClipPath(
+            clipper: TriangleClipper(),
+            child: Container(
+              height: arrowHeight,
+              width: arrowWidth + outlineWidth,
+              color: outlineColor,
+              child: Text(""),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+              top: (cleanOutline)
+              ? outlineWidth / 2
+              : 0,
+            ),
+            child: ClipPath(
+              clipper: TriangleClipper(),
+              child: Container(
+                height: arrowHeight - (
+                  (cleanOutline) 
+                  ? outlineWidth 
+                  : 0
+                ),
+                width: arrowWidth,
+                color: arrowColor,
+                child: Text(""),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TriangleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0.0, size.height);
+    path.lineTo(size.width, size.height/2);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(TriangleClipper oldClipper) => false;
+}
+
+/*
+Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             DefaultTextStyle(
@@ -226,6 +392,7 @@ class _ScanStarterState extends State<ScanStarter>{
                     fontSize: 22,
                   ),
                   child: Stack(
+                    alignment: Alignment.center,
                     //NOTE: I can't pass in the children otherwise DefaultTextStyle won't work
                     children: <Widget>[
                       Opacity(
@@ -285,171 +452,4 @@ class _ScanStarterState extends State<ScanStarter>{
             ),
           ],
         );
-      }
-      else{
-        return new Builder(
-          builder: (BuildContext context) {
-            return InkWell(
-              onTap: (){
-                //Inform the user that it might fail
-                final SnackBar msg = SnackBar(
-                  content: Text(
-                    'Trying To Re-Start The Scanner' 
-                    + '\n' 
-                    + 'If It Fails Please Try Again',
-                  ),
-                );
-                Scaffold.of(context).showSnackBar(msg);
-                //Attempt to Start Up The Scanner
-                ScannerStaticVars.startScan();
-              },
-              child: Container(
-                color: Colors.white,
-                padding: EdgeInsets.all(16),
-                child: Center(
-                  child: DefaultTextStyle(
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        Text(
-                          'Please Wait',
-                          style: TextStyle(
-                            fontSize: 48,
-                          ),
-                        ),
-                        Container(
-                          height: 8,
-                        ),
-                        Image.asset(
-                          "assets/pngs/hourglass.png",
-                          width: 150,
-                        ),
-                        Container(
-                          height: 8,
-                        ),
-                        Text(
-                          "For The Bluetooth Scanner",
-                        ),
-                        Text(
-                          "To Start Up",
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              ),
-            );
-          }
-        );
-      }
-    }
-    else{
-      return BluetoothOff(
-        bluetoothOffWidget: BluetoothOffWidget.page,
-      );
-    }
-  }
-}
-
-class Hints extends StatelessWidget {
-  final List<String> lines;
-
-  const Hints({
-    this.lines,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> lineWidgets = new List<Widget>();
-    for(int i = 0; i < lines.length; i++){
-      lineWidgets.add(Text(lines[i]));
-    }
-
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: lineWidgets,
-      ),
-    );
-  }
-}
-
-class ArrowWidget extends StatelessWidget {
-  const ArrowWidget({
-    @required this.arrowWidth,
-    @required this.outlineWidth,
-    this.cleanOutline: false,
-    @required this.outlineColor,
-    @required this.arrowColor,
-  });
-
-  final double arrowWidth;
-  final double outlineWidth;
-  final bool cleanOutline;
-  final Color outlineColor;
-  final Color arrowColor;
-
-  @override
-  Widget build(BuildContext context) {
-    double arrowHeight = 0;
-
-    return Container(
-      child: Stack(
-        fit: StackFit.passthrough,
-        children: <Widget>[
-          ClipPath(
-            clipper: TriangleClipper(),
-            child: Container(
-              height: arrowHeight,
-              width: arrowWidth + outlineWidth,
-              color: outlineColor,
-              child: Text(""),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(
-              top: (cleanOutline)
-              ? outlineWidth / 2
-              : 0,
-            ),
-            child: ClipPath(
-              clipper: TriangleClipper(),
-              child: Container(
-                height: arrowHeight - (
-                  (cleanOutline) 
-                  ? outlineWidth 
-                  : 0
-                ),
-                width: arrowWidth,
-                color: arrowColor,
-                child: Text(""),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class TriangleClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.lineTo(0.0, size.height);
-    path.lineTo(size.width, size.height/2);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(TriangleClipper oldClipper) => false;
-}
+*/

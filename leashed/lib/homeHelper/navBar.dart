@@ -31,7 +31,7 @@ class NavBar extends StatelessWidget {
             ),
             onPressed: (){
               Navigator.push(context, PageTransition(
-                type: PageTransitionType.leftToRight,
+                type: PageTransitionType.rightToLeft,
                 child: SearchNew(),
               ));
             },
@@ -57,7 +57,7 @@ class NavBar extends StatelessWidget {
               ),
               onTap: (){
                 Navigator.push(context, PageTransition(
-                  type: PageTransitionType.rightToLeft,
+                  type: PageTransitionType.upToDown,
                   child: Settings(),
                 ));
               },

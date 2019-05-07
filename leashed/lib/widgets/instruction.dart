@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
-import 'package:leashed/widgets/bluetoothOffBanner.dart';
 
+//NOTE: we will only enter this IF our bluetooth is already on
 class Instruction extends StatefulWidget {
   final String imageUrl;
   final List<String> lines;
@@ -42,7 +42,9 @@ class _InstructionState extends State<Instruction> {
   }
 
   customSetState(){
-   setState(() {});
+    if(ScannerStaticVars.bluetoothOn.value == false){
+      Navigator.maybePop(context);
+    }
   }
 
   @override
@@ -68,9 +70,6 @@ class _InstructionState extends State<Instruction> {
         ),
         body: new Column(
           children: <Widget>[
-            (ScannerStaticVars.bluetoothOn.value)
-            ? Container()
-            : new BluetoothOff(),
             ConstrainedBox(
               constraints: BoxConstraints(
                 minHeight: titleHeight,
@@ -95,13 +94,11 @@ class _InstructionState extends State<Instruction> {
             ),
             Expanded(
               child: Center(
-                child: (ScannerStaticVars.bluetoothOn.value && ScannerStaticVars.isScanning.value)
-                ? Container()
-                : new RaisedButton(
+                child: new RaisedButton(
                   color: Navigation.blueGrey,
                   onPressed: () => widget.onDone(),
                   child: new Text(
-                    "Done",
+                    "Next",
                     style: TextStyle(
                       color: Colors.white,
                     ),

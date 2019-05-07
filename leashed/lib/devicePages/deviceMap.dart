@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:leashed/addNew.dart';
@@ -30,6 +31,19 @@ class _DeviceDetailsState extends State<DeviceDetails> {
     initialPage: 1,
     keepPage: true,
   );
+
+  @override
+  void initState() {
+    //set preferred orientation
+    //force portrait mode
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown
+    ]);
+
+    //super init
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
