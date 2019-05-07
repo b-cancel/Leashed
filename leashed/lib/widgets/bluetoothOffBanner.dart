@@ -110,7 +110,10 @@ class Page extends StatelessWidget {
                 Text(
                   ' The Bluetooth Adapter Is ' + bluetoothStateString,
                 ),
-                Container(height: 4),
+                Icon(
+                  Icons.bluetooth_disabled,
+                  size: 256,
+                ),
                 Text(
                   "This Feature Requires Bluetooth",
                 ),

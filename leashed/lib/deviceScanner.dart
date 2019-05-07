@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 
@@ -21,23 +23,26 @@ class ScanStarter extends StatefulWidget {
 }
 
 class _ScanStarterState extends State<ScanStarter>{
+  final ValueNotifier<int> potentialMessageIndex = ValueNotifier<int>(0);
+
   @override
   void initState() {
     //super init
     super.initState();
 
-    //Listeners To Determine When to Reload
-    ScannerStaticVars.bluetoothOn.addListener(navigationAwayIfTurnedOff); //travels away on turn off
-    ScannerStaticVars.isScanning.addListener(customSetState); //allow for indicator that turned on
-    ScannerStaticVars.wantToBeScanning.addListener(customSetState); //allows for reset button
+    //travels away from this widget when the user turns the bluetooth off
+    //turns on the scanner when the user turns bluetooth on
+    ScannerStaticVars.bluetoothOn.addListener(navigationAwayIfTurnedOff);
+
+    //show the user what they need to do to get things working (turn on OR wait)
+    ScannerStaticVars.bluetoothOn.addListener(customSetState); //show that you need to turn bluetooth on
+    ScannerStaticVars.isScanning.addListener(customSetState); //show that the scanner is turning on
 
     //start the scan ONLY if the bluetooth is already on
     if(ScannerStaticVars.bluetoothOn.value){
       //start the scanner after the first build 
       //the user will instantly see the effect of them pressing the plus
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => ScannerStaticVars.startScan(),
-      );
+      startScanner();
     }
   }
 
@@ -46,16 +51,19 @@ class _ScanStarterState extends State<ScanStarter>{
     //stop the scanner
     ScannerStaticVars.stopScan();
 
-    //remove listeners
-    ScannerStaticVars.bluetoothOn.removeListener(navigationAwayIfTurnedOff); //travels away on turn off
-    ScannerStaticVars.isScanning.removeListener(customSetState); //allow for indicator that turned on
-    ScannerStaticVars.wantToBeScanning.removeListener(customSetState); //allows for reset button
+    //travels away from this widget when the user turns the bluetooth off
+    //turns on the scanner when the user turns bluetooth on
+    ScannerStaticVars.bluetoothOn.removeListener(navigationAwayIfTurnedOff);
+
+    //show the user what they need to do to get things working (turn on OR wait)
+    ScannerStaticVars.bluetoothOn.removeListener(customSetState); //show that you need to turn bluetooth on
+    ScannerStaticVars.isScanning.removeListener(customSetState); //show that the scanner is turning on
 
     //super dispose
     super.dispose();
   }
 
-  //-----BLE Interact START
+  //-----Listeners START
 
   customSetState(){
     if(mounted){
@@ -68,21 +76,127 @@ class _ScanStarterState extends State<ScanStarter>{
       ScannerStaticVars.stopScan();
       Navigator.of(context).maybePop();
     }
+    else{
+      startScanner();
+    }
   }
 
-  //-----BLE Interact END
+  startScanner(){
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => ScannerStaticVars.startScan(),
+    );
+  }
+
+  //-----Listeners END
 
   @override
   Widget build(BuildContext context) {
     if(ScannerStaticVars.bluetoothOn.value){
-      return new Builder(
-        builder: (BuildContext context) {
-          if(ScannerStaticVars.isScanning.value){
-            return Container(
-              child: widget.child,
-            );
-          }
-          else{
+      if(ScannerStaticVars.isScanning.value){
+        //---display the appropiate message
+        List<Widget> potentialMessages = [
+          DefaultTextStyle(
+            style: TextStyle(
+              color: Navigation.blueGrey,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  "Record The Device's Signature"
+                ),
+                Text(
+                  "And We Can Help You"
+                ),
+                Text(
+                  "Interpret The Device's Signals"
+                ),
+              ],
+            ),
+          ),
+          Text(
+            "no"
+          ),
+        ];
+
+        //---Sizing for our Scanner
+        double height = MediaQuery.of(context).size.height / 5;
+        height *= (5/4);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Expanded(
+              child: InkWell(
+                onLongPress: (){
+                  //go to next potential message
+                  potentialMessageIndex.value += 1;
+
+                  //make sure we don't overflow
+                  if(potentialMessageIndex.value >= potentialMessages.length){
+                    potentialMessageIndex.value = 0;
+                  }
+                  
+                  //show UI difference
+                  setState(() {});
+                },
+                child: Container(
+                  alignment: Alignment.center,
+                  padding: EdgeInsets.all(16),
+                  child: DefaultTextStyle(
+                    style: TextStyle(
+                      color: Navigation.blueGrey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    child: potentialMessages[potentialMessageIndex.value],
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              color: Colors.blue,
+              height: height,
+              child: Text("middle"),
+            ),
+            Container(
+              color: Colors.purple,
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  Expanded(
+                    child: Container(
+                      height: 250,
+                      color: Colors.green,
+                      child: Text("left"),
+                    ),
+                  ),
+                  ClipPath(
+                    clipper: TriangleClipper(),
+                    child: Container(
+                      height: 250,
+                      width: 50,
+                      color: Colors.red,
+                      child: Text(""),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 250,
+                      color: Colors.yellow,
+                      child: Text("right"),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
+        );
+      }
+      else{
+        return new Builder(
+          builder: (BuildContext context) {
             return InkWell(
               onTap: (){
                 //Inform the user that it might fail
@@ -98,14 +212,50 @@ class _ScanStarterState extends State<ScanStarter>{
                 ScannerStaticVars.startScan();
               },
               child: Container(
+                color: Colors.white,
+                padding: EdgeInsets.all(16),
                 child: Center(
-                  child: new Text("waiting for scanner to turn on"),
-                ),
+                  child: DefaultTextStyle(
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          'Please Wait',
+                          style: TextStyle(
+                            fontSize: 48,
+                          ),
+                        ),
+                        Container(
+                          height: 8,
+                        ),
+                        Image.asset(
+                          "assets/pngs/hourglass.png",
+                          width: 150,
+                        ),
+                        Container(
+                          height: 8,
+                        ),
+                        Text(
+                          "For The Bluetooth Scanner",
+                        ),
+                        Text(
+                          "To Start Up",
+                        ),
+                      ],
+                    ),
+                  ),
+                )
               ),
             );
           }
-        }
-      );
+        );
+      }
     }
     else{
       return BluetoothOff(
@@ -113,4 +263,18 @@ class _ScanStarterState extends State<ScanStarter>{
       );
     }
   }
+}
+
+class TriangleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0.0, size.height);
+    path.lineTo(size.width, size.height/2);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(TriangleClipper oldClipper) => false;
 }

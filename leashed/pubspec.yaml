@@ -121,6 +121,7 @@ flutter:
     - assets/pngs/imageNotFound.png
     - assets/pngs/logoTransparent.png
     - assets/pngs/devicePlaceholder.png
+    - assets/pngs/hourglass.png
 
 
 
