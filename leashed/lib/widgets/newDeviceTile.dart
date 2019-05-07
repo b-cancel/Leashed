@@ -28,7 +28,7 @@ class NewDeviceTile extends StatelessWidget {
         Navigator.push(context, PageTransition(
           type: PageTransitionType.fade,
           duration: Duration.zero, 
-          child: AddNew(
+          child: AddEditDeviceDetails(
             name: name,
             id: id,
             type: type,

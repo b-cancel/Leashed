@@ -70,7 +70,7 @@ class _InstructionState extends State<Instruction> {
           children: <Widget>[
             (ScannerStaticVars.bluetoothOn.value)
             ? Container()
-            : new BluetoothOffBanner(),
+            : new BluetoothOff(),
             ConstrainedBox(
               constraints: BoxConstraints(
                 minHeight: titleHeight,

@@ -1,34 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:system_setting/system_setting.dart';
 
-class BluetoothOffBanner extends StatefulWidget {
+enum BluetoothOffWidget {banner, page}
+
+class BluetoothOff extends StatefulWidget {
+  final BluetoothOffWidget bluetoothOffWidget;
+
+  BluetoothOff({
+    this.bluetoothOffWidget: BluetoothOffWidget.banner,
+  });
+
   @override
-  _BluetoothOffBannerState createState() => _BluetoothOffBannerState();
+  _BluetoothOffState createState() => _BluetoothOffState();
 }
 
-class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
+class _BluetoothOffState extends State<BluetoothOff> {
   @override
   void initState() {
     super.initState();
+    ScannerStaticVars.bluetoothState.addListener(customSetState);
+  }
 
-    ScannerStaticVars.bluetoothState.addListener((){
-      setState(() {});
-    });
+  @override
+  void dispose() { 
+    ScannerStaticVars.bluetoothState.removeListener(customSetState);
+    super.dispose();
+  }
+
+  customSetState(){
+    if(mounted){
+      setState((){});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    BluetoothState bleState = ScannerStaticVars.getBluetoothState();
-    String bleStateString = "";
-    if(bleState == BluetoothState.turningOn) bleStateString = "Turning On";
-    else if(bleState == BluetoothState.turningOff) bleStateString = "Turning Off";
-    else{
-      bleStateString = bleState.toString().substring(15);
-      bleStateString = bleStateString[0].toUpperCase() + bleStateString.substring(1);
-    }
+    BluetoothState bluetoothState = ScannerStaticVars.getBluetoothState();
+    String bluetoothStateString = bluetoothStateToString(bluetoothState);
+    bool isBanner = widget.bluetoothOffWidget == BluetoothOffWidget.banner;
 
+    return (isBanner)
+    ? Banner(bluetoothStateString)
+    : Page(bluetoothStateString);
+  }
+}
+
+class Banner extends StatelessWidget {
+  final String bluetoothStateString;
+  Banner(this.bluetoothStateString);
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
       onTap: (){
         SystemSetting.goto(SettingTarget.BLUETOOTH);
@@ -43,8 +68,9 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
               Icons.error,
               color: Colors.black,
             ),
+            Container(width: 4),
             new Text(
-              ' The Bluetooth Adapter Is ' + bleStateString,
+              'The Bluetooth Adapter Is ' + bluetoothStateString,
               style: TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
@@ -57,16 +83,57 @@ class _BluetoothOffBannerState extends State<BluetoothOffBanner> {
   }
 }
 
-/*
-// create an async void to call the API function with settings name as parameter
-openSettingsMenu(settingsName) async {
-    var resultSettingsOpening = false;
+class Page extends StatelessWidget {
+  final String bluetoothStateString;
+  Page(this.bluetoothStateString);
 
-    try {
-      resultSettingsOpening =
-          await AccessSettingsMenu.openSettings(settingsType: settingsName);
-    } catch (e) {
-      resultSettingsOpening = false;
-    }
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: (){
+        SystemSetting.goto(SettingTarget.BLUETOOTH);
+      },
+      child: Container(
+        color: Colors.red,
+        padding: EdgeInsets.all(16),
+        child: Center(
+          child: DefaultTextStyle(
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  ' The Bluetooth Adapter Is ' + bluetoothStateString,
+                ),
+                Container(height: 4),
+                Text(
+                  "This Feature Requires Bluetooth",
+                ),
+                Container(height: 4),
+                Text(
+                  "Please Tap Here To Turn It In On",
+                ),
+              ],
+            ),
+          ),
+        )
+      ),
+    );
+  }
 }
-*/
+
+String bluetoothStateToString(BluetoothState bluetoothState){
+  String bluetoothStateString = "";
+  if(bluetoothState == BluetoothState.turningOn) bluetoothStateString = "Turning On";
+  else if(bluetoothState == BluetoothState.turningOff) bluetoothStateString = "Turning Off";
+  else{
+    bluetoothStateString = bluetoothState.toString().substring(15);
+    bluetoothStateString = bluetoothStateString[0].toUpperCase() + bluetoothStateString.substring(1);
+  }
+  return bluetoothStateString;
+}

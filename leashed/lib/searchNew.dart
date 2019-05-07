@@ -109,7 +109,7 @@ class _SearchNewState extends State<SearchNew> with RouteAware {
         children: <Widget>[
           (ScannerStaticVars.bluetoothOn.value)
           ? Container()
-          : new BluetoothOffBanner(),
+          : new BluetoothOff(),
           DefaultTextStyle(
             style: TextStyle(
               color: Colors.black

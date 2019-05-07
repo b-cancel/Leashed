@@ -23,6 +23,8 @@ class NoDevices extends StatelessWidget {
         title: NavBar(
           navBarHeight: 40,
           deviceCount: deviceCount,
+          //TODO... add this in
+          //introScreen: true, 
         ),
       ),
       body: new Container(

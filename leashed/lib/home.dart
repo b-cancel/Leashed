@@ -118,7 +118,11 @@ class _DevicesState extends State<Devices> {
 
   @override
   Widget build(BuildContext context) {
-    BottomNavBar bottomNavBar = new BottomNavBar(
+    BottomNavBar bottomNavBar = BottomNavBar(
+      icons: [
+        Icon(Icons.list), 
+        Icon(FontAwesomeIcons.map),
+      ],
       menuNum: menuNum,
       callback: (int index){
         setState(() {
@@ -240,7 +244,7 @@ class _DevicesState extends State<Devices> {
                         //---------Error
                         (ScannerStaticVars.bluetoothOn.value)
                         ? Container()
-                        : BluetoothOffBanner(),
+                        : BluetoothOff(),
                         //----------Slider
                         new EntireSlider(),
                       ],
@@ -291,21 +295,25 @@ class _DevicesState extends State<Devices> {
             deviceCount: widget.deviceCount,
           ),
         ),
-        body: MapWidget(
-          titles: [
-            "Headphones", 
-            "Work Back Pack", 
-            "Ditto Tracker",
-          ],
-          subtitles: [
-            "Last Seen at: UTRGV Library", 
-            "Last Seen: 8 hrs ago", 
-            "In Range: 1-2 meters away",
-          ],
-          locations: [
-            LatLng(26.306773, -98.173589),
-            LatLng(26.278324, -98.179618),
-            LatLng(26.306134, -98.174892),
+        body: Stack(
+          children: <Widget>[
+            MapWidget(
+              titles: [
+                "Headphones", 
+                "Work Back Pack", 
+                "Ditto Tracker",
+              ],
+              subtitles: [
+                "Last Seen at: UTRGV Library", 
+                "Last Seen: 8 hrs ago", 
+                "In Range: 1-2 meters away",
+              ],
+              locations: [
+                LatLng(26.306773, -98.173589),
+                LatLng(26.278324, -98.179618),
+                LatLng(26.306134, -98.174892),
+              ],
+            ),
           ],
         ),
         bottomNavigationBar: bottomNavBar,

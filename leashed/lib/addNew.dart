@@ -16,26 +16,26 @@ import 'package:image_picker/image_picker.dart';
 //TODO... use image_picker_saver 0.1.0
 //to also let users select images from the web
 
-class AddNew extends StatefulWidget {
-  AddNew({
+class AddEditDeviceDetails extends StatefulWidget {
+  AddEditDeviceDetails({
     this.name,
     this.id,
     this.type,
     this.imageUrl: "",
-    this.newDevice: true,
+    this.addDetails: true,
   });
 
   final String name;
   final String id;
   final String type; 
   final String imageUrl;
-  final bool newDevice;
+  final bool addDetails;
 
   @override
-  _AddNewState createState() => _AddNewState();
+  _AddEditDeviceDetailsState createState() => _AddEditDeviceDetailsState();
 }
 
-class _AddNewState extends State<AddNew> {
+class _AddEditDeviceDetailsState extends State<AddEditDeviceDetails> {
   final TextEditingController nameController = new TextEditingController();
   final FocusNode nameFocusNode = new FocusNode();
   final ValueNotifier<bool> editingName = new ValueNotifier<bool>(false); 
@@ -88,191 +88,169 @@ class _AddNewState extends State<AddNew> {
 
   @override
   Widget build(BuildContext context) {
-    //assets/pngs/imageNotFound.png
-    //assets/pngs/logoTransparent.png
     double width = MediaQuery.of(context).size.width / 4;
     double height = MediaQuery.of(context).size.height / 4;
     double imageSize = math.min(width, height);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: new Text(
-          (widget.newDevice)
-          ? "Add New Device"
-          : "Device Settings",
-        ),
-      ),
-      body: Column(
-        children: <Widget>[
-          (ScannerStaticVars.bluetoothOn.value)
-          ? Container()
-          : new BluetoothOffBanner(),
-          Expanded(
-            child: ListView(
-              children: <Widget>[
-                new Container(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Stack(
-                        children: <Widget>[
-                          Container(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 20.0, bottom: 4),
-                              child: new Container(
-                                width: imageSize,
-                                height: imageSize,
-                                child: new Image.asset(
-                                  deviceImage.value,
-                                  fit: BoxFit.cover,
-                                ),
+    return Column(
+      children: <Widget>[
+        (ScannerStaticVars.bluetoothOn.value)
+        ? Container()
+        : new BluetoothOff(),
+        Expanded(
+          child: ListView(
+            children: <Widget>[
+              new Container(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Stack(
+                      children: <Widget>[
+                        Container(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 20.0, bottom: 4),
+                            child: new Container(
+                              width: imageSize,
+                              height: imageSize,
+                              child: new Image.asset(
+                                deviceImage.value,
+                                fit: BoxFit.cover,
                               ),
                             ),
                           ),
-                          Positioned.fill(
-                            child: Align(
-                              alignment: Alignment.bottomRight,
+                        ),
+                        Positioned.fill(
+                          child: Align(
+                            alignment: Alignment.bottomRight,
+                            child: Container(
+                              padding: EdgeInsets.only(right: 16),
                               child: Container(
-                                padding: EdgeInsets.only(right: 16),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(80.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(80.0),
+                                  color: Navigation.blueGrey,
+                                  border: Border.all(
                                     color: Navigation.blueGrey,
-                                    border: Border.all(
-                                      color: Navigation.blueGrey,
-                                      width: 4.0,
-                                    ),
+                                    width: 4.0,
                                   ),
-                                  child: Icon(
-                                    Icons.edit,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.edit,
+                                  color: Colors.white,
+                                  size: 16,
                                 ),
                               ),
                             ),
                           ),
-                          Positioned.fill(
-                            child: GestureDetector(
-                              onTap: () => imagePicker(),
+                        ),
+                        Positioned.fill(
+                          child: GestureDetector(
+                            onTap: () => imagePicker(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width - imageSize - (16 * 3),
+                            child: Stack(
+                              children: <Widget>[
+                                TextFormField(
+                                  controller: nameController,
+                                  focusNode: nameFocusNode,
+                                  enabled: editingName.value,
+                                  onFieldSubmitted: (str){
+                                    nameController.text = str;
+                                    editingName.value = false;
+                                  },
+                                  decoration: InputDecoration(
+                                    contentPadding: EdgeInsets.all(0),
+                                    border: InputBorder.none,
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 0,
+                                  bottom: 0,
+                                  right: 0,
+                                  child: IconButton(
+                                    onPressed: (){
+                                      editingName.value = true;
+                                    },
+                                    icon: Icon(Icons.edit),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          DefaultTextStyle(
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                new Text(widget.id),
+                                new Text(widget.type),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width - imageSize - (16 * 3),
-                              child: Stack(
-                                children: <Widget>[
-                                  TextFormField(
-                                    controller: nameController,
-                                    focusNode: nameFocusNode,
-                                    enabled: editingName.value,
-                                    onFieldSubmitted: (str){
-                                      nameController.text = str;
-                                      editingName.value = false;
-                                    },
-                                    decoration: InputDecoration(
-                                      contentPadding: EdgeInsets.all(0),
-                                      border: InputBorder.none,
-                                    ),
-                                    style: TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 0,
-                                    bottom: 0,
-                                    right: 0,
-                                    child: IconButton(
-                                      onPressed: (){
-                                        editingName.value = true;
-                                      },
-                                      icon: Icon(Icons.edit),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            DefaultTextStyle(
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  new Text(widget.id),
-                                  new Text(widget.type),
-                                ],
-                              ),
-                            ),
-                          ],
+                    ),
+                  ],
+                ),
+              ),
+              (widget.addDetails == false)
+              ? Container()
+              : InkWell(
+                onTap: (){
+                  /*
+                  Navigator.push(context, PageTransition(
+                    type: PageTransitionType.fade,
+                    duration: Duration.zero, 
+                    child: DeviceScanner(
+                      title: "Grabbing Device Signature",
+                      child: new LiveScanner( 
+                        deviceID: widget.id,
+                      ),
+                    ),
+                  ));
+                  */
+                },
+                child: Container(
+                  padding: EdgeInsets.all(64),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(
+                        FontAwesomeIcons.signature,
+                        size: 100,
+                      ),
+                      Text(
+                        "Inspect Signal",
+                        style: TextStyle(
+                          color: Navigation.blueGrey,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 32,
                         ),
                       ),
                     ],
-                  ),
-                ),
-                /*
-                Container(
-                  child: (ScannerStaticVars.bluetoothOn.value)
-                  ? Container(
-                    child: InkWell(
-                      onTap: (){
-                        Navigator.push(context, PageTransition(
-                          type: PageTransitionType.fade,
-                          duration: Duration.zero, 
-                          child: DeviceScanner(
-                            title: "Grabbing Device Signature",
-                            deviceID: widget.id,
-                            child: new LiveScanner( 
-                              deviceID: widget.id,
-                            ),
-                          ),
-                        ));
-                      },
-                      child: Container(
-                        child: Center(
-                          child: new Text("tap to record the devices signature"),
-                        ),
-                      ),
-                    ),
                   )
-                  : Container(
-                    child: Center(
-                      child: new Text("Turn Bluetooth On To Record The Device's Signature"),
-                    ),
-                  ),
-                )
-                */
-              ],
-            ),
-          ),
-        ],
-      ),
-      /*
-      floatingActionButton: new FloatingActionButton(
-        onPressed: (){
-          Navigator.push(context, PageTransition(
-            type: PageTransitionType.fade,
-            duration: Duration.zero, 
-            child: DeviceScanner(
-              title: "Searching For Device",
-              deviceID: widget.id,
-              child: new UpdatingScanner( 
-                deviceID: widget.id,
+                ),
               ),
-            ),
-          ));
-        },
-        child: Icon(Icons.settings_bluetooth),
-      ),
-      */
+            ],
+          ),
+        ),
+      ],
     );
   }
 

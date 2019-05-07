@@ -7,14 +7,14 @@ import 'package:page_transition/page_transition.dart';
 
 class NavBar extends StatelessWidget {
   const NavBar({
-    Key key,
-    @required this.navBarHeight,
     this.deviceCount,
-  }) : super(key: key);
+    @required this.navBarHeight,
+    this.introScreen: false,
+  });
 
   final double navBarHeight;
-
   final ValueNotifier<int> deviceCount;
+  final bool introScreen;
 
   @override
   Widget build(BuildContext context) {
@@ -43,26 +43,29 @@ class NavBar extends StatelessWidget {
               fit: BoxFit.fitHeight,
             ),
           ),
-          InkWell(
-            child: Container(
-              padding: EdgeInsets.only(right: 12),
-              child: Center(
-                child: Icon(
-                  Icons.settings,
-                  color: Colors.white,
-                ),
+          Container(
+            padding: EdgeInsets.only(right: 12),
+            child: (introScreen)
+            ? Icon(
+                Icons.settings,
+                color: Colors.white.withOpacity(0.5),
+            )
+            : InkWell(
+              child: Icon(
+                Icons.settings,
+                color: Colors.white,
               ),
+              onTap: (){
+                Navigator.push(context, PageTransition(
+                  type: PageTransitionType.rightToLeft,
+                  child: Settings(),
+                ));
+              },
+              onLongPress: (){ //TODO... remove debug (toggle UI)
+                deviceCount.value = (deviceCount.value > 0) ? 0 : 1;
+              },
             ),
-            onTap: (){
-              Navigator.push(context, PageTransition(
-                type: PageTransitionType.rightToLeft,
-                child: Settings(),
-              ));
-            },
-            onLongPress: (){ //TODO... remove debug (toggle UI)
-              deviceCount.value = (deviceCount.value > 0) ? 0 : 1;
-            },
-          )
+          ),
         ],
       ),
     );
@@ -72,41 +75,54 @@ class NavBar extends StatelessWidget {
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({
     Key key,
+    @required this.icons,
+    this.names,
     @required this.menuNum,
     @required this.callback,
   }) : super(key: key);
 
+  final List<Widget> icons;
+  final List<String> names;
   final ValueNotifier<int> menuNum;
   final Function callback;
 
+  static final Text noText = Text(
+    '',
+    style: TextStyle(
+      fontSize: 0,
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
-    Text noText = Text(
-      '',
-      style: TextStyle(
-        fontSize: 0,
-      ),
-    );
+    List<BottomNavigationBarItem> navItems = new List<BottomNavigationBarItem>();
+    bool noNames = (this.names == null);
+    for(int i = 0; i < icons.length; i++){
+      navItems.add(
+        BottomNavigationBarItem(
+          icon: icons[i], 
+          title: (noNames) 
+          ? noText
+          : Text(
+            names[i],
+          ),
+        ),
+      );
+    }
 
     return Theme(
       data: ThemeData.dark().copyWith(
         canvasColor: Navigation.blueGrey,
       ),
-      child: BottomNavigationBar(
-        onTap: callback,
-        currentIndex: menuNum.value,
-        fixedColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list), 
-            title: noText,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.map), 
-            title: noText,
-          ),
-        ],
+      child: SizedBox(
+        height: (noNames) ? 50 : 60,
+        child: BottomNavigationBar(
+          onTap: callback,
+          currentIndex: menuNum.value,
+          fixedColor: Colors.white,
+          type: BottomNavigationBarType.fixed,
+          items: navItems,
+        ),
       ),
     );
   }

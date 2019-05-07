@@ -34,105 +34,128 @@ class _DeviceState extends State<Device> {
 
     //TODO... change this to no longer work with placeholders
     String image = "assets/placeholders/" + widget.image;
-    bool isOpen = widget.open;
 
-    return Container(
-      padding: EdgeInsets.only(
-        top: (widget.open) ? 0 : 16,
-        bottom: (widget.open) ? 16 : 0
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          InkWell(
-            onTap: (){
-              if(widget.open){
-                Navigator.push(context, PageTransition(
-                  type: PageTransitionType.downToUp,
-                  child: DeviceMap(
-                    image: widget.image, 
-                    name: widget.name,
-                    status: widget.status,
-                  ),
-                ));
-              }
-              else{
-                Navigator.maybePop(context);
-              }
-            },
-            child: new Container(
-              padding: const EdgeInsets.only(left: 16.0, right: 16),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  //no main axis size
-                  //no main alignment
-                  children: <Widget>[
-                    Container(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          right: 8.0, 
-                          bottom: (widget.open) ? 0 : 16,
-                        ),
-                        child: new Container(
-                          width: imageSize,
-                          height: imageSize,
-                          child: new Image.asset(
-                            image,
-                            fit: BoxFit.cover,
+    return Hero(
+      tag: image, //TODO... repalce for key... but as long as its something unique we good
+      flightShuttleBuilder: (
+        BuildContext flightContext,
+        Animation<double> animation,
+        HeroFlightDirection flightDirection,
+        BuildContext fromHeroContext,
+        BuildContext toHeroContext,
+        ){
+        return SingleChildScrollView(
+          child: toHeroContext.widget,
+        );
+      },
+      placeholderBuilder: (context, child) {
+        return Container(
+          color: Colors.transparent,
+        );
+      },
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          color: Colors.white,
+          padding: EdgeInsets.only(
+            top: (widget.open) ? 0 : 16,
+            bottom: (widget.open) ? 16 : 0
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              InkWell(
+                onTap: (){
+                  if(widget.open){
+                    Navigator.push(context, PageTransition(
+                      type: PageTransitionType.downToUp,
+                      duration: Duration(milliseconds: 500),
+                      child: DeviceDetails(
+                        image: widget.image, 
+                        name: widget.name,
+                        status: widget.status,
+                      ),
+                    ));
+                  }
+                  else{
+                    Navigator.maybePop(context);
+                  }
+                },
+                child: new Container(
+                  padding: const EdgeInsets.only(left: 16.0, right: 16),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      //no main axis size
+                      //no main alignment
+                      children: <Widget>[
+                        Container(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              right: 8.0, 
+                              bottom: (widget.open) ? 0 : 16,
+                            ),
+                            child: new Container(
+                              width: imageSize,
+                              height: imageSize,
+                              child: new Image.asset(
+                                image,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            new Text(
-                              widget.name,
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Navigation.blueGrey,
-                              ),
+                        Expanded(
+                          child: Container(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                new Text(
+                                  widget.name,
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Navigation.blueGrey,
+                                  ),
+                                ),
+                                new Text(
+                                  widget.status,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ],
                             ),
-                            new Text(
-                              widget.status,
-                              style: TextStyle(
-                                fontSize: 18,
-                              ),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.only(left: 16),
+                          child: Transform.rotate(
+                            angle: math.pi / 2,
+                            child: new Icon(
+                              (widget.open)
+                              ? Icons.chevron_left
+                              : Icons.chevron_right,
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                    Container(
-                      padding: EdgeInsets.only(left: 16),
-                      child: Transform.rotate(
-                        angle: math.pi / 2,
-                        child: new Icon(
-                          (widget.open)
-                          ? Icons.chevron_left
-                          : Icons.chevron_right,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+              Container(
+                padding: EdgeInsets.only(right: (imageSize * 4) * (1/10)),
+                child: Divider(
+                  color: Colors.blueGrey[900],
+                  height: 2,
+                ),
+              ),
+            ],
           ),
-          Container(
-            padding: EdgeInsets.only(right: (imageSize * 4) * (1/10)),
-            child: Divider(
-              color: Colors.blueGrey[900],
-              height: 2,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
