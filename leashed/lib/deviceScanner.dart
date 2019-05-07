@@ -93,104 +93,196 @@ class _ScanStarterState extends State<ScanStarter>{
   Widget build(BuildContext context) {
     if(ScannerStaticVars.bluetoothOn.value){
       if(ScannerStaticVars.isScanning.value){
-        //---display the appropiate message
-        List<Widget> potentialMessages = [
-          DefaultTextStyle(
-            style: TextStyle(
-              color: Navigation.blueGrey,
-              fontWeight: FontWeight.bold,
-              fontSize: 24,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  "Record The Device's Signature"
-                ),
-                Text(
-                  "And We Can Help You"
-                ),
-                Text(
-                  "Interpret The Device's Signals"
-                ),
-              ],
-            ),
-          ),
-          Text(
-            "no"
-          ),
-        ];
-
         //---Sizing for our Scanner
         double height = MediaQuery.of(context).size.height / 5;
         height *= (5/4);
 
+        //---Sizing For Our Arrow
+        double arrowWidth = (MediaQuery.of(context).size.width / 3) / 2;
+
+        //---Show Scanner
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Expanded(
-              child: InkWell(
-                onLongPress: (){
-                  //go to next potential message
-                  potentialMessageIndex.value += 1;
-
-                  //make sure we don't overflow
-                  if(potentialMessageIndex.value >= potentialMessages.length){
-                    potentialMessageIndex.value = 0;
-                  }
-                  
-                  //show UI difference
-                  setState(() {});
-                },
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.all(16),
-                  child: DefaultTextStyle(
-                    style: TextStyle(
-                      color: Navigation.blueGrey,
-                      fontWeight: FontWeight.bold,
+            DefaultTextStyle(
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Navigation.blueGrey,
+                fontSize: 18,
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Expanded(
+                      child: Container(
+                        color: Navigation.blueGrey,
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                          child: DefaultTextStyle(
+                            style: TextStyle(
+                              color: Colors.white
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                                Text("Signal"),
+                                Text("Strength"),
+                                Text("Of"),
+                                RichText(
+                                  text: TextSpan(
+                                    text: "91",
+                                    style: TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Text("Out of 100"),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                    child: potentialMessages[potentialMessageIndex.value],
+                    new ArrowWidget(
+                      arrowWidth: arrowWidth, 
+                      outlineWidth: 15,
+                      outlineColor: Navigation.blueGrey,
+                      arrowColor: Navigation.blueGrey,
+                    ),
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                              Text("Indicates"),
+                              Text("You"),
+                              Text("Are"),
+                              RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: "10",
+                                      style: TextStyle(
+                                        fontSize: 36,
+                                        fontWeight: FontWeight.bold,
+                                        color: Navigation.blueGrey,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: "ft",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Navigation.blueGrey,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ]
+                                ),
+                              ),
+                              Text("Away"),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: Container(
+                color: Colors.blue,
+                height: height,
+                child: Text("middle"),
+              ),
+            ),
+            InkWell(
+              onLongPress: (){
+                //go to next potential message
+                potentialMessageIndex.value += 1;
+
+                //make sure we don't overflow
+                if(potentialMessageIndex.value >= 4){ //TODO... set depending
+                  potentialMessageIndex.value = 0;
+                }
+                
+                //show UI difference
+                setState(() {});
+              },
+              child: Container(
+                alignment: Alignment.center,
+                padding: EdgeInsets.all(16),
+                child: DefaultTextStyle(
+                  style: TextStyle(
+                    color: Navigation.blueGrey,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
+                  child: Stack(
+                    //NOTE: I can't pass in the children otherwise DefaultTextStyle won't work
+                    children: <Widget>[
+                      Opacity(
+                        opacity: (potentialMessageIndex.value == 0) ? 1 : 0,
+                        child: new Hints(
+                          lines: [
+                            "Record The Device's Signature",
+                            "And We Can Help You",
+                            "Interpret The Device's Signal",
+                          ],
+                        ),
+                      ),
+                      Opacity(
+                        opacity: (potentialMessageIndex.value == 1) ? 1 : 0,
+                        child: Hints(
+                          lines: [
+                            "You Are Between",
+                            "45 And 250 ft",
+                            "From The Device",
+                          ],
+                        ),
+                      ),
+                      Opacity(
+                        opacity: (potentialMessageIndex.value == 2) ? 1 : 0,
+                        child: DefaultTextStyle(
+                          style: TextStyle(
+                            color: Navigation.blueGrey,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 28,
+                          ),
+                          child: Hints(
+                            lines: [
+                              "You Are Getting Closer",
+                            ],
+                          ),
+                        ),
+                      ),
+                      Opacity(
+                        opacity: (potentialMessageIndex.value == 3) ? 1 : 0,
+                        child: DefaultTextStyle(
+                          style: TextStyle(
+                            color: Navigation.blueGrey,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 28,
+                          ),
+                          child: Hints(
+                            lines: [
+                              "You Are Getting Further",
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-            Container(
-              color: Colors.blue,
-              height: height,
-              child: Text("middle"),
-            ),
-            Container(
-              color: Colors.purple,
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                children: <Widget>[
-                  Expanded(
-                    child: Container(
-                      height: 250,
-                      color: Colors.green,
-                      child: Text("left"),
-                    ),
-                  ),
-                  ClipPath(
-                    clipper: TriangleClipper(),
-                    child: Container(
-                      height: 250,
-                      width: 50,
-                      color: Colors.red,
-                      child: Text(""),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      height: 250,
-                      color: Colors.yellow,
-                      child: Text("right"),
-                    ),
-                  ),
-                ],
-              ),
-            )
           ],
         );
       }
@@ -262,6 +354,89 @@ class _ScanStarterState extends State<ScanStarter>{
         bluetoothOffWidget: BluetoothOffWidget.page,
       );
     }
+  }
+}
+
+class Hints extends StatelessWidget {
+  final List<String> lines;
+
+  const Hints({
+    this.lines,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> lineWidgets = new List<Widget>();
+    for(int i = 0; i < lines.length; i++){
+      lineWidgets.add(Text(lines[i]));
+    }
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: lineWidgets,
+      ),
+    );
+  }
+}
+
+class ArrowWidget extends StatelessWidget {
+  const ArrowWidget({
+    @required this.arrowWidth,
+    @required this.outlineWidth,
+    this.cleanOutline: false,
+    @required this.outlineColor,
+    @required this.arrowColor,
+  });
+
+  final double arrowWidth;
+  final double outlineWidth;
+  final bool cleanOutline;
+  final Color outlineColor;
+  final Color arrowColor;
+
+  @override
+  Widget build(BuildContext context) {
+    double arrowHeight = 0;
+
+    return Container(
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: <Widget>[
+          ClipPath(
+            clipper: TriangleClipper(),
+            child: Container(
+              height: arrowHeight,
+              width: arrowWidth + outlineWidth,
+              color: outlineColor,
+              child: Text(""),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+              top: (cleanOutline)
+              ? outlineWidth / 2
+              : 0,
+            ),
+            child: ClipPath(
+              clipper: TriangleClipper(),
+              child: Container(
+                height: arrowHeight - (
+                  (cleanOutline) 
+                  ? outlineWidth 
+                  : 0
+                ),
+                width: arrowWidth,
+                color: arrowColor,
+                child: Text(""),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
