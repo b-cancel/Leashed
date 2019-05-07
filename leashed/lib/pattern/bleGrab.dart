@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:leashed/deviceScanner.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/pattern/blePattern.dart';
 import 'package:leashed/widgets/instruction.dart';

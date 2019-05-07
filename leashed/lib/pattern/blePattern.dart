@@ -8,7 +8,10 @@ import 'package:leashed/scanner.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:percent_indicator/percent_indicator.dart' as percent;
 
-//NOTE: we KNOW that bluetooth is one when we arrive at EITHER of this widgets
+//NOTE: we KNOW that 
+//1. bluetooth is on
+//2. scanning is on
+//when we arrive at EITHER of these widgets
 
 class BlePatternPage extends StatelessWidget {
   final int secondsBetweenSteps;
@@ -59,50 +62,14 @@ class _BlePatternState extends State<BlePattern> {
   @override
   void initState() {
     super.initState();
-
-    //if the bluetooth turns off we should navigate away from the page
-    ScannerStaticVars.bluetoothOn.addListener(popIfBluetoothOff);
-
-    //make sure that the scanner turn on before starting to gather data
-    ScannerStaticVars.isScanning.addListener(startWhenIsScaning);
-    ScannerStaticVars.wantToBeScanning.addListener(otherSetState);
-
-    //Start the scanner right after all the image load
+    //Start the scanner right after all the images load
     //otherwise the images wont load quickly when the device is busy
     WidgetsBinding.instance.addPostFrameCallback((_){
-      print("----LOADED");
-      ScannerStaticVars.startScan();
+      recursion();
     });
   }
 
-  @override
-  void dispose(){
-    ScannerStaticVars.wantToBeScanning.removeListener(otherSetState);
-    ScannerStaticVars.isScanning.removeListener(startWhenIsScaning);
-    ScannerStaticVars.bluetoothOn.removeListener(popIfBluetoothOff);
-    ScannerStaticVars.stopScan();
-    super.dispose();
-  }
-
-  otherSetState(){
-    setState(() {});
-  }
-
-  popIfBluetoothOff(){
-    if(ScannerStaticVars.bluetoothOn.value == false){
-      Navigator.of(context).pop(); 
-    }
-  }
-
-  startWhenIsScaning(){ 
-    setState(() {});
-    if(ScannerStaticVars.isScanning.value){
-      print("-------------------------STARTING THE SCAN-------------------------");
-      recursion();
-    }
-  }
-
-  //-----The Process-----
+  //-----The Process Variables-----
   int instructionNumber = 1; //starts at 1
   double progressThisStep = 0;
 
@@ -114,8 +81,7 @@ class _BlePatternState extends State<BlePattern> {
       intervalTimes.add(DateTime.now());
       if(mounted){
         Navigator.pushReplacement(context, PageTransition(
-          type: PageTransitionType.fade,
-          duration: Duration.zero, 
+          type: PageTransitionType.rightToLeft,
           child: PatternIdentify(
             intervalTimes: intervalTimes,
           ),
@@ -197,8 +163,7 @@ class _BlePatternState extends State<BlePattern> {
           child: Container(
             padding: EdgeInsets.fromLTRB(indicatorPadding, 0, indicatorPadding, 0),
             alignment: Alignment.center,
-            child: (ScannerStaticVars.isScanning.value)
-            ? percent.LinearPercentIndicator(
+            child: percent.LinearPercentIndicator(
               animation: false,
               animationDuration: 100,
               animateFromLastPercent: true,
@@ -206,35 +171,7 @@ class _BlePatternState extends State<BlePattern> {
               width: indicatorWidth,
               lineHeight: 16, 
               progressColor: Colors.lightGreenAccent,
-            )
-            : new Builder(builder: (BuildContext context) {
-              return Container(
-                child: InkWell(
-                  onTap: (){
-                    //Inform the user that it might fail
-                    final SnackBar msg = SnackBar(
-                      content: Text(
-                        'Trying To Re-Start The Scanner' 
-                        + '\n' 
-                        + 'If It Fails Please Try Again',
-                      ),
-                    );
-                    Scaffold.of(context).showSnackBar(msg);
-                    //Attempt to Start Up The Scanner
-                    ScannerStaticVars.startScan();
-                  },
-                  child: Container(
-                    child: Text(
-                      "Waiting For The Scanner To Start Up",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Navigation.blueGrey,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
+            ),
           ),
         )
       ],

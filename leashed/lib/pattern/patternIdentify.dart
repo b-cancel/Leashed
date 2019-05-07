@@ -129,9 +129,8 @@ class PatternIdentify extends StatelessWidget {
 
                       //try again but waiting a little longer
                       Navigator.pushReplacement(context, PageTransition(
-                        type: PageTransitionType.fade,
-                        duration: Duration.zero, 
-                        child: BlePattern(
+                        type: PageTransitionType.leftToRight,
+                        child: BlePatternPage(
                           secondsPerStep: Navigation.timeToDetectPattern.value,
                         ),
                       ));
@@ -416,13 +415,14 @@ class NoPatternFound extends StatelessWidget {
         child: DefaultTextStyle(
           style: TextStyle(
             color: Navigation.blueGrey,
-            fontSize: 32,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              new Text("A Matching Signal Pattern"),
+              new Text("A Matching"),
+              new Text("Signal Pattern"),
               new Text("Was Not Found"),
               new Text("Please Try Again"),
               new Text(""),
@@ -531,9 +531,8 @@ class DevicePattern extends StatelessWidget {
                       onPressed: (){
                         Navigation.timeToDetectPattern.value = Navigation.defaultTimeToDetectPattern.value; //RESET
                         Navigator.pushReplacement(context, PageTransition(
-                          type: PageTransitionType.fade,
-                          duration: Duration.zero, 
-                          child: AddEditDeviceDetails(
+                          type: PageTransitionType.rightToLeft,
+                          child: AddDeviceDetailsPage(
                             name: name,
                             id: id,
                             type: type,

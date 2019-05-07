@@ -23,8 +23,6 @@ class ScanStarter extends StatefulWidget {
 }
 
 class _ScanStarterState extends State<ScanStarter>{
-  final ValueNotifier<int> potentialMessageIndex = ValueNotifier<int>(0);
-
   @override
   void initState() {
     //super init
@@ -72,12 +70,12 @@ class _ScanStarterState extends State<ScanStarter>{
   }
 
   navigationAwayIfTurnedOff() async{
-    if(ScannerStaticVars.bluetoothOn.value == false){
-      ScannerStaticVars.stopScan();
-      Navigator.of(context).maybePop();
+    if(ScannerStaticVars.bluetoothOn.value){
+      startScanner();
     }
     else{
-      startScanner();
+      ScannerStaticVars.stopScan();
+      Navigator.of(context).maybePop();
     }
   }
 
@@ -93,14 +91,6 @@ class _ScanStarterState extends State<ScanStarter>{
   Widget build(BuildContext context) {
     if(ScannerStaticVars.bluetoothOn.value){
       if(ScannerStaticVars.isScanning.value){
-        //---Sizing for our Scanner
-        double height = MediaQuery.of(context).size.height / 5;
-        height *= (5/4);
-
-        //---Sizing For Our Arrow
-        double arrowWidth = (MediaQuery.of(context).size.width / 3) / 2;
-
-        //---Show Scanner
         return widget.child;
       }
       else{
@@ -174,6 +164,7 @@ class _ScanStarterState extends State<ScanStarter>{
   }
 }
 
+/*
 class Hints extends StatelessWidget {
   final List<String> lines;
 
@@ -266,7 +257,17 @@ class TriangleClipper extends CustomClipper<Path> {
   bool shouldReclip(TriangleClipper oldClipper) => false;
 }
 
-/*
+final ValueNotifier<int> potentialMessageIndex = ValueNotifier<int>(0);
+
+//---Sizing for our Scanner
+        double height = MediaQuery.of(context).size.height / 5;
+        height *= (5/4);
+
+        //---Sizing For Our Arrow
+        double arrowWidth = (MediaQuery.of(context).size.width / 3) / 2;
+
+        //---Show Scanner
+
 Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[

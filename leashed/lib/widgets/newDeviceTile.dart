@@ -27,16 +27,11 @@ class NewDeviceTile extends StatelessWidget {
       onTap: (){
         Navigator.push(context, PageTransition(
           type: PageTransitionType.rightToLeft,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text("Add Bluetooth Device"),
-            ),
-            body: AddEditDeviceDetails(
-              name: name,
-              id: id,
-              type: type,
-            ),
-          )
+          child: AddDeviceDetailsPage(
+            name: name,
+            id: id,
+            type: type,
+          ),
         ));
       },
       child: Column(

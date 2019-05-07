@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
-import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:system_setting/system_setting.dart';
 

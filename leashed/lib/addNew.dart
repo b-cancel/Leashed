@@ -2,19 +2,51 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:leashed/deviceFinder.dart';
-import 'package:leashed/deviceScanner.dart';
 import 'dart:math' as math;
 
 import 'package:leashed/navigation.dart';
-import 'package:leashed/recordSignature.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:image_picker/image_picker.dart';
 
 //TODO... use image_picker_saver 0.1.0
 //to also let users select images from the web
+
+class AddDeviceDetailsPage extends StatelessWidget {
+  final String name;
+  final String id;
+  final String type;
+
+  AddDeviceDetailsPage({
+    this.name,
+    this.id,
+    this.type,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Add Bluetooth Device"),
+      ),
+      body: AddEditDeviceDetails(
+        name: name,
+        id: id,
+        type: type,
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: (){
+          //pop self
+          Navigator.pop(context); 
+          //pop add device list page
+          Navigator.pop(context); 
+        },
+        icon: Icon(Icons.check),
+        label: Text("Done"),
+      ),
+    );
+  }
+}
 
 class AddEditDeviceDetails extends StatefulWidget {
   AddEditDeviceDetails({
