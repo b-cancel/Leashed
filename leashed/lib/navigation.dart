@@ -1,12 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:fluro/fluro.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:leashed/addNew.dart';
 import 'package:leashed/home.dart';
-import 'package:leashed/searchNew.dart';
-import 'package:leashed/settings.dart';
 
 //-------------------------Root Widget-------------------------
 

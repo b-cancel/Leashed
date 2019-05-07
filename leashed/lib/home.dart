@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -11,12 +10,9 @@ import 'package:leashed/navigation.dart';
 import 'package:leashed/scanner.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:leashed/widgets/gradientSlider.dart';
-import 'package:page_transition/page_transition.dart';
 
 import 'package:leashed/sliverModifications/sliverPersistentHeader.dart' as sliverPersistentHeader;
 import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSpaceBar;
-
-import 'dart:math' as math;
 
 //NOTE: so Material App Works properly
 class HomeStateLess extends StatelessWidget {

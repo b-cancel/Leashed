@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:leashed/addNew.dart';
-import 'package:leashed/deviceFinder.dart';
 import 'package:leashed/deviceScanner.dart';
 import 'package:leashed/homeHelper/deviceItem.dart';
 import 'package:leashed/homeHelper/navBar.dart';

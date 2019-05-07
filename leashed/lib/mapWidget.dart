@@ -1,18 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:leashed/addNew.dart';
-import 'package:leashed/deviceFinder.dart';
-import 'package:leashed/deviceScanner.dart';
-import 'package:leashed/homeHelper/deviceItem.dart';
 import 'package:leashed/navigation.dart';
-import 'package:location/location.dart';
-import 'package:page_transition/page_transition.dart';
-
-import 'dart:math' as math;
 
 class MapWidget extends StatefulWidget {
   final List<String> titles;
