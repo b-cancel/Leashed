@@ -437,8 +437,15 @@ class DeviceData{
     }
   }
 
-  removeDevice(){
-    //TODO... fill this in
+  //NOTE: this doesnt remove the device
+  //our device is simply auto garbage collected when we remove it from our list
+  //This function simply breaks the references this object holds to our locations
+  clearLocationReferences(){
+    List<String> locationsReferenced = locationKeyToRssiKey.keys.toList();
+    for(int i = 0; i < locationsReferenced.length; i++){
+      int locationKey = int.parse(locationsReferenced[i]);
+      DataManager.appData.locationData.decreaseReferenceCount(locationKey);
+    }
   }
 
   //-------------------------Static Functions
