@@ -86,7 +86,9 @@ class DataManager {
 class AppData{
   SettingsData settingsData;
   SosData sosData;
+  //NOTE: obviously there is no limit to this list
   List<DeviceData> deviceData;
+  //NOTE: there is a limit to this list
   LocationsData locationData;
 
   AppData(
@@ -280,23 +282,52 @@ class DeviceData{
   String imageUrl;
 
   //NOTE: we only add a new rssi update IF we get new rssi from the scanner
-  Queue<RssiUpdate> rssiUpdates;
-  int maxRssiUpdates;
+  Queue<RssiUpdate> _rssiUpdates;
+
+  //the location key is how many microsecondsBeforeEpoch for the GPS update
+  //the rssi key is how many microsecondsBeforeEpoch for the BT update
+  //NOTE: these are stored as strings from the sake of json.encode() working
+  //but ultimate we are storing ints here
+  Map<String, String> locationKeyToRssiKey;
+
+  //NOTE: for now this is just used to eliminate the older update
+  //when the maxRssiUpdates limit is passed
+  int maxUpdates;
+  //TODO: add a durationBeforeDeletionAllowed variable
+  //  -when we reach maxRssiUpdates we don't just remove the older update
+  //  -REMOVE the older update IF
+  //    -the difference between the newest and the oldest update
+  //    -is larger than durationBeforeDeletionAllowed
+  //  -REMOVE other update ELSE
+  //    -we remove an update that isnt as significant to tracking your location
+  //    -ideally we want to get rid of updates that are more closer together
+  //The IDEA behind this is, that we always know the general path of travel of our device
+  //For Example: knowing that I was in 10 different locations in starbucks isnt all that helpful
+  //So when I start getting rid of update data I should eliminate 9 of those 10 locations
+  //Before removing all the other single points that I received from all different locations
 
   DeviceData(
     this.id,
     this.type,
     this.friendlyName,
+    //always passable since friendly name will be copied to its value
     this.assignedName,
+    //always passable since default image will be copied to its value
     this.imageUrl,
-    this.rssiUpdates,
+    //always passable since a set of rssiUpdates have to have occured
+    //in order for you to detect the device in the first place
+    this._rssiUpdates,
     {
-      this.maxRssiUpdates,
+      //will ONLY have these if its not the first time this thing is added
+      this.locationKeyToRssiKey,
+      this.maxUpdates,
     }
   ){
-    //maxRssiUpdates is not passed when you add the device
-    if(maxRssiUpdates == null){
-      maxRssiUpdates = 100; //MANUAL DEFAULT
+    if(locationKeyToRssiKey == null){
+      locationKeyToRssiKey = new Map<String,String>();
+    }
+    if(maxUpdates == null){
+      maxUpdates = 100; //MANUAL DEFAULT
     }
   }
 
@@ -307,9 +338,53 @@ class DeviceData{
     map["friendlyName"] = json.encode(friendlyName);
     map["assignedName"] = json.encode(assignedName);
     map["imageUrl"] = json.encode(imageUrl);
-    map["rssiUpdates"] = json.encode(rssiUpdates);
-    map["maxRssiUpdates"] = json.encode(maxRssiUpdates);
+    map["rssiUpdates"] = json.encode(_rssiUpdates);
+    map["locationKeyToRssiKey"] = json.encode(locationKeyToRssiKey);
+    map["maxUpdates"] = json.encode(maxUpdates);
     return map;
+  }
+
+  //-------------------------Mess With The Queue
+
+  //NOTE: ONLY pass the optional param IF the GPS is known to be on
+  addUpdate(
+    RssiUpdate update, 
+    bool gpsOn,
+    //this will be the last gps update (only relevant within X Ammount of time)
+    {int microsecondsSinceEpochForThisGpsUpdate}
+    ){
+    //-----add to back of line (newer points)
+    _rssiUpdates.addLast(update); 
+
+    //-----device whether or not whether to also track a gps update
+    if(gpsOn && microsecondsSinceEpochForThisGpsUpdate != null){
+      //NOTE: we already have this location saved but we need to link it up to this update
+
+      //decide whether or not this location hasnt already been FIRST recorded by another rssi update
+      if(locationKeyToRssiKey.containsKey(microsecondsSinceEpochForThisGpsUpdate) == false){
+        String locationKey = microsecondsSinceEpochForThisGpsUpdate.toString();
+        String rssiKey = update.microsecondsSinceEpoch.toString();
+        locationKeyToRssiKey[locationKey] = rssiKey;
+      }
+      //ELSE... another update has already recorded this location
+    }
+    //ELSE... we updated our RSSI but 
+    //1. our gps is off OR 
+    //2. the last locaction was too far away to be relevnt
+
+    //-----remove data if needed
+    if(_rssiUpdates.length > maxUpdates){
+      //remove from front of line (older points)
+      _rssiUpdates.removeFirst();
+
+      //----------------------------------------------------------------------------------------------------
+      //TODO... reduce reference count by 1 for this particular GPS upate
+      //----------------------------------------------------------------------------------------------------
+    }
+  }
+
+  List<RssiUpdate> getUpdates(){
+    return _rssiUpdates.toList();
   }
 
   //-------------------------Static Functions
@@ -323,17 +398,17 @@ class DeviceData{
 
 class RssiUpdate{
   int value;
-  int dateTime; //from epoch
+  int microsecondsSinceEpoch;
 
   RssiUpdate(
     this.value,
-    this.dateTime,
+    this.microsecondsSinceEpoch,
   );
 
   Map toJson(){ 
     Map map = new Map();
     map["value"] = json.encode(value);
-    map["dateTime"] = json.encode(dateTime);
+    map["microsecondsFromEpoch"] = json.encode(microsecondsSinceEpoch);
     return map;
   }
 
@@ -348,29 +423,46 @@ class RssiUpdate{
 
 //-------------------------LOCATION DATA-------------------------
 
-//---
-//1. we are using a Queues so that we can keep a max of X items efficiently
-//2. this is because we dont really need constant time access
-//3. we need to be able to add to the back
-//4. we need to be able to remove from the front
-//5. the keys Queue in both can return an index 
-//    -that can then be used to find the item in another queue
-//---
-
 //NOTE: because Device Storage uses LocationStorage keys to keep track of their location history
 //we DO NOT remove any location marked as being used by Devices
 class LocationsData{
   //NOTE: we only add a new GPS update IF we get new GPS from the scanner
   //list of last couple gps updates (equivalent length)
-  Queue<LocationStorage> locations;
-  Queue<double> longitude;
-  Queue<int> dateTimeUpdates;
-  Queue<int> keys; //unique keys to things can address this location
-  final int maxLocationUpdatesStored = 125;
+  Queue<LocationStorage> _locations;
+  int maxUpdates;
+
+  LocationsData(
+    this._locations,
+    this.maxUpdates
+  );
+
+  //TODO: add a durationBeforeDeletionAllowed variable
+  //Explained in [DeviceData]
 
   Map toJson(){ 
     Map map = new Map();
+    map["locations"] = json.encode(_locations);
+    map["maxUpdates"] = json.encode(maxUpdates);
     return map;
+  }
+  
+  //-------------------------Mess With The Queue
+
+  //NOTE: ONLY pass the optional param IF the GPS is known to be on
+  addUpdate(LocationStorage update){
+    //-----add to back of line (newer points)
+    _locations.addLast(update); 
+
+    //-----remove data if needed
+    if(_locations.length > maxUpdates){
+      //remove from front of line (older points)
+      //TODO... only REMOVE IF the location isnt being used or reference by NO devices
+      _locations.removeFirst();
+    }
+  }
+
+  List<LocationStorage> getUpdates(){
+    return _locations.toList();
   }
 
   //-------------------------Static Functions
@@ -380,29 +472,44 @@ class LocationsData{
   }
 
   static LocationsData get defaultData{
-
+    return LocationsData(
+      new Queue<LocationStorage>(),
+      100, //MANUAL DEFAULT
+    );
   }
 }
 
 class LocationStorage{
   double latitude;
   double longitude;
-  int dateTimeUpdates; //microseconds from epoch
+  int microsecondsSinceEpoch;
+  int referenceCount;
 
   LocationStorage(
     this.latitude,
     this.longitude,
-    this.dateTimeUpdates,
-  );
+    this.microsecondsSinceEpoch,
+    {
+      this.referenceCount,
+    }
+  ){
+    if(referenceCount == null){
+      referenceCount = 0;
+    }
+  }
 
   Map toJson(){ 
     Map map = new Map();
+    map["latitude"] = json.encode(latitude);
+    map["longitude"] = json.encode(longitude);
+    map["microsecondsSinceEpoch"] = json.encode(microsecondsSinceEpoch);
+    map["referenceCount"] = json.encode(referenceCount);
     return map;
   }
 
   //-------------------------Static Functions
   
-  static LocationStorage toStruct(String fileString){
+  static LocationStorage toStruct(String string){
     //TODO... fill this in
   }
 
