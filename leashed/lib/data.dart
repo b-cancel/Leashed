@@ -9,8 +9,17 @@ import 'dart:async';
 
 //NOTE: do not use json.encode()
 //instead use myToJson()
+//EXCEPTIONS:
+//1. the encoding of SOME Strings MUST HAVE quotes
+//  - the String that actually store another data type dont require them
+//2. the encoding of a Map or List does use json.encode()
 
 //NOTE: Search "MANUAL DEFAULT" To Find The Defaults I Selected
+
+//TODO... test
+//"sosContacts": []
+//"deviceData": [],
+//"microsecondsSinceEpoch2Location": {},
 
 class DataManager {
   static String _fileName = "leashedAppData.txt";
@@ -37,13 +46,7 @@ class DataManager {
     await _writeStructToFile;
 
     //print our file
-    JsonEncoder encoder = new JsonEncoder.withIndent('  ');
-    String fileString = await _fileReference.readAsString();
-    Map jsonMap = jsonDecode(fileString);
-    print("-------------------------");
-    //print(jsonMap.toString());
-    print(encoder.convert(jsonMap));
-    print("-------------------------");
+    _printFile;
 
     /*
     //get references to the file
@@ -109,6 +112,15 @@ class DataManager {
     //convert String to Struct
     appData = AppData.toStruct(_fileString);
   }
+
+  static get _printFile async{
+    JsonEncoder encoder = new JsonEncoder.withIndent('  ');
+    String fileString = await _fileReference.readAsString();
+    Map jsonMap = jsonDecode(fileString);
+    print("-------------------------");
+    print(encoder.convert(jsonMap));
+    print("-------------------------");
+  }
 }
 
 //-------------------------APP DATA-------------------------
@@ -135,13 +147,12 @@ class AppData{
   Map toJson(){ 
     Map map = new Map();
     map[addQuotes("settingsData")] = myToJson(settingsData);
-    /*
-    map["sosData"] = json.encode(sosData);
-    map["microsecondsUntilLastGpsUpdateisUseless"] = json.encode(microsecondsUntilLastGpsUpdateisUseless);
-    map["deviceData"] = json.encode(deviceData);
-    map["defaultDeviceDataMaxUpdates"] = json.encode(defaultDeviceDataMaxUpdates);
-    map["locationData"] = json.encode(locationData);
-    */
+    map[addQuotes("sosData")] = myToJson(sosData);
+    map[addQuotes("microsecondsUntilLastGpsUpdateisUseless")] = myToJson(microsecondsUntilLastGpsUpdateisUseless);
+    map[addQuotes("deviceData")] = json.encode(deviceData);
+    map[addQuotes("defaultDeviceDataMaxUpdates")] = myToJson(defaultDeviceDataMaxUpdates);
+    map[addQuotes("locationData")] = myToJson(locationData);
+
     return map;
   }
 
@@ -210,8 +221,8 @@ class ColorSetting{
 
   Map toJson(){ 
     Map map = new Map();
-    map[addQuotes("checkDuration")] = json.encode(checkDuration);
-    map[addQuotes("intervalDuration")] = json.encode(intervalDuration);
+    map[addQuotes("checkDuration")] = myToJson(checkDuration);
+    map[addQuotes("intervalDuration")] = myToJson(intervalDuration);
     return map;
   }
   
@@ -259,8 +270,8 @@ class SosData{
 
   Map toJson(){ 
     Map map = new Map();
-    map["sosMessage"] = json.encode(sosMessage);
-    map["sosContacts"] = json.encode(sosContacts);
+    map[addQuotes("sosMessage")] = addQuotes(sosMessage); 
+    map[addQuotes("sosContacts")] = json.encode(sosContacts);
     return map;
   }
   
@@ -279,7 +290,7 @@ class SosData{
 }
 
 class SosContact{
-  String name;
+  String name; //TODO... we assume this CANT BE EMPTY (otherwise things will break)
   String label;
   String number;
 
@@ -291,9 +302,9 @@ class SosContact{
 
   Map toJson(){ 
     Map map = new Map();
-    map["name"] = json.encode(name);
-    map["label"] = json.encode(label);
-    map["number"] = json.encode(number);
+    map[addQuotes("name")] = addQuotes(name);
+    map[addQuotes("label")] = addQuotes(label);
+    map[addQuotes("number")] = addQuotes(number);
     return map;
   }
 
@@ -404,15 +415,15 @@ class DeviceData{
 
   Map toJson(){ 
     Map map = new Map();
-    map["id"] = json.encode(id);
-    map["type"] = json.encode(type);
-    map["friendlyName"] = json.encode(friendlyName);
-    map["assignedName"] = json.encode(assignedName);
-    map["imageUrl"] = json.encode(imageUrl);
-    map["microsecondsSinceEpoch2Value"] = json.encode(microsecondsSinceEpoch2Value);
+    map[addQuotes("id")] = addQuotes(id);
+    map[addQuotes("type")] = addQuotes(type);
+    map[addQuotes("friendlyName")] = addQuotes(friendlyName);
+    map[addQuotes("assignedName")] = addQuotes(assignedName);
+    map[addQuotes("imageUrl")] = addQuotes(imageUrl);
+    map[addQuotes("microsecondsSinceEpoch2Value")] = json.encode(microsecondsSinceEpoch2Value);
     //NOTE: we don't need to save rssiUpdatesOrder since its impliable from the above
-    map["locationKeyToRssiKey"] = json.encode(locationKeyToRssiKey);
-    map["maxUpdates"] = json.encode(maxUpdates);
+    map[addQuotes("locationKeyToRssiKey")] = json.encode(locationKeyToRssiKey);
+    map[addQuotes("maxUpdates")] = myToJson(maxUpdates);
     return map;
   }
 
@@ -515,10 +526,10 @@ class LocationsData{
 
   Map toJson(){ 
     Map map = new Map();
-    map["microsecondsSinceEpoch2Location"] = json.encode(microsecondsSinceEpoch2Location);
+    map[addQuotes("microsecondsSinceEpoch2Location")] = json.encode(microsecondsSinceEpoch2Location);
     //NOTE: we don't need to save locationUpdatesOrder since its impliable from the above
-    map["locationsReferenced"] = json.encode(locationsReferenced);
-    map["maxExtraUpdates"] = json.encode(maxExtraUpdates);
+    map[addQuotes("locationsReferenced")] = myToJson(locationsReferenced);
+    map[addQuotes("maxExtraUpdates")] = myToJson(maxExtraUpdates);
     return map;
   }
   
@@ -615,9 +626,9 @@ class LocationStorage{
 
   Map toJson(){ 
     Map map = new Map();
-    map["latitude"] = json.encode(latitude);
-    map["longitude"] = json.encode(longitude);
-    map["referenceCount"] = json.encode(referenceCount);
+    map[addQuotes("latitude")] = myToJson(latitude);
+    map[addQuotes("longitude")] = myToJson(longitude);
+    map[addQuotes("referenceCount")] = myToJson(referenceCount);
     return map;
   }
 
@@ -649,10 +660,13 @@ Queue<String> mapToOrderedQueue(Map<String, dynamic> map){
 
 final String quote = "\"";
 remQuotes(String str){
-  String startChar = str[0];
-  String endChar = str[str.length - 1];
-  if(startChar == quote && endChar == quote){
-    return str.substring(1, str.length-2);
+  if(str.length >= 2){
+    String startChar = str[0];
+    String endChar = str[str.length - 1];
+    if(startChar == quote && endChar == quote){
+      return str.substring(1, str.length-2);
+    }
+    else return str;
   }
   else return str;
 }
@@ -662,5 +676,13 @@ String addQuotes(String str){
 }
 
 String myToJson(dynamic data){
-  return remQuotes(data.toJson().toString());
+  //handle primatives
+  if(data is int) return remQuotes(data.toString());
+  else if(data is bool) return remQuotes(data.toString());
+  else if(data is String){
+    return remQuotes(data);
+  }
+  else{
+    return remQuotes(data.toJson().toString());
+  }
 }
