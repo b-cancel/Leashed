@@ -406,9 +406,9 @@ class DeviceData{
 
     //-----add gps update to rssi update
     int rssiDateTime = microsecondsSinceEpoch;
-    int lastGpsDateTime = DataManager.appData.locationData.locations.last.microsecondsSinceEpoch;
+    String lastGpsDateTime = DataManager.appData.locationData.microsecondsSinceEpoch2Location.keys.last;
     //NOTE: we KNOW that rssiDateTime > gpsDateTime
-    int microsecondsSinceLastGpsUpdate = rssiDateTime - lastGpsDateTime;
+    int microsecondsSinceLastGpsUpdate = rssiDateTime - int.parse(lastGpsDateTime);
 
     if(microsecondsSinceLastGpsUpdate < DataManager.appData.microsecondsUntilLastGpsUpdateisUseless){
       //NOTE: every NEW gps location can only map to ONE rssiUpdate (the first it matches with)
@@ -416,9 +416,8 @@ class DeviceData{
       //decide whether or not this location hasnt already been FIRST recorded by another rssi update
       if(locationKeyToRssiKey.containsKey(lastGpsDateTime) == false){
         //save the location key
-        String locationKeyString = lastGpsDateTime.toString();
         String rssiKeyString = rssiDateTime.toString();
-        locationKeyToRssiKey[locationKeyString] = rssiKeyString;
+        locationKeyToRssiKey[lastGpsDateTime] = rssiKeyString;
 
         //tell the location we are using it
         DataManager.appData.locationData.increaseReferenceCount(lastGpsDateTime);
@@ -440,15 +439,13 @@ class DeviceData{
       int rssiValueForOldest = microsecondsSinceEpoch2Value[microsecondsSinceEpochForOldest];
 
       //get the location it maps to
-      String locationKeyString = locationKeyToRssiKey.keys.firstWhere(
+      String locationKey = locationKeyToRssiKey.keys.firstWhere(
         (key) => (int.parse(locationKeyToRssiKey[key]) == rssiValueForOldest), 
         orElse: () => null,
       );
 
       //this rssi udpate has a gps update reference
-      if(locationKeyString != null){
-        //reduce its reference count
-        int locationKey = int.parse(locationKeyString);
+      if(locationKey != null){ //reduce its reference count
         DataManager.appData.locationData.decreaseReferenceCount(locationKey);
       }
       
@@ -464,8 +461,7 @@ class DeviceData{
   clearLocationReferences(){
     List<String> locationsReferenced = locationKeyToRssiKey.keys.toList();
     for(int i = 0; i < locationsReferenced.length; i++){
-      int locationKey = int.parse(locationsReferenced[i]);
-      DataManager.appData.locationData.decreaseReferenceCount(locationKey);
+      DataManager.appData.locationData.decreaseReferenceCount(locationsReferenced[i]);
     }
   }
 
@@ -485,22 +481,41 @@ class DeviceData{
 class LocationsData{
   //NOTE: we only add a new GPS update IF we get new GPS from the scanner
   //list of last couple gps updates (equivalent length)
-  Queue<LocationStorage> locations; //DONT ADD MANUALLY (use addUpdate)
+  Map<String, LocationStorage> microsecondsSinceEpoch2Location;
+  Queue<String> locationUpdatesOrder; //DONT ADD MANUALLY (use addUpdate)
   int locationsReferenced;
   int maxExtraUpdates;
 
   LocationsData(
-    this.locations,
+    this.microsecondsSinceEpoch2Location,
     this.locationsReferenced,
     this.maxExtraUpdates
-  );
+  ){
+    //NOTE: locationUpdatesOrder can be easily implied by reading in
+    //microsecondsSinceEpoch2Location
+
+    /*
+    //create empty queue for filling
+    rssiUpdatesOrder = Queue<String>();
+    //temporary rssiUpdate for easy sorting
+    List<String> rssiUpdatesOrderList = microsecondsSinceEpoch2Value.keys;
+    //smallest to largest (11, 21) 
+    //11 since epoch happened further back than 21 since epoch
+    rssiUpdatesOrderList.sort(); 
+    //add the smallest numbers to the back of the line first
+    for(int i = 0; i < rssiUpdatesOrderList.length; i++){
+      rssiUpdatesOrder.addLast(rssiUpdatesOrderList[i]);
+    }
+    */
+  }
 
   //TODO: add a durationBeforeDeletionAllowed variable
   //Explained in [DeviceData]
 
   Map toJson(){ 
     Map map = new Map();
-    map["locations"] = json.encode(locations);
+    map["microsecondsSinceEpoch2Location"] = json.encode(microsecondsSinceEpoch2Location);
+    //NOTE: we don't need to save locationUpdatesOrder since its impliable from the above
     map["locationsReferenced"] = json.encode(locationsReferenced);
     map["maxUpdates"] = json.encode(maxExtraUpdates);
     return map;
@@ -544,12 +559,12 @@ class LocationsData{
     }
   }
 
-  increaseReferenceCount(int microsecondsSinceEpochKEY){
+  increaseReferenceCount(String microsecondsSinceEpochKEY){
     //TODO... increase the reference count
     //TODO... IF its the first time we are referencing this increase the counter
   }
 
-  decreaseReferenceCount(int microsecondsSinceEpochKEY){
+  decreaseReferenceCount(String microsecondsSinceEpochKEY){
     //TODO... decrease reference count
     //TODO... IF its NOW not reference then decrease the counter
   }
@@ -574,13 +589,11 @@ class LocationsData{
 class LocationStorage{
   double latitude;
   double longitude;
-  int microsecondsSinceEpoch;
   int referenceCount;
 
   LocationStorage(
     this.latitude,
     this.longitude,
-    this.microsecondsSinceEpoch,
     {
       this.referenceCount,
     }
@@ -594,7 +607,6 @@ class LocationStorage{
     Map map = new Map();
     map["latitude"] = json.encode(latitude);
     map["longitude"] = json.encode(longitude);
-    map["microsecondsSinceEpoch"] = json.encode(microsecondsSinceEpoch);
     map["referenceCount"] = json.encode(referenceCount);
     return map;
   }
