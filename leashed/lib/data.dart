@@ -52,7 +52,7 @@ class DataManager {
   }
   
   static get _writeStructWithDefaults async{
-    appData = AppData.defaultData;
+    appData = AppData.defaultData; //TODO... currently here
   }
 
   static get _writeStructToFile async{
@@ -70,12 +70,12 @@ class DataManager {
   }
 }
 
-//-------------------------STATIC STRUCTS-------------------------
+//-------------------------STRUCT-------------------------
 
 class AppData{
   SettingsStorage settingData;
-  LocationsStorage locationData;
-  List<DeviceStorage> deviceData;
+  //LocationsStorage locationData;
+  //List<DeviceStorage> deviceData;
 
   AppData(){
 
@@ -104,9 +104,86 @@ class SettingsStorage{
   String sosMessage;
   List<SosContact> sosContacts;
 
+  SettingsStorage(){
 
+  }
+
+  Map get toJson { 
+    Map map = new Map();
+    return map;
+  }
+
+  //-------------------------Static Functions
+  
+  static SettingsStorage toStruct(String fileString){
+
+  }
+
+  static SettingsStorage get defaultData{
+
+  }
 }
 
+class ColorSetting{
+  int checkDuration;
+  int intervalDuration;
+
+  ColorSetting(
+    int checkDuration,
+    int intervalDuration,
+  ){
+    this.checkDuration = checkDuration;
+    this.intervalDuration = intervalDuration;
+  }
+  
+  Map get toJson { 
+    Map map = new Map();
+    return map;
+  }
+
+  //-------------------------Static Functions
+  
+  static ColorSetting toStruct(String fileString){
+
+  }
+
+  static ColorSetting get defaultData{
+
+  }
+}
+
+class SosContact{
+  String name;
+  String label;
+  String number;
+
+  SosContact(
+    String name, 
+    String label, 
+    String number,
+  ){
+    this.name = name;
+    this.label = label;
+    this.number = number;
+  }
+    
+  Map get toJson { 
+    Map map = new Map();
+    return map;
+  }
+
+  //-------------------------Static Functions
+  
+  static SosContact toStruct(String fileString){
+
+  }
+
+  static SosContact get defaultData{
+
+  }
+}
+
+/*
 //NOTE: from (1)Bluetooth (2)GPS
 //1. I need to be able to access the location from the dateTime [constantly time]
 //2. I need have a dynamic data structure
@@ -209,34 +286,4 @@ class DeviceStorage
   int maxLocationUpdates;
   }  
 }
-
-//-------------------------NON STATIC STRUCTS-------------------------
-
-class ColorSetting{
-  int checkDuration;
-  int intervalDuration;
-
-  ColorSetting(
-    int checkDuration,
-    int intervalDuration,
-  ){
-    this.checkDuration = checkDuration;
-    this.intervalDuration = intervalDuration;
-  }
-}
-
-class SosContact{
-  String name;
-  String label;
-  String number;
-
-  SosContact(
-    String name, 
-    String label, 
-    String number,
-  ){
-    this.name = name;
-    this.label = label;
-    this.number = number;
-  }
-}
+*/
