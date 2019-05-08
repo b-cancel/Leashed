@@ -359,20 +359,7 @@ class DeviceData{
       this.maxUpdates,
     }
   ){
-    //NOTE: rssiUpdatesOrder can be easily implied by reading in
-    //microsecondsSinceEpoch2Value
-
-    //create empty queue for filling
-    rssiUpdatesOrder = Queue<String>();
-    //temporary rssiUpdate for easy sorting
-    List<String> rssiUpdatesOrderList = microsecondsSinceEpoch2Value.keys;
-    //smallest to largest (11, 21) 
-    //11 since epoch happened further back than 21 since epoch
-    rssiUpdatesOrderList.sort(); 
-    //add the smallest numbers to the back of the line first
-    for(int i = 0; i < rssiUpdatesOrderList.length; i++){
-      rssiUpdatesOrder.addLast(rssiUpdatesOrderList[i]);
-    }
+    rssiUpdatesOrder = mapToOrderedQueue(microsecondsSinceEpoch2Value);
 
     //NOTE: add defaults for the first time we create this
     if(locationKeyToRssiKey == null){
@@ -491,22 +478,7 @@ class LocationsData{
     this.locationsReferenced,
     this.maxExtraUpdates
   ){
-    //NOTE: locationUpdatesOrder can be easily implied by reading in
-    //microsecondsSinceEpoch2Location
-
-    /*
-    //create empty queue for filling
-    rssiUpdatesOrder = Queue<String>();
-    //temporary rssiUpdate for easy sorting
-    List<String> rssiUpdatesOrderList = microsecondsSinceEpoch2Value.keys;
-    //smallest to largest (11, 21) 
-    //11 since epoch happened further back than 21 since epoch
-    rssiUpdatesOrderList.sort(); 
-    //add the smallest numbers to the back of the line first
-    for(int i = 0; i < rssiUpdatesOrderList.length; i++){
-      rssiUpdatesOrder.addLast(rssiUpdatesOrderList[i]);
-    }
-    */
+    locationUpdatesOrder = mapToOrderedQueue(microsecondsSinceEpoch2Location);
   }
 
   //TODO: add a durationBeforeDeletionAllowed variable
@@ -517,7 +489,7 @@ class LocationsData{
     map["microsecondsSinceEpoch2Location"] = json.encode(microsecondsSinceEpoch2Location);
     //NOTE: we don't need to save locationUpdatesOrder since its impliable from the above
     map["locationsReferenced"] = json.encode(locationsReferenced);
-    map["maxUpdates"] = json.encode(maxExtraUpdates);
+    map["maxExtraUpdates"] = json.encode(maxExtraUpdates);
     return map;
   }
   
@@ -526,13 +498,14 @@ class LocationsData{
   //NOTE: ONLY pass the optional param IF the GPS is known to be on
   addUpdate(double latitude, double longitude, int microsecondsSinceEpoch){
     //-----create struct
-    LocationStorage update = LocationStorage(latitude, longitude, microsecondsSinceEpoch);
+    LocationStorage update = LocationStorage(latitude, longitude);
 
     //-----add to back of line (newer points)
-    locations.addLast(update); 
+    locationUpdatesOrder.addLast(microsecondsSinceEpoch.toString()); 
+    microsecondsSinceEpoch2Location[microsecondsSinceEpoch.toString()] = update;
 
     //-----remove data if needed
-    if(locations.length > (locationsReferenced + maxExtraUpdates)){
+    if(locationUpdatesOrder.length > (locationsReferenced + maxExtraUpdates)){
       //remove from front of line (older points)
       //NOTE: we are removing the oldest point possible that ISN'T being used by a BLE Device
 
@@ -540,7 +513,7 @@ class LocationsData{
       LocationStorage locationToRemove;
 
       //iterate through all locations to find the FIRST that isn't being referenced
-      List<LocationStorage> theLocations = locations.toList();
+      List<LocationStorage> theLocations = locationUpdatesOrder.toList();
       int indexBeingChecked = 0;
       while(locationToRemove == null){
         LocationStorage thisLocation = theLocations[indexBeingChecked];
@@ -560,13 +533,19 @@ class LocationsData{
   }
 
   increaseReferenceCount(String microsecondsSinceEpochKEY){
-    //TODO... increase the reference count
-    //TODO... IF its the first time we are referencing this increase the counter
+    LocationStorage locationToUpdate = microsecondsSinceEpoch2Location[microsecondsSinceEpochKEY];
+    locationToUpdate.referenceCount += 1;
+    if(locationToUpdate.referenceCount == 1){ //first time we are referencing this location
+      locationsReferenced++;
+    }
   }
 
   decreaseReferenceCount(String microsecondsSinceEpochKEY){
-    //TODO... decrease reference count
-    //TODO... IF its NOW not reference then decrease the counter
+    LocationStorage locationToUpdate = microsecondsSinceEpoch2Location[microsecondsSinceEpochKEY];
+    locationToUpdate.referenceCount -= 1;
+    if(locationToUpdate.referenceCount == 0){ //we are no longer referencing this location
+      locationsReferenced--;
+    }
   }
 
   //-------------------------Static Functions
@@ -577,7 +556,7 @@ class LocationsData{
 
   static LocationsData get defaultData{
     return LocationsData(
-      new Queue<LocationStorage>(),
+      new Map<String, LocationStorage>(),
       //initially you have no locations 
       //and therefore no references
       0, 
@@ -618,4 +597,21 @@ class LocationStorage{
   }
 
   //NOTE: has no default(would be added manually)
+}
+
+//NOTE: orderedQueue can be easily implied by reading in map
+Queue<String> mapToOrderedQueue(Map<String, dynamic> map){
+  //create empty queue for filling
+  Queue<String> orderedQueue = Queue<String>();
+  //temporary rssiUpdate for easy sorting
+  List<String> keyOrderedList = map.keys;
+  //smallest to largest (11, 21) 
+  //11 since epoch happened further back than 21 since epoch
+  keyOrderedList.sort(); 
+  //add the smallest numbers to the back of the line first
+  for(int i = 0; i < keyOrderedList.length; i++){
+    orderedQueue.addLast(keyOrderedList[i]);
+  }
+  //return the queue
+  return orderedQueue;
 }
