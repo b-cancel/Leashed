@@ -7,6 +7,9 @@ import 'package:flutter_blue/flutter_blue.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 
+//NOTE: do not use json.encode()
+//instead use myToJson()
+
 //NOTE: Search "MANUAL DEFAULT" To Find The Defaults I Selected
 
 class DataManager {
@@ -17,6 +20,32 @@ class DataManager {
   static AppData appData; //accessible by all other functions
 
   static init() async{
+    //get references to the file
+    _filePath = await _localFilePath;
+    
+    //create or read the file
+    _fileReference = File(_filePath);
+
+    //delete the file
+    if(_fileExists) _deleteFile;
+    //create the file
+    await _createFile;
+
+    //fill our structs with defaults
+    await _writeStructWithDefaults;
+    //save the defaults on in the file
+    await _writeStructToFile;
+
+    //print our file
+    JsonEncoder encoder = new JsonEncoder.withIndent('  ');
+    String fileString = await _fileReference.readAsString();
+    Map jsonMap = jsonDecode(fileString);
+    print("-------------------------");
+    //print(jsonMap.toString());
+    print(encoder.convert(jsonMap));
+    print("-------------------------");
+
+    /*
     //get references to the file
     _filePath = await _localFilePath;
     
@@ -38,6 +67,7 @@ class DataManager {
       //read the file into struct
       await _writeFileToStruct;
     }
+    */
   }
 
   static bool get _fileExists{
@@ -68,7 +98,7 @@ class DataManager {
 
   static get _writeStructToFile async{
     //convert Struct to String
-    _fileString = json.encode(appData);
+    _fileString = myToJson(appData);
     //write file
     await _fileReference.writeAsString(_fileString);
   }
@@ -104,12 +134,14 @@ class AppData{
 
   Map toJson(){ 
     Map map = new Map();
-    map["settingsData"] = json.encode(settingsData);
+    map[addQuotes("settingsData")] = myToJson(settingsData);
+    /*
     map["sosData"] = json.encode(sosData);
     map["microsecondsUntilLastGpsUpdateisUseless"] = json.encode(microsecondsUntilLastGpsUpdateisUseless);
     map["deviceData"] = json.encode(deviceData);
     map["defaultDeviceDataMaxUpdates"] = json.encode(defaultDeviceDataMaxUpdates);
     map["locationData"] = json.encode(locationData);
+    */
     return map;
   }
 
@@ -146,9 +178,9 @@ class SettingsData{
 
   Map toJson(){ 
     Map map = new Map();
-    map["redSetting"] = json.encode(redSetting);
-    map["yellowSetting"] = json.encode(yellowSetting);
-    map["greenSetting"] = json.encode(greenSetting);
+    map[addQuotes("redSetting")] = redSetting.toJson().toString();
+    map[addQuotes("yellowSetting")] = yellowSetting.toJson().toString();
+    map[addQuotes("greenSetting")] = greenSetting.toJson().toString();
     return map;
   }
 
@@ -178,8 +210,8 @@ class ColorSetting{
 
   Map toJson(){ 
     Map map = new Map();
-    map["checkDuration"] = json.encode(checkDuration);
-    map["intervalDuration"] = json.encode(intervalDuration);
+    map[addQuotes("checkDuration")] = json.encode(checkDuration);
+    map[addQuotes("intervalDuration")] = json.encode(intervalDuration);
     return map;
   }
   
@@ -603,7 +635,7 @@ Queue<String> mapToOrderedQueue(Map<String, dynamic> map){
   //create empty queue for filling
   Queue<String> orderedQueue = Queue<String>();
   //temporary rssiUpdate for easy sorting
-  List<String> keyOrderedList = map.keys;
+  List<String> keyOrderedList = map.keys.toList();
   //smallest to largest (11, 21) 
   //11 since epoch happened further back than 21 since epoch
   keyOrderedList.sort(); 
@@ -613,4 +645,22 @@ Queue<String> mapToOrderedQueue(Map<String, dynamic> map){
   }
   //return the queue
   return orderedQueue;
+}
+
+final String quote = "\"";
+remQuotes(String str){
+  String startChar = str[0];
+  String endChar = str[str.length - 1];
+  if(startChar == quote && endChar == quote){
+    return str.substring(1, str.length-2);
+  }
+  else return str;
+}
+
+String addQuotes(String str){
+  return quote + str + quote;
+}
+
+String myToJson(dynamic data){
+  return remQuotes(data.toJson().toString());
 }

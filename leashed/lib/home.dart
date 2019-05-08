@@ -19,7 +19,6 @@ import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSp
 class HomeStateLess extends StatelessWidget {
   void initScanner()async {
     ScannerStaticVars.init();
-    DataManager.init();
   }
 
   @override
