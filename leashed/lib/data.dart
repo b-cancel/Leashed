@@ -293,13 +293,15 @@ class DeviceData{
   String imageUrl;
 
   //NOTE: we only add a new rssi update IF we get new rssi from the scanner
-  Queue<RssiUpdate> rssiUpdates; //DONT ADD MANUALLY (use addUpdate)
+  //DONT ADD MANUALLY (use addUpdate)
+  Map<String, int> microsecondsSinceEpoch2Value;
+  Queue<String> rssiUpdatesOrder; 
 
   //the location key is how many microsecondsBeforeEpoch for the GPS update
   //the rssi key is how many microsecondsBeforeEpoch for the BT update
-  //NOTE: these are stored as strings from the sake of json.encode() working
-  //  - it only know how to automatically toJson maps with String keys
-  //but ultimate we are storing ints here
+  //NOTE: the keys are stored as strings from the sake of json.encode() working
+  //  - it only knows how to automatically toJson maps with String keys
+  //but ultimately we are storing ints here
   Map<String, String> locationKeyToRssiKey;
   //TODO... what we really need is a two way map...
   //I should be able to 
@@ -350,13 +352,29 @@ class DeviceData{
     this.imageUrl,
     //always passable since a set of rssiUpdates have to have occured
     //in order for you to detect the device in the first place
-    this.rssiUpdates,
+    this.microsecondsSinceEpoch2Value,
     {
       //will ONLY have these if its not the first time this thing is added
       this.locationKeyToRssiKey,
       this.maxUpdates,
     }
   ){
+    //NOTE: rssiUpdatesOrder can be easily implied by reading in
+    //microsecondsSinceEpoch2Value
+
+    //create empty queue for filling
+    rssiUpdatesOrder = Queue<String>();
+    //temporary rssiUpdate for easy sorting
+    List<String> rssiUpdatesOrderList = microsecondsSinceEpoch2Value.keys;
+    //smallest to largest (11, 21) 
+    //11 since epoch happened further back than 21 since epoch
+    rssiUpdatesOrderList.sort(); 
+    //add the smallest numbers to the back of the line first
+    for(int i = 0; i < rssiUpdatesOrderList.length; i++){
+      rssiUpdatesOrder.addLast(rssiUpdatesOrderList[i]);
+    }
+
+    //NOTE: add defaults for the first time we create this
     if(locationKeyToRssiKey == null){
       locationKeyToRssiKey = new Map<String,String>();
     }
@@ -372,7 +390,8 @@ class DeviceData{
     map["friendlyName"] = json.encode(friendlyName);
     map["assignedName"] = json.encode(assignedName);
     map["imageUrl"] = json.encode(imageUrl);
-    map["rssiUpdates"] = json.encode(rssiUpdates);
+    map["microsecondsSinceEpoch2Value"] = json.encode(microsecondsSinceEpoch2Value);
+    //NOTE: we don't need to save rssiUpdatesOrder since its impliable from the above
     map["locationKeyToRssiKey"] = json.encode(locationKeyToRssiKey);
     map["maxUpdates"] = json.encode(maxUpdates);
     return map;
@@ -381,14 +400,12 @@ class DeviceData{
   //-------------------------Mess With The Queue
 
   addUpdate(int value, int microsecondsSinceEpoch){
-    //-----create struct
-    RssiUpdate update = RssiUpdate(value, microsecondsSinceEpoch);
-
     //-----add to back of line (newer points)
-    rssiUpdates.addLast(update); 
+    microsecondsSinceEpoch2Value[microsecondsSinceEpoch.toString()] = value;
+    rssiUpdatesOrder.addLast(microsecondsSinceEpoch.toString()); 
 
     //-----add gps update to rssi update
-    int rssiDateTime = update.microsecondsSinceEpoch;
+    int rssiDateTime = microsecondsSinceEpoch;
     int lastGpsDateTime = DataManager.appData.locationData.locations.last.microsecondsSinceEpoch;
     //NOTE: we KNOW that rssiDateTime > gpsDateTime
     int microsecondsSinceLastGpsUpdate = rssiDateTime - lastGpsDateTime;
@@ -413,15 +430,18 @@ class DeviceData{
     //2. the GPS simply isn't working properly
 
     //-----remove data if needed
-    if(rssiUpdates.length > maxUpdates){
+    if(rssiUpdatesOrder.length > maxUpdates){
       //---tell the location we are no longer using it
 
+      //get the oldest key
+      String microsecondsSinceEpochForOldest = rssiUpdatesOrder.first;
+
       //get the key of the rssi update we are removing
-      int valueOr_RssiKey = rssiUpdates.first.microsecondsSinceEpoch;
+      int rssiValueForOldest = microsecondsSinceEpoch2Value[microsecondsSinceEpochForOldest];
 
       //get the location it maps to
       String locationKeyString = locationKeyToRssiKey.keys.firstWhere(
-        (key) => (int.parse(locationKeyToRssiKey[key]) == valueOr_RssiKey), 
+        (key) => (int.parse(locationKeyToRssiKey[key]) == rssiValueForOldest), 
         orElse: () => null,
       );
 
@@ -433,7 +453,8 @@ class DeviceData{
       }
       
       //---remove from front of line (older points)
-      rssiUpdates.removeFirst();
+      rssiUpdatesOrder.removeFirst();
+      microsecondsSinceEpoch2Value.remove(microsecondsSinceEpochForOldest);
     }
   }
 
@@ -452,31 +473,6 @@ class DeviceData{
   
   static DeviceData toStruct(String string){
     //TODO... fill this in
-  }
-
-  //NOTE: has no default(would be added manually)
-}
-
-class RssiUpdate{
-  int value;
-  int microsecondsSinceEpoch;
-
-  RssiUpdate(
-    this.value,
-    this.microsecondsSinceEpoch,
-  );
-
-  Map toJson(){ 
-    Map map = new Map();
-    map["value"] = json.encode(value);
-    map["microsecondsFromEpoch"] = json.encode(microsecondsSinceEpoch);
-    return map;
-  }
-
-  //-------------------------Static Functions
-
-  static RssiUpdate toStruct(String string){
-
   }
 
   //NOTE: has no default(would be added manually)
