@@ -3,6 +3,341 @@ import 'package:leashed/navigation.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:charts_common/common.dart' as common;
 
+class ScannerUI extends StatefulWidget {
+  final String deviceID;
+  final Function animateToPage;
+
+  ScannerUI({
+    this.deviceID,
+    this.animateToPage,
+  });
+
+  @override
+  _ScannerUIState createState() => _ScannerUIState();
+}
+
+class _ScannerUIState extends State<ScannerUI> {
+  final ValueNotifier<int> potentialMessageIndex = ValueNotifier<int>(0);
+
+  @override
+  Widget build(BuildContext context) {
+    //---Sizing for our Scanner
+    double height = MediaQuery.of(context).size.height / 5;
+    height *= (5/4);
+
+    //---Sizing For Our Arrow
+    double arrowWidth = (MediaQuery.of(context).size.width / 3) / 2;
+
+    //---Show Scanner
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        DefaultTextStyle(
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Navigation.blueGrey,
+            fontSize: 18,
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Expanded(
+                  child: Container(
+                    color: Navigation.blueGrey,
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: DefaultTextStyle(
+                        style: TextStyle(
+                          color: Colors.white
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Text("Signal"),
+                            Text("Strength"),
+                            Text("Of"),
+                            RichText(
+                              text: TextSpan(
+                                text: "91",
+                                style: TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Text("Out of 100"),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                new ArrowWidget(
+                  arrowWidth: arrowWidth, 
+                  outlineWidth: 15,
+                  outlineColor: Navigation.blueGrey,
+                  arrowColor: Navigation.blueGrey,
+                ),
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Text("Indicates"),
+                          Text("You"),
+                          Text("Are"),
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: "10",
+                                  style: TextStyle(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: Navigation.blueGrey,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: "ft",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Navigation.blueGrey,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ]
+                            ),
+                          ),
+                          Text("Away"),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            color: Colors.grey[350],
+            height: height,
+            child: Text("middle"),
+          ),
+        ),
+        InkWell(
+          onLongPress: (){
+            //go to next potential message
+            potentialMessageIndex.value += 1;
+
+            //make sure we don't overflow
+            if(potentialMessageIndex.value >= 4){ //TODO... set depending
+              potentialMessageIndex.value = 0;
+            }
+            
+            //show UI difference
+            setState(() {});
+          },
+          child: Container(
+            alignment: Alignment.center,
+            padding: EdgeInsets.all(16),
+            child: DefaultTextStyle(
+              style: TextStyle(
+                color: Navigation.blueGrey,
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                //NOTE: I can't pass in the children otherwise DefaultTextStyle won't work
+                children: <Widget>[
+                  Opacity(
+                    opacity: (potentialMessageIndex.value == 0) ? 1 : 0,
+                    child: new Hints(
+                      lines: [
+                        "Record The Device's Signature",
+                        "And We Can Help You",
+                        "Interpret The Device's Signal",
+                      ],
+                    ),
+                  ),
+                  Opacity(
+                    opacity: (potentialMessageIndex.value == 1) ? 1 : 0,
+                    child: Hints(
+                      lines: [
+                        "You Are Between",
+                        "45 And 250 ft",
+                        "From The Device",
+                      ],
+                    ),
+                  ),
+                  Opacity(
+                    opacity: (potentialMessageIndex.value == 2) ? 1 : 0,
+                    child: DefaultTextStyle(
+                      style: TextStyle(
+                        color: Navigation.blueGrey,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28,
+                      ),
+                      child: Hints(
+                        lines: [
+                          "You Are Getting Closer",
+                        ],
+                      ),
+                    ),
+                  ),
+                  Opacity(
+                    opacity: (potentialMessageIndex.value == 3) ? 1 : 0,
+                    child: DefaultTextStyle(
+                      style: TextStyle(
+                        color: Navigation.blueGrey,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28,
+                      ),
+                      child: Hints(
+                        lines: [
+                          "You Are Getting Further",
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class Hints extends StatelessWidget {
+  final List<String> lines;
+
+  const Hints({
+    this.lines,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> lineWidgets = new List<Widget>();
+    for(int i = 0; i < lines.length; i++){
+      lineWidgets.add(Text(lines[i]));
+    }
+
+    return Column(
+      children: lineWidgets,
+    );
+  }
+}
+
+class ArrowWidget extends StatelessWidget {
+  const ArrowWidget({
+    @required this.arrowWidth,
+    @required this.outlineWidth,
+    this.cleanOutline: false,
+    @required this.outlineColor,
+    @required this.arrowColor,
+  });
+
+  final double arrowWidth;
+  final double outlineWidth;
+  final bool cleanOutline;
+  final Color outlineColor;
+  final Color arrowColor;
+
+  @override
+  Widget build(BuildContext context) {
+    double arrowHeight = 0;
+
+    return Container(
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: <Widget>[
+          ClipPath(
+            clipper: TriangleClipper(),
+            child: Container(
+              height: arrowHeight,
+              width: arrowWidth + outlineWidth,
+              color: outlineColor,
+              child: Text(""),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+              top: (cleanOutline)
+              ? outlineWidth / 2
+              : 0,
+            ),
+            child: ClipPath(
+              clipper: TriangleClipper(),
+              child: Container(
+                height: arrowHeight - (
+                  (cleanOutline) 
+                  ? outlineWidth 
+                  : 0
+                ),
+                width: arrowWidth,
+                color: arrowColor,
+                child: Text(""),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TriangleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0.0, size.height);
+    path.lineTo(size.width, size.height/2);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(TriangleClipper oldClipper) => false;
+}
+
+class WhiteCircle extends StatelessWidget {
+  final String value;
+
+  const WhiteCircle({
+    this.value,
+    Key key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(8),
+      child: Container(
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(100),
+          color: Colors.white,
+        ),
+        child: new Text(
+          value,
+          style: TextStyle(
+            color: Navigation.blueGrey,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 //TODO...
 
 //for both(rssi and slope)
@@ -24,19 +359,8 @@ import 'package:charts_common/common.dart' as common;
 
 //NOTE: we know for a fact that when we arrive at this widget our bluetooth is on
 
-class ScannerUI extends StatefulWidget {
-  final String deviceID;
-
-  ScannerUI({
-    this.deviceID,
-  });
-
-  @override
-  _ScannerUIState createState() => _ScannerUIState();
-}
-
+/*
 class _ScannerUIState extends State<ScannerUI> {
-  /*
   ValueNotifier<bool> keyFound = ValueNotifier<bool>(true);
 
   @override
@@ -65,7 +389,6 @@ class _ScannerUIState extends State<ScannerUI> {
   }
 
   final TextEditingController rollingAverageValue = new TextEditingController(text: "3");
-  */
 
   @override
   Widget build(BuildContext context) {
@@ -75,13 +398,12 @@ class _ScannerUIState extends State<ScannerUI> {
         child: Text("Center"),
       ),
     );
-    /*
     double heightDiv3 = MediaQuery.of(context).size.height / 3;
 
     List<common.AnnotationSegment> annotations = new List<common.AnnotationSegment>();
     annotations.addAll(highlightErrorRanges([1,2,3,4]),
-    */
-    /*
+
+
     ScanData scanData = ScannerStaticVars.allDevicesFound[widget.deviceID].scanData;
     int rollingAverage = (rollingAverageValue.text == "") ? 0 : int.parse(rollingAverageValue.text);
     int sampleCount = scanData.rssiUpdateCount.value;
@@ -243,7 +565,6 @@ class _ScannerUIState extends State<ScannerUI> {
         ),
       ],
     );
-    */
   }
 
   List<common.AnnotationSegment> highlightErrorRanges(List<int> intervals, int value){
@@ -266,325 +587,4 @@ class _ScannerUIState extends State<ScannerUI> {
     return ranges;
   }
 }
-
-class WhiteCircle extends StatelessWidget {
-  final String value;
-
-  const WhiteCircle({
-    this.value,
-    Key key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(8),
-      child: Container(
-        padding: EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(100),
-          color: Colors.white,
-        ),
-        child: new Text(
-          value,
-          style: TextStyle(
-            color: Navigation.blueGrey,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-//-------------------------
-
-/*
-class Hints extends StatelessWidget {
-  final List<String> lines;
-
-  const Hints({
-    this.lines,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> lineWidgets = new List<Widget>();
-    for(int i = 0; i < lines.length; i++){
-      lineWidgets.add(Text(lines[i]));
-    }
-
-    return Column(
-      children: lineWidgets,
-    );
-  }
-}
-
-class ArrowWidget extends StatelessWidget {
-  const ArrowWidget({
-    @required this.arrowWidth,
-    @required this.outlineWidth,
-    this.cleanOutline: false,
-    @required this.outlineColor,
-    @required this.arrowColor,
-  });
-
-  final double arrowWidth;
-  final double outlineWidth;
-  final bool cleanOutline;
-  final Color outlineColor;
-  final Color arrowColor;
-
-  @override
-  Widget build(BuildContext context) {
-    double arrowHeight = 0;
-
-    return Container(
-      child: Stack(
-        fit: StackFit.passthrough,
-        children: <Widget>[
-          ClipPath(
-            clipper: TriangleClipper(),
-            child: Container(
-              height: arrowHeight,
-              width: arrowWidth + outlineWidth,
-              color: outlineColor,
-              child: Text(""),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(
-              top: (cleanOutline)
-              ? outlineWidth / 2
-              : 0,
-            ),
-            child: ClipPath(
-              clipper: TriangleClipper(),
-              child: Container(
-                height: arrowHeight - (
-                  (cleanOutline) 
-                  ? outlineWidth 
-                  : 0
-                ),
-                width: arrowWidth,
-                color: arrowColor,
-                child: Text(""),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class TriangleClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.lineTo(0.0, size.height);
-    path.lineTo(size.width, size.height/2);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(TriangleClipper oldClipper) => false;
-}
-
-final ValueNotifier<int> potentialMessageIndex = ValueNotifier<int>(0);
-
-//---Sizing for our Scanner
-        double height = MediaQuery.of(context).size.height / 5;
-        height *= (5/4);
-
-        //---Sizing For Our Arrow
-        double arrowWidth = (MediaQuery.of(context).size.width / 3) / 2;
-
-        //---Show Scanner
-
-Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            DefaultTextStyle(
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Navigation.blueGrey,
-                fontSize: 18,
-              ),
-              child: IntrinsicHeight(
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Expanded(
-                      child: Container(
-                        color: Navigation.blueGrey,
-                        padding: EdgeInsets.all(16),
-                        child: Center(
-                          child: DefaultTextStyle(
-                            style: TextStyle(
-                              color: Colors.white
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                                Text("Signal"),
-                                Text("Strength"),
-                                Text("Of"),
-                                RichText(
-                                  text: TextSpan(
-                                    text: "91",
-                                    style: TextStyle(
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                Text("Out of 100"),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    new ArrowWidget(
-                      arrowWidth: arrowWidth, 
-                      outlineWidth: 15,
-                      outlineColor: Navigation.blueGrey,
-                      arrowColor: Navigation.blueGrey,
-                    ),
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsets.all(16),
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: <Widget>[
-                              Text("Indicates"),
-                              Text("You"),
-                              Text("Are"),
-                              RichText(
-                                text: TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text: "10",
-                                      style: TextStyle(
-                                        fontSize: 36,
-                                        fontWeight: FontWeight.bold,
-                                        color: Navigation.blueGrey,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: "ft",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Navigation.blueGrey,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ]
-                                ),
-                              ),
-                              Text("Away"),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: Container(
-                color: Colors.blue,
-                height: height,
-                child: Text("middle"),
-              ),
-            ),
-            InkWell(
-              onLongPress: (){
-                //go to next potential message
-                potentialMessageIndex.value += 1;
-
-                //make sure we don't overflow
-                if(potentialMessageIndex.value >= 4){ //TODO... set depending
-                  potentialMessageIndex.value = 0;
-                }
-                
-                //show UI difference
-                setState(() {});
-              },
-              child: Container(
-                alignment: Alignment.center,
-                padding: EdgeInsets.all(16),
-                child: DefaultTextStyle(
-                  style: TextStyle(
-                    color: Navigation.blueGrey,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    //NOTE: I can't pass in the children otherwise DefaultTextStyle won't work
-                    children: <Widget>[
-                      Opacity(
-                        opacity: (potentialMessageIndex.value == 0) ? 1 : 0,
-                        child: new Hints(
-                          lines: [
-                            "Record The Device's Signature",
-                            "And We Can Help You",
-                            "Interpret The Device's Signal",
-                          ],
-                        ),
-                      ),
-                      Opacity(
-                        opacity: (potentialMessageIndex.value == 1) ? 1 : 0,
-                        child: Hints(
-                          lines: [
-                            "You Are Between",
-                            "45 And 250 ft",
-                            "From The Device",
-                          ],
-                        ),
-                      ),
-                      Opacity(
-                        opacity: (potentialMessageIndex.value == 2) ? 1 : 0,
-                        child: DefaultTextStyle(
-                          style: TextStyle(
-                            color: Navigation.blueGrey,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 28,
-                          ),
-                          child: Hints(
-                            lines: [
-                              "You Are Getting Closer",
-                            ],
-                          ),
-                        ),
-                      ),
-                      Opacity(
-                        opacity: (potentialMessageIndex.value == 3) ? 1 : 0,
-                        child: DefaultTextStyle(
-                          style: TextStyle(
-                            color: Navigation.blueGrey,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 28,
-                          ),
-                          child: Hints(
-                            lines: [
-                              "You Are Getting Further",
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
 */

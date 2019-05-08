@@ -76,6 +76,13 @@ class _DeviceDetailsState extends State<DeviceDetails> {
             child: ScanStarter(
               child: ScannerUI( 
                 deviceID: "0",
+                animateToPage: (){
+                  pageController.animateToPage(
+                    2, 
+                    duration: Duration(milliseconds: 500), 
+                    curve: Curves.ease,
+                  );
+                },
               ),
             ),
           ),
@@ -111,7 +118,11 @@ class _DeviceDetailsState extends State<DeviceDetails> {
         callback: (int index){
           setState(() {
             menuNum.value = index;
-            pageController.animateToPage(index, duration: Duration(milliseconds: 500), curve: Curves.ease);
+            pageController.animateToPage(
+              index, 
+              duration: Duration(milliseconds: 500), 
+              curve: Curves.ease,
+            );
           });
         },
       ),

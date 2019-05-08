@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:leashed/navigation.dart';
 import 'package:leashed/searchNew.dart';
 import 'package:leashed/settings.dart';

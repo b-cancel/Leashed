@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:leashed/data.dart';
 import 'package:leashed/homeHelper/deviceItem.dart';
 import 'package:leashed/homeHelper/navBar.dart';
 import 'package:leashed/homeHelper/noDevices.dart';
@@ -18,6 +19,7 @@ import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSp
 class HomeStateLess extends StatelessWidget {
   void initScanner()async {
     ScannerStaticVars.init();
+    DataManager.init();
   }
 
   @override
