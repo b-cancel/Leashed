@@ -507,25 +507,27 @@ class LocationsData{
       //NOTE: we are removing the oldest point possible that ISN'T being used by a BLE Device
 
       //NOTE: this is guaranteed to be filled below
-      LocationStorage locationToRemove;
+      String locationToRemoveIndex;
 
       //iterate through all locations to find the FIRST that isn't being referenced
-      List<LocationStorage> theLocations = locationUpdatesOrder.toList();
+      List<String> theLocations = locationUpdatesOrder.toList();
       int indexBeingChecked = 0;
-      while(locationToRemove == null){
-        LocationStorage thisLocation = theLocations[indexBeingChecked];
-        if(thisLocation.referenceCount > 0){
+      while(locationToRemoveIndex == null){
+        String locationIndex = theLocations[indexBeingChecked];
+        LocationStorage theLocation = microsecondsSinceEpoch2Location[locationIndex];
+        if(theLocation.referenceCount > 0){
           //move on to checking if the next location is not used
           indexBeingChecked++;
         }
         else{
-          locationToRemove = thisLocation;
+          locationToRemoveIndex = locationIndex;
           break;
         }
       }
       
       //remove the location that we no longer need
-      locations.remove(locationToRemove);
+      locationUpdatesOrder.remove(locationToRemoveIndex);
+      microsecondsSinceEpoch2Location.remove(locationToRemoveIndex);
     }
   }
 
