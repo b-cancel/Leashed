@@ -86,15 +86,19 @@ class DataManager {
 class AppData{
   SettingsData settingsData;
   SosData sosData;
+  int microsecondsUntilLastGpsUpdateisUseless;
   //NOTE: obviously there is no limit to this list
   List<DeviceData> deviceData;
+  int defaultDeviceDataMaxUpdates;
   //NOTE: there is a limit to this list
   LocationsData locationData;
 
   AppData(
     this.settingsData,
     this.sosData,
+    this.microsecondsUntilLastGpsUpdateisUseless,
     this.deviceData,
+    this.defaultDeviceDataMaxUpdates,
     this.locationData,
   );
 
@@ -102,7 +106,9 @@ class AppData{
     Map map = new Map();
     map["settingsData"] = json.encode(settingsData);
     map["sosData"] = json.encode(sosData);
+    map["microsecondsUntilLastGpsUpdateisUseless"] = json.encode(microsecondsUntilLastGpsUpdateisUseless);
     map["deviceData"] = json.encode(deviceData);
+    map["defaultDeviceDataMaxUpdates"] = json.encode(defaultDeviceDataMaxUpdates);
     map["locationData"] = json.encode(locationData);
     return map;
   }
@@ -117,7 +123,9 @@ class AppData{
     return AppData(
       SettingsData.defaultData,
       SosData.defaultData,
+      Duration(seconds: 1).inMicroseconds, //MANUAL DEFAULT
       new List<DeviceData>(),
+      100,  //MANUAL DEFAULT
       LocationsData.defaultData,
     );
   }
@@ -181,6 +189,7 @@ class ColorSetting{
     //TODO... fill this in
   }
 
+  //MANUAL DEFAULT
   static ColorSetting get defaultRedData{
     return ColorSetting(
       Duration(seconds: 5).inMicroseconds,
@@ -188,6 +197,7 @@ class ColorSetting{
     );
   }
 
+  //MANUAL DEFAULT
   static ColorSetting get defaultYellowData{
     return ColorSetting(
       Duration(seconds: 30).inMicroseconds,
@@ -195,6 +205,7 @@ class ColorSetting{
     );
   }
 
+  //MANUAL DEFAULT
   static ColorSetting get defaultGreenData{
     return ColorSetting(
       Duration(minutes: 5).inMicroseconds,
@@ -282,13 +293,36 @@ class DeviceData{
   String imageUrl;
 
   //NOTE: we only add a new rssi update IF we get new rssi from the scanner
-  Queue<RssiUpdate> _rssiUpdates;
+  Queue<RssiUpdate> rssiUpdates; //DONT ADD MANUALLY (use addUpdate)
 
   //the location key is how many microsecondsBeforeEpoch for the GPS update
   //the rssi key is how many microsecondsBeforeEpoch for the BT update
   //NOTE: these are stored as strings from the sake of json.encode() working
+  //  - it only know how to automatically toJson maps with String keys
   //but ultimate we are storing ints here
   Map<String, String> locationKeyToRssiKey;
+  //TODO... what we really need is a two way map...
+  //I should be able to 
+  //1. grab my value from my key in constant time
+  //2. AND graby my key from my value in constant time
+  //We Need this because when we reach our maxUpdates limit
+  //  - everytime we add to the list we also remove from it
+  //  - adding is constantly time
+  //  - BUT removing requires that we find the key of a certain value
+  //    - which takes O(n)
+  //Alternate Solution
+  //  - If the map stay in order
+  //  - and sets also stay in order
+  //  - we might be able to keep a set of value
+  //  - then simply grab the index of the value in the set
+  //  - that index will be the index of the key
+  //  - that we need to remove from the key to value mapping
+  //this works in this scenario because 
+  //1. every key is unique
+  //  - since we only record the location the first time its detected
+  //2. every value is unique
+  //  - since we know multiple scans of the same device can't be read in at once
+  //TODO... check if a two way map is worth it over just our current method
 
   //NOTE: for now this is just used to eliminate the older update
   //when the maxRssiUpdates limit is passed
@@ -316,7 +350,7 @@ class DeviceData{
     this.imageUrl,
     //always passable since a set of rssiUpdates have to have occured
     //in order for you to detect the device in the first place
-    this._rssiUpdates,
+    this.rssiUpdates,
     {
       //will ONLY have these if its not the first time this thing is added
       this.locationKeyToRssiKey,
@@ -327,7 +361,7 @@ class DeviceData{
       locationKeyToRssiKey = new Map<String,String>();
     }
     if(maxUpdates == null){
-      maxUpdates = 100; //MANUAL DEFAULT
+      maxUpdates = DataManager.appData.defaultDeviceDataMaxUpdates;
     }
   }
 
@@ -338,7 +372,7 @@ class DeviceData{
     map["friendlyName"] = json.encode(friendlyName);
     map["assignedName"] = json.encode(assignedName);
     map["imageUrl"] = json.encode(imageUrl);
-    map["rssiUpdates"] = json.encode(_rssiUpdates);
+    map["rssiUpdates"] = json.encode(rssiUpdates);
     map["locationKeyToRssiKey"] = json.encode(locationKeyToRssiKey);
     map["maxUpdates"] = json.encode(maxUpdates);
     return map;
@@ -346,62 +380,62 @@ class DeviceData{
 
   //-------------------------Mess With The Queue
 
-  //NOTE: ONLY pass the optional param IF the GPS is known to be on
-  addUpdate(
-    RssiUpdate update, 
-    bool gpsOn,
-    //this will be the last gps update (only relevant within X Ammount of time)
-    {int microsecondsSinceEpochForThisGpsUpdate}
-    ){
+  addUpdate(RssiUpdate update){
     //-----add to back of line (newer points)
-    _rssiUpdates.addLast(update); 
+    rssiUpdates.addLast(update); 
 
-    //-----device whether or not whether to also track a gps update
-    if(gpsOn && microsecondsSinceEpochForThisGpsUpdate != null){
-      //NOTE: we already have this location saved but we need to link it up to this update
+    //-----add gps update to rssi update
+    int rssiDateTime = update.microsecondsSinceEpoch;
+    int lastGpsDateTime = DataManager.appData.locationData.locations.last.microsecondsSinceEpoch;
+    //NOTE: we KNOW that rssiDateTime > gpsDateTime
+    int microsecondsSinceLastGpsUpdate = rssiDateTime - lastGpsDateTime;
+
+    if(microsecondsSinceLastGpsUpdate < DataManager.appData.microsecondsUntilLastGpsUpdateisUseless){
+      //NOTE: every NEW gps location can only map to ONE rssiUpdate (the first it matches with)
 
       //decide whether or not this location hasnt already been FIRST recorded by another rssi update
-      if(locationKeyToRssiKey.containsKey(microsecondsSinceEpochForThisGpsUpdate) == false){
+      if(locationKeyToRssiKey.containsKey(lastGpsDateTime) == false){
         //save the location key
-        int locationKey = microsecondsSinceEpochForThisGpsUpdate;
-        String locationKeyString = locationKey.toString();
-        String rssiKeyString = update.microsecondsSinceEpoch.toString();
+        String locationKeyString = lastGpsDateTime.toString();
+        String rssiKeyString = rssiDateTime.toString();
         locationKeyToRssiKey[locationKeyString] = rssiKeyString;
 
         //tell the location we are using it
-        DataManager.appData.locationData.increaseReferenceCount(locationKey);
+        DataManager.appData.locationData.increaseReferenceCount(lastGpsDateTime);
       }
       //ELSE... another update has already recorded this location
     }
-    //ELSE... we updated our RSSI but 
-    //1. our gps is off OR 
-    //2. the last locaction was too far away to be relevnt
+    //ELSE... the update happened too long ago
+    //1. the GPS is OFF
+    //2. the GPS simply isn't working properly
 
     //-----remove data if needed
-    if(_rssiUpdates.length > maxUpdates){
-      //---tell the location we are no longer using it (if this update is mapped to an explosion)
+    if(rssiUpdates.length > maxUpdates){
+      //---tell the location we are no longer using it
+
       //get the key of the rssi update we are removing
-      int valueWeAreSearchingFor_RssiKey = _rssiUpdates.first.microsecondsSinceEpoch;
+      int valueOr_RssiKey = rssiUpdates.first.microsecondsSinceEpoch;
 
       //get the location it maps to
       String locationKeyString = locationKeyToRssiKey.keys.firstWhere(
-        (key) => (locationKeyToRssiKey[key] == valueWeAreSearchingFor_RssiKey), 
+        (key) => (int.parse(locationKeyToRssiKey[key]) == valueOr_RssiKey), 
         orElse: () => null,
       );
 
-      //reduce its reference count
+      //this rssi udpate has a gps update reference
       if(locationKeyString != null){
+        //reduce its reference count
         int locationKey = int.parse(locationKeyString);
         DataManager.appData.locationData.decreaseReferenceCount(locationKey);
       }
       
       //---remove from front of line (older points)
-      _rssiUpdates.removeFirst();
+      rssiUpdates.removeFirst();
     }
   }
 
   List<RssiUpdate> getUpdates(){
-    return _rssiUpdates.toList();
+    return rssiUpdates.toList();
   }
 
   //-------------------------Static Functions
@@ -445,13 +479,13 @@ class RssiUpdate{
 class LocationsData{
   //NOTE: we only add a new GPS update IF we get new GPS from the scanner
   //list of last couple gps updates (equivalent length)
-  Queue<LocationStorage> _locations;
+  Queue<LocationStorage> locations; //DONT ADD MANUALLY (use addUpdate)
   //int locationsReferenced;
   int maxUpdates;
 
   LocationsData(
     //TODO... fix some stuff here...
-    this._locations,
+    this.locations,
     //this.locationsReferenced,
     this.maxUpdates
   );
@@ -461,7 +495,7 @@ class LocationsData{
 
   Map toJson(){ 
     Map map = new Map();
-    map["locations"] = json.encode(_locations);
+    map["locations"] = json.encode(locations);
     //TODO... fix some stuff here...
     map["maxUpdates"] = json.encode(maxUpdates);
     return map;
@@ -472,18 +506,18 @@ class LocationsData{
   //NOTE: ONLY pass the optional param IF the GPS is known to be on
   addUpdate(LocationStorage update){
     //-----add to back of line (newer points)
-    _locations.addLast(update); 
+    locations.addLast(update); 
 
     //-----remove data if needed
-    if(_locations.length > maxUpdates){
+    if(locations.length > maxUpdates){
       //remove from front of line (older points)
       //TODO... only REMOVE IF the location isnt being used or reference by NO devices
-      _locations.removeFirst();
+      locations.removeFirst();
     }
   }
 
   List<LocationStorage> getUpdates(){
-    return _locations.toList();
+    return locations.toList();
   }
 
   increaseReferenceCount(int microsecondsSinceEpochKEY){
