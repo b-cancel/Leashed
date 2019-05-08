@@ -380,7 +380,10 @@ class DeviceData{
 
   //-------------------------Mess With The Queue
 
-  addUpdate(RssiUpdate update){
+  addUpdate(int value, int microsecondsSinceEpoch){
+    //-----create struct
+    RssiUpdate update = RssiUpdate(value, microsecondsSinceEpoch);
+
     //-----add to back of line (newer points)
     rssiUpdates.addLast(update); 
 
@@ -434,8 +437,8 @@ class DeviceData{
     }
   }
 
-  List<RssiUpdate> getUpdates(){
-    return rssiUpdates.toList();
+  removeDevice(){
+    //TODO... fill this in
   }
 
   //-------------------------Static Functions
@@ -480,14 +483,13 @@ class LocationsData{
   //NOTE: we only add a new GPS update IF we get new GPS from the scanner
   //list of last couple gps updates (equivalent length)
   Queue<LocationStorage> locations; //DONT ADD MANUALLY (use addUpdate)
-  //int locationsReferenced;
-  int maxUpdates;
+  int locationsReferenced;
+  int maxExtraUpdates;
 
   LocationsData(
-    //TODO... fix some stuff here...
     this.locations,
-    //this.locationsReferenced,
-    this.maxUpdates
+    this.locationsReferenced,
+    this.maxExtraUpdates
   );
 
   //TODO: add a durationBeforeDeletionAllowed variable
@@ -496,28 +498,47 @@ class LocationsData{
   Map toJson(){ 
     Map map = new Map();
     map["locations"] = json.encode(locations);
-    //TODO... fix some stuff here...
-    map["maxUpdates"] = json.encode(maxUpdates);
+    map["locationsReferenced"] = json.encode(locationsReferenced);
+    map["maxUpdates"] = json.encode(maxExtraUpdates);
     return map;
   }
   
   //-------------------------Mess With The Queue
 
   //NOTE: ONLY pass the optional param IF the GPS is known to be on
-  addUpdate(LocationStorage update){
+  addUpdate(double latitude, double longitude, int microsecondsSinceEpoch){
+    //-----create struct
+    LocationStorage update = LocationStorage(latitude, longitude, microsecondsSinceEpoch);
+
     //-----add to back of line (newer points)
     locations.addLast(update); 
 
     //-----remove data if needed
-    if(locations.length > maxUpdates){
+    if(locations.length > (locationsReferenced + maxExtraUpdates)){
       //remove from front of line (older points)
-      //TODO... only REMOVE IF the location isnt being used or reference by NO devices
-      locations.removeFirst();
-    }
-  }
+      //NOTE: we are removing the oldest point possible that ISN'T being used by a BLE Device
 
-  List<LocationStorage> getUpdates(){
-    return locations.toList();
+      //NOTE: this is guaranteed to be filled below
+      LocationStorage locationToRemove;
+
+      //iterate through all locations to find the FIRST that isn't being referenced
+      List<LocationStorage> theLocations = locations.toList();
+      int indexBeingChecked = 0;
+      while(locationToRemove == null){
+        LocationStorage thisLocation = theLocations[indexBeingChecked];
+        if(thisLocation.referenceCount > 0){
+          //move on to checking if the next location is not used
+          indexBeingChecked++;
+        }
+        else{
+          locationToRemove = thisLocation;
+          break;
+        }
+      }
+      
+      //remove the location that we no longer need
+      locations.remove(locationToRemove);
+    }
   }
 
   increaseReferenceCount(int microsecondsSinceEpochKEY){
@@ -539,6 +560,9 @@ class LocationsData{
   static LocationsData get defaultData{
     return LocationsData(
       new Queue<LocationStorage>(),
+      //initially you have no locations 
+      //and therefore no references
+      0, 
       100, //MANUAL DEFAULT
     );
   }
@@ -568,7 +592,6 @@ class LocationStorage{
     map["latitude"] = json.encode(latitude);
     map["longitude"] = json.encode(longitude);
     map["microsecondsSinceEpoch"] = json.encode(microsecondsSinceEpoch);
-    //TODO... missing something here
     map["referenceCount"] = json.encode(referenceCount);
     return map;
   }
