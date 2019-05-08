@@ -391,12 +391,13 @@ class DeviceData{
     microsecondsSinceEpoch2Value[microsecondsSinceEpoch.toString()] = value;
     rssiUpdatesOrder.addLast(microsecondsSinceEpoch.toString()); 
 
-    //-----add gps update to rssi update
+    //-----check if we can use the last gps update
     int rssiDateTime = microsecondsSinceEpoch;
     String lastGpsDateTime = DataManager.appData.locationData.microsecondsSinceEpoch2Location.keys.last;
     //NOTE: we KNOW that rssiDateTime > gpsDateTime
     int microsecondsSinceLastGpsUpdate = rssiDateTime - int.parse(lastGpsDateTime);
 
+    //-----add gps update to rssi update
     if(microsecondsSinceLastGpsUpdate < DataManager.appData.microsecondsUntilLastGpsUpdateisUseless){
       //NOTE: every NEW gps location can only map to ONE rssiUpdate (the first it matches with)
 
@@ -417,28 +418,24 @@ class DeviceData{
 
     //-----remove data if needed
     if(rssiUpdatesOrder.length > maxUpdates){
+      //---get the oldest key to remove
+      String microsecondsSinceEpochRssiKey = rssiUpdatesOrder.first;
+
       //---tell the location we are no longer using it
-
-      //get the oldest key
-      String microsecondsSinceEpochForOldest = rssiUpdatesOrder.first;
-
-      //get the key of the rssi update we are removing
-      int rssiValueForOldest = microsecondsSinceEpoch2Value[microsecondsSinceEpochForOldest];
-
       //get the location it maps to
-      String locationKey = locationKeyToRssiKey.keys.firstWhere(
-        (key) => (int.parse(locationKeyToRssiKey[key]) == rssiValueForOldest), 
+      String microsecondsSinceLastEpochLocationKey = locationKeyToRssiKey.keys.firstWhere(
+        (key) => (locationKeyToRssiKey[key] == microsecondsSinceEpochRssiKey), 
         orElse: () => null,
       );
 
       //this rssi udpate has a gps update reference
-      if(locationKey != null){ //reduce its reference count
-        DataManager.appData.locationData.decreaseReferenceCount(locationKey);
+      if(microsecondsSinceLastEpochLocationKey != null){ //reduce its reference count
+        DataManager.appData.locationData.decreaseReferenceCount(microsecondsSinceLastEpochLocationKey);
       }
       
       //---remove from front of line (older points)
       rssiUpdatesOrder.removeFirst();
-      microsecondsSinceEpoch2Value.remove(microsecondsSinceEpochForOldest);
+      microsecondsSinceEpoch2Value.remove(microsecondsSinceEpochRssiKey);
     }
   }
 
