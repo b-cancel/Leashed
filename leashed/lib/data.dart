@@ -1,25 +1,40 @@
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
-import 'package:leashed/helper/structs.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 
 class DataManager {
-  static String fileName = "data.txt";
-  static ValueNotifier<String> filePath = ValueNotifier<String>(""); 
+  static String _fileName = "leashedAppData.txt";
+  static String _filePath;
+  static File _fileReference;
+  static String _fileString;
+  static AppData appData; //accessible by all other functions
 
   static init() async{
-    String ourFilePath = await _localFilePath;
-    if(fileExists(ourFilePath)){
-      print("EXIST");
+    //get references to the file
+    _filePath = await _localFilePath;
+    
+    //create or read the file
+    _fileReference = File(_filePath);
+    if(_fileExists == false){
+      //create the file
+      await _createFile;
+      //fill our structs with defaults
+      await _writeStructWithDefaults;
+      //save the defaults on in the file
+      await _writeStructToFile;
     }
-    else print("NO EXISTS");
+    else{
+      //read the file into struct
+      await _writeFileToStruct;
+    }
   }
 
-  static bool fileExists(String path){
-    return FileSystemEntity.typeSync(path) != FileSystemEntityType.notFound;
+  static bool get _fileExists{
+    return FileSystemEntity.typeSync(_filePath) != FileSystemEntityType.notFound;
   }
 
   static Future<String> get _localPath async {
@@ -29,34 +44,199 @@ class DataManager {
 
   static Future<String> get _localFilePath async{
     final localPath = await _localPath;
-    return '$localPath/$fileName';
+    return '$localPath/$_fileName';
+  }
+  
+  static get _createFile async{
+    await _fileReference.create();
+  }
+  
+  static get _writeStructWithDefaults async{
+    appData = AppData.defaultData;
   }
 
-  static Future<File> get _localFile async {
-    final path = await _localFilePath;
-    return File(path);
+  static get _writeStructToFile async{
+    //convert Struct to String
+    _fileString = appData.toJson.toString();
+    //write file
+    await _fileReference.writeAsString(_fileString);
   }
 
-  /*
-  Future<File> writeCounter(int counter) async {
-    final file = await _localFile;
+  static get _writeFileToStruct async{
+    //read file
+    _fileString = await _fileReference.readAsString();
+    //convert String to Struct
+    appData = AppData.toStruct(_fileString);
+  }
+}
 
-    // Write the file
-    return file.writeAsString('$counter');
+//-------------------------STATIC STRUCTS-------------------------
+
+class AppData{
+  SettingsStorage settingData;
+  LocationsStorage locationData;
+  List<DeviceStorage> deviceData;
+
+  AppData(){
+
   }
 
-  Future<int> readCounter() async {
-    try {
-      final file = await _localFile;
+  Map get toJson { 
+    Map map = new Map();
+    return map;
+  }  
 
-      // Read the file
-      String contents = await file.readAsString();
+  //-------------------------Static Functions
+  
+  static AppData toStruct(String fileString){
 
-      return int.parse(contents);
-    } catch (e) {
-      // If encountering an error, return 0
-      return 0;
-    }
   }
-  */
+
+  static AppData get defaultData{
+
+  }
+}
+
+class SettingsStorage{
+  ColorSetting redSetting;
+  ColorSetting yellowSetting;
+  ColorSetting greenSetting;
+  String sosMessage;
+  List<SosContact> sosContacts;
+
+
+}
+
+//NOTE: from (1)Bluetooth (2)GPS
+//1. I need to be able to access the location from the dateTime [constantly time]
+//2. I need have a dynamic data structure
+
+//1. we are using a Queues so that we can keep a max of X items efficiently
+//2. this is because we dont really need constant time access
+//3. we need to be able to add to the back
+//4. we need to be able to remove from the front
+//5. the keys Queue in both can return an index 
+//    -that can then be used to find the item in another queue
+
+//NOTE: because Device Storage uses LocationStorage keys to keep track of their location history
+//we DO NOT remove any location marked as being used by Devices
+class LocationsStorage{
+  //NOTE: we only add a new GPS update IF we get new GPS from the scanner
+  //list of last couple gps updates (equivalent length)
+  Queue<LocationStorage> locations;
+  Queue<double> longitude;
+  Queue<int> dateTimeUpdates;
+  Queue<int> keys; //unique keys to things can address this location
+  final int maxLocationUpdatesStored = 125;
+
+  d(){
+    latitude[1]
+  }
+}
+
+class LocationStorage{
+  double latitude;
+  double longitude;
+  int dateTimeUpdates; //microseconds from epoch
+}
+
+class DeviceStorage
+{
+  //set once and done
+  String id;
+  BluetoothDeviceType type;
+  String friendlyName;
+
+  //device settings
+  String assignedName;
+  String imageUrl;
+
+  //NOTE: we only add a new rssi update IF we get new rssi from the scanner
+  //list of last couple rssi updates (equivalent length)
+  Queue<int> rssiUpdates;
+  Queue<int> rssiDateTimeUpdates; //microseconds from epoch
+  static final int maxRssiUpdates = 250;
+  
+
+  DeviceStorage({
+    String id,
+    BluetoothDeviceType type,
+    String friendlyName,
+  }){
+    //params
+    this.id = id;
+    this.type = type;
+    this.friendlyName = friendlyName;
+
+    //defaults
+    assignedName = friendlyName;
+    imageUrl = "assets/pngs/devicePlaceholder.png";
+
+    //rssi list inits
+    List<int> rssiUpdates;
+    List<int> rssiDateTimeUpdates;
+
+    //location list inits
+    List<double> locationLatitude;
+    List<double> locationLongitude;
+    List<int> locationDateTimeUpdates;
+  }
+
+  Map toJson() { 
+    Map map = new Map();
+    map["id"] = id;
+    map["Name"] = Name;
+    return map;
+
+    //set once and done
+  String id;
+  String type;
+  String friendlyName;
+
+  //device settings
+  String assignedName;
+  String imageUrl;
+
+  //list of last couple rssi updates (equivalent length)
+  List<int> rssiUpdates;
+  List<int> rssiDateTimeUpdates;
+  int maxRssiUpdates;
+
+  //list of last couple gps update (equivalent length)
+  List<double> locationLatitude;
+  List<double> locationLongitude;
+  List<int> locationDateTimeUpdates;
+  int maxLocationUpdates;
+  }  
+}
+
+//-------------------------NON STATIC STRUCTS-------------------------
+
+class ColorSetting{
+  int checkDuration;
+  int intervalDuration;
+
+  ColorSetting(
+    int checkDuration,
+    int intervalDuration,
+  ){
+    this.checkDuration = checkDuration;
+    this.intervalDuration = intervalDuration;
+  }
+}
+
+class SosContact{
+  String name;
+  String label;
+  String number;
+
+  SosContact(
+    String name, 
+    String label, 
+    String number,
+  ){
+    this.name = name;
+    this.label = label;
+    this.number = number;
+  }
 }
