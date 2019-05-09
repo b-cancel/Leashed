@@ -7,17 +7,16 @@ import 'package:flutter_blue/flutter_blue.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 
-//NOTE: do not use json.encode()
-//instead use myToJson()
-//EXCEPTIONS:
-//1. the encoding of SOME Strings MUST HAVE quotes
-//  - the String that actually store another data type dont require them
-//2. the encoding of a Map or List does use json.encode()
-
-//NOTE: Search "MANUAL DEFAULT" To Find The Defaults I Selected
-
-//TODO... test
-//"deviceData": [],
+//NOTES
+//[A] search "MANUAL DEFAULT" To Find The Defaults I Selected
+//[B] int, double, and bool -> should not be encoded
+//[C] whats used depends heavily on the situation (dep, types, array, map, etc)
+//1. sometimes you use json.encode()
+//  - so far json.encode() needs to be used for arrays and maps
+//2. other times you use myToJson()
+//[D] for some reason 
+//1. sometimes map keys need to have quotes 
+//2. and other times they dont
 
 class DataManager {
   static String _fileName = "leashedAppData.txt";
@@ -46,6 +45,7 @@ class DataManager {
     appData.sosData.sosContacts.add(SosContact("Jessica","cell","(956) 128-1297"));
 
     //fill our struct with location data
+    /*
     appData.locationData.microsecondsSinceEpoch2Location = {
       "3" : LocationData(1112.312, 7.43, referenceCount: 3),
       "1" : LocationData(12.312, 788.7043, referenceCount: 7),
@@ -53,6 +53,58 @@ class DataManager {
       "4" : LocationData(12.553312, 97.43, referenceCount: 5),
       "5" : LocationData(7812.312, 79.43, referenceCount: 1),
     };
+    */
+
+    //fill our struct with device data
+    appData.deviceData.add(
+      DeviceData(
+        "aca3c70rqm32c9d", 
+        "Low Energy", 
+        "Friendly", 
+        "Assigned", 
+        "image url", 
+        {
+          "1":1,
+          "2":2,
+          "3":5,
+          "5":10,
+          "6":11,
+        },
+        locationKeyToRssiKey: {
+          "key1" : "value3",
+          "key124" : "value7",
+          "key50" : "value03",
+        },
+        maxUpdates: 100,
+      ),
+    );
+
+    appData.deviceData.add(
+      DeviceData(
+        "125235123", 
+        "Low", 
+        "freln", 
+        "ass", 
+        "imagr", 
+        {
+          "1":1,
+          "5":2,
+          "6":3,
+          "7":14,
+          "9":15,
+        },
+        locationKeyToRssiKey: {
+          "keyo" : "124",
+          "kaya" : "valuq134e7",
+          "kem" : "123",
+        },
+        maxUpdates: 100,
+      ),
+    );
+
+    /*
+    map[addQuotes("locationKeyToRssiKey")] = json.encode(locationKeyToRssiKey);
+    */
 
     //save the defaults on in the file
     await _writeStructToFile;
@@ -174,9 +226,9 @@ class AppData{
     Map map = new Map();
     map[addQuotes("settingsData")] = myToJson(settingsData);
     map[addQuotes("sosData")] = myToJson(sosData);
-    map[addQuotes("microsecondsUntilLastGpsUpdateisUseless")] = myToJson(microsecondsUntilLastGpsUpdateisUseless);
+    map[addQuotes("microsecondsUntilLastGpsUpdateisUseless")] = microsecondsUntilLastGpsUpdateisUseless;
     map[addQuotes("deviceData")] = json.encode(deviceData);
-    map[addQuotes("defaultDeviceDataMaxUpdates")] = myToJson(defaultDeviceDataMaxUpdates);
+    map[addQuotes("defaultDeviceDataMaxUpdates")] = defaultDeviceDataMaxUpdates;
     map[addQuotes("locationData")] = myToJson(locationData);
 
     return map;
@@ -247,8 +299,8 @@ class ColorSetting{
 
   Map toJson(){ 
     Map map = new Map();
-    map[addQuotes("checkDuration")] = myToJson(checkDuration);
-    map[addQuotes("intervalDuration")] = myToJson(intervalDuration);
+    map[addQuotes("checkDuration")] = checkDuration;
+    map[addQuotes("intervalDuration")] = intervalDuration;
     return map;
   }
   
@@ -441,15 +493,15 @@ class DeviceData{
 
   Map toJson(){ 
     Map map = new Map();
-    map[addQuotes("id")] = addQuotes(id);
-    map[addQuotes("type")] = addQuotes(type);
-    map[addQuotes("friendlyName")] = addQuotes(friendlyName);
-    map[addQuotes("assignedName")] = addQuotes(assignedName);
-    map[addQuotes("imageUrl")] = addQuotes(imageUrl);
-    map[addQuotes("microsecondsSinceEpoch2Value")] = json.encode(microsecondsSinceEpoch2Value);
+    map["id"] = addQuotes(id);
+    map["type"] = addQuotes(type);
+    map["friendlyName"] = addQuotes(friendlyName);
+    map["assignedName"] = addQuotes(assignedName);
+    map["imageUrl"] = addQuotes(imageUrl);
+    map["microsecondsSinceEpoch2Value"] = json.encode(microsecondsSinceEpoch2Value);
     //NOTE: we don't need to save rssiUpdatesOrder since its impliable from the above
-    map[addQuotes("locationKeyToRssiKey")] = json.encode(locationKeyToRssiKey);
-    map[addQuotes("maxUpdates")] = myToJson(maxUpdates);
+    map["locationKeyToRssiKey"] = json.encode(locationKeyToRssiKey);
+    map["maxUpdates"] = maxUpdates;
     return map;
   }
 
@@ -554,8 +606,8 @@ class LocationsData{
     Map map = new Map();
     map[addQuotes("microsecondsSinceEpoch2Location")] = mapToJson(microsecondsSinceEpoch2Location);
     //NOTE: we don't need to save locationUpdatesOrder since its impliable from the above
-    map[addQuotes("locationsReferenced")] = myToJson(locationsReferenced);
-    map[addQuotes("maxExtraUpdates")] = myToJson(maxExtraUpdates);
+    map[addQuotes("locationsReferenced")] = locationsReferenced;
+    map[addQuotes("maxExtraUpdates")] = maxExtraUpdates;
     return map;
   }
   
@@ -652,9 +704,9 @@ class LocationData{
 
   Map toJson(){ 
     Map map = new Map();
-    map[addQuotes("latitude")] = myToJson(latitude);
-    map[addQuotes("longitude")] = myToJson(longitude);
-    map[addQuotes("referenceCount")] = myToJson(referenceCount);
+    map[addQuotes("latitude")] = latitude;
+    map[addQuotes("longitude")] = longitude;
+    map[addQuotes("referenceCount")] = referenceCount;
     return map;
   }
 
@@ -703,10 +755,7 @@ String addQuotes(String str){
 
 String myToJson(dynamic data){
   //handle primatives
-  if(data is int) return remQuotes(data.toString());
-  else if(data is bool) return remQuotes(data.toString());
-  else if(data is double) return remQuotes(data.toString());
-  else if(data is String) return remQuotes(data);
+  if(data is String) return remQuotes(data);
   else{
     return remQuotes(data.toJson().toString());
   }
