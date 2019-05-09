@@ -53,6 +53,9 @@ class DataManager {
       "5" : LocationData(7812.312, 79.43, referenceCount: 1),
     };
 
+    appData.locationData.maxExtraUpdates = 125;
+    appData.locationData.locationsReferenced = 1;
+
     //fill our struct with device data
     appData.deviceData.add(
       DeviceData(
@@ -108,7 +111,16 @@ class DataManager {
     await _writeStructToFile;
 
     //print our file
-    _printFile;
+    await _printFile;
+
+    print("---------------------------------------------------------------------------");
+    print("\n\n\n\n\n");
+    print("---------------------------------------------------------------------------");
+
+    //test our file to struct function
+    await _writeFileToStruct;
+    await _writeStructToFile;
+    await _printFile;
   }
 
   static init() async{
@@ -176,13 +188,13 @@ class DataManager {
     //read file
     _fileString = await _fileReference.readAsString();
     //convert String to Struct
-    appData = AppData.toStruct(_fileString);
+    appData = AppData.toStruct(json.decode(_fileString));
   }
 
   static get _printFile async{
     JsonEncoder encoder = new JsonEncoder.withIndent('  ');
     String fileString = await _fileReference.readAsString();
-    Map jsonMap = jsonDecode(fileString);
+    Map jsonMap = json.decode(fileString);
     //NOTE: encoder.convert(jsonMap) here should work
     //BUT because of some caching issue with the function it cuts off
     //making it never cut off is going to be difficult
@@ -221,21 +233,27 @@ class AppData{
   );
 
   Map toJson(){ 
-    Map map = new Map();
-    map[addQuotes("settingsData")] = myToJson(settingsData);
-    map[addQuotes("sosData")] = myToJson(sosData);
-    map[addQuotes("microsecondsUntilLastGpsUpdateisUseless")] = microsecondsUntilLastGpsUpdateisUseless;
-    map[addQuotes("deviceData")] = arrayToJson(deviceData);
-    map[addQuotes("defaultDeviceDataMaxUpdates")] = defaultDeviceDataMaxUpdates;
-    map[addQuotes("locationData")] = myToJson(locationData);
-
-    return map;
+    return {
+      addQuotes("settingsData") : myToJson(settingsData),
+      addQuotes("sosData"): myToJson(sosData),
+      addQuotes("microsecondsUntilLastGpsUpdateisUseless"): microsecondsUntilLastGpsUpdateisUseless,
+      addQuotes("deviceData"): arrayToJson(deviceData),
+      addQuotes("defaultDeviceDataMaxUpdates"): defaultDeviceDataMaxUpdates,
+      addQuotes("locationsData"): myToJson(locationData),
+    };
   }
 
   //-------------------------Static Functions
   
-  static AppData toStruct(String string){
-    //TODO... fill this in
+  static AppData toStruct(Map<String, dynamic> map){
+    return AppData(
+      SettingsData.toStruct(map["settingsData"]),
+      SosData.toStruct(map["sosData"]),
+      map["microsecondsUntilLastGpsUpdateisUseless"], 
+      List<DeviceData>(), //TODO... finish array to struct
+      map["defaultDeviceDataMaxUpdates"], 
+      LocationsData.toStruct(map["locationsData"]),
+    );
   }
 
   static AppData get defaultData{
@@ -264,17 +282,21 @@ class SettingsData{
   );
 
   Map toJson(){ 
-    Map map = new Map();
-    map[addQuotes("redSetting")] = redSetting.toJson().toString();
-    map[addQuotes("yellowSetting")] = yellowSetting.toJson().toString();
-    map[addQuotes("greenSetting")] = greenSetting.toJson().toString();
-    return map;
+    return {
+      addQuotes("redSetting"): redSetting.toJson().toString(),
+      addQuotes("yellowSetting"): yellowSetting.toJson().toString(),
+      addQuotes("greenSetting"): greenSetting.toJson().toString(),
+    };
   }
 
   //-------------------------Static Functions
 
-  static SettingsData toStruct(String string){
-    //TODO... fill this in
+  static SettingsData toStruct(Map<String,dynamic> map){
+    return SettingsData(
+      ColorSetting.toStruct(map["redSetting"]), 
+      ColorSetting.toStruct(map["yellowSetting"]), 
+      ColorSetting.toStruct(map["greenSetting"]), 
+    );
   }
 
   static SettingsData get defaultData{
@@ -296,16 +318,19 @@ class ColorSetting{
   );
 
   Map toJson(){ 
-    Map map = new Map();
-    map[addQuotes("checkDuration")] = checkDuration;
-    map[addQuotes("intervalDuration")] = intervalDuration;
-    return map;
+    return {
+      addQuotes("checkDuration"): checkDuration,
+      addQuotes("intervalDuration"): intervalDuration,
+    };
   }
   
   //-------------------------Static Functions
   
-  static ColorSetting toStruct(String string){
-    //TODO... fill this in
+  static ColorSetting toStruct(Map <String, dynamic> map){
+    return ColorSetting(
+      map["checkDuration"],
+      map["intervalDuration"],
+    );
   }
 
   //MANUAL DEFAULT
@@ -345,16 +370,19 @@ class SosData{
   );
 
   Map toJson(){ 
-    Map map = new Map();
-    map[addQuotes("sosMessage")] = addQuotes(sosMessage); 
-    map[addQuotes("sosContacts")] = json.encode(sosContacts);
-    return map;
+    return {
+      addQuotes("sosMessage"): addQuotes(sosMessage),
+      addQuotes("sosContacts"): json.encode(sosContacts),
+    };
   }
   
   //-------------------------Static Functions
   
-  static SosData toStruct(String string){
-    //TODO... fill this in
+  static SosData toStruct(Map<String, dynamic> map){
+    return SosData(
+      map["sosMessage"],
+      new List<SosContact>(),//TODO... finish to list
+    );
   }
 
   static SosData get defaultData{
@@ -377,17 +405,21 @@ class SosContact{
   );
 
   Map toJson(){ 
-    Map map = new Map();
-    map["name"] = myToJson(name);
-    map["label"] = myToJson(label);
-    map["number"] = myToJson(number);
-    return map;
+    return {
+    "name": myToJson(name),
+    "label": myToJson(label),
+    "number": myToJson(number),
+    };
   }
 
   //-------------------------Static Functions
   
-  static SosContact toStruct(String string){
-    //TODO... fill this in
+  static SosContact toStruct(Map<String,dynamic> map){
+    return SosContact(
+      map["name"],
+      map["label"],
+      map["number"],
+    );
   }
 
   //NOTE: has no default(would be added manually)
@@ -490,17 +522,17 @@ class DeviceData{
   }
 
   Map toJson(){ 
-    Map map = new Map();
-    map[addQuotes("id")] = addQuotes(id);
-    map[addQuotes("type")] = addQuotes(type);
-    map[addQuotes("friendlyName")] = addQuotes(friendlyName);
-    map[addQuotes("assignedName")] = addQuotes(assignedName);
-    map[addQuotes("imageUrl")] = addQuotes(imageUrl);
-    map[addQuotes("microsecondsSinceEpoch2Value")] = mapToJson(microsecondsSinceEpoch2Value);
-    //NOTE: we don't need to save rssiUpdatesOrder since its impliable from the above
-    map[addQuotes("locationKeyToRssiKey")] = mapToJson(locationKeyToRssiKey);
-    map[addQuotes("maxUpdates")] = maxUpdates;
-    return map;
+    return {
+      addQuotes("id"): addQuotes(id),
+      addQuotes("type"): addQuotes(type),
+      addQuotes("friendlyName"): addQuotes(friendlyName),
+      addQuotes("assignedName"): addQuotes(assignedName),
+      addQuotes("imageUrl"): addQuotes(imageUrl),
+      addQuotes("microsecondsSinceEpoch2Value"): mapToJson(microsecondsSinceEpoch2Value),
+      //NOTE: we don't need to save rssiUpdatesOrder since its impliable from the above
+      addQuotes("locationKeyToRssiKey"): mapToJson(locationKeyToRssiKey),
+      addQuotes("maxUpdates"): maxUpdates,
+    };
   }
 
   //-------------------------Mess With The Queue
@@ -570,8 +602,17 @@ class DeviceData{
 
   //-------------------------Static Functions
   
-  static DeviceData toStruct(String string){
-    //TODO... fill this in
+  static DeviceData toStruct(Map<String, dynamic> map){
+    return DeviceData(
+      map["id"],
+      map["type"],
+      map["friendlyName"],
+      map["assignedName"],
+      map["imageUrl"],
+      new Map<String, int>(), //map["microsecondsSinceEpoch2Value"], //TODO...
+      locationKeyToRssiKey: new Map<String, String>(), //map["locationKeyToRssiKey"], //TODO... 
+      maxUpdates: map["maxUpdates"],
+    );
   }
 
   //NOTE: has no default(would be added manually)
@@ -601,12 +642,12 @@ class LocationsData{
   //Explained in [DeviceData]
 
   Map toJson(){ 
-    Map map = new Map();
-    map[addQuotes("microsecondsSinceEpoch2Location")] = mapToJson(microsecondsSinceEpoch2Location);
-    //NOTE: we don't need to save locationUpdatesOrder since its impliable from the above
-    map[addQuotes("locationsReferenced")] = locationsReferenced;
-    map[addQuotes("maxExtraUpdates")] = maxExtraUpdates;
-    return map;
+    return {
+      addQuotes("microsecondsSinceEpoch2Location"): mapToJson(microsecondsSinceEpoch2Location),
+      //NOTE: we don't need to save locationUpdatesOrder since its impliable from the above
+      addQuotes("locationsReferenced"): locationsReferenced,
+      addQuotes("maxExtraUpdates"): maxExtraUpdates,
+    };
   }
   
   //-------------------------Mess With The Queue
@@ -668,8 +709,12 @@ class LocationsData{
 
   //-------------------------Static Functions
   
-  static LocationsData toStruct(String fileString){
-    //TODO... fill this in
+  static LocationsData toStruct(Map<String, dynamic> map){
+    return LocationsData(
+      new Map<String, LocationData>(), //TODO... finish map to struct
+      map["locationsReferenced"],
+      map["maxExtraUpdates"],
+    );
   }
 
   static LocationsData get defaultData{
@@ -701,21 +746,27 @@ class LocationData{
   }
 
   Map toJson(){ 
-    Map map = new Map();
-    map[addQuotes("latitude")] = latitude;
-    map[addQuotes("longitude")] = longitude;
-    map[addQuotes("referenceCount")] = referenceCount;
-    return map;
+    return {
+      addQuotes("latitude"): latitude,
+      addQuotes("longitude"): longitude,
+      addQuotes("referenceCount"): referenceCount,
+    };
   }
 
   //-------------------------Static Functions
   
-  static LocationData toStruct(String string){
-    //TODO... fill this in
+  static LocationData toStruct(Map<String, dynamic> map){
+    return LocationData(
+      map["latitude"],
+      map["longitude"],
+      referenceCount: map["referenceCount"],
+    );
   }
 
   //NOTE: has no default(would be added manually)
 }
+
+//-------------------------EXTRA TO JSON-------------------------
 
 //NOTE: orderedQueue can be easily implied by reading in map
 Queue<String> mapToOrderedQueue(Map<String, dynamic> map){
@@ -797,4 +848,10 @@ String mapToJson(Map<String,dynamic> map, {bool addQuoteKey: true}){
   }
   str += "}";
   return str;
+}
+
+//-------------------------EXTRA TO STRUCT-------------------------
+
+Map<String, dynamic> mapToStruct(Map<String, dynamic> map){
+  map.keys.toList();
 }

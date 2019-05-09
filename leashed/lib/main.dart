@@ -16,6 +16,6 @@ void main() {
 
 //NOTE: we do this to ensure that we load up the data BEFORE starting up the app
 void asyncMain()async{
-  await DataManager.init();
+  //await DataManager.init();
   runApp(Navigation());
 }

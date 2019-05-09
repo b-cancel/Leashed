@@ -18,6 +18,7 @@ import 'package:leashed/sliverModifications/flexibleSpaceBar.dart' as flexibleSp
 //NOTE: so Material App Works properly
 class HomeStateLess extends StatelessWidget {
   void initScanner()async {
+    await DataManager.init();
     ScannerStaticVars.init();
   }
 
