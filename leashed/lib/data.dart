@@ -17,9 +17,7 @@ import 'dart:async';
 //NOTE: Search "MANUAL DEFAULT" To Find The Defaults I Selected
 
 //TODO... test
-//"sosContacts": []
 //"deviceData": [],
-//"microsecondsSinceEpoch2Location": {},
 
 class DataManager {
   static String _fileName = "leashedAppData.txt";
@@ -28,7 +26,7 @@ class DataManager {
   static String _fileString;
   static AppData appData; //accessible by all other functions
 
-  static init() async{
+  static testConversion() async{
     //get references to the file
     _filePath = await _localFilePath;
     
@@ -42,11 +40,29 @@ class DataManager {
 
     //fill our structs with defaults
     await _writeStructWithDefaults;
+
+    //fill our struct with sosContacts
+    appData.sosData.sosContacts.add(SosContact("jake","work","(956) 777-2692"));
+    appData.sosData.sosContacts.add(SosContact("Jessica","cell","(956) 128-1297"));
+
+    //fill our struct with location data
+    appData.locationData.microsecondsSinceEpoch2Location = {
+      "3" : LocationData(1112.312, 7.43, referenceCount: 3),
+      "1" : LocationData(12.312, 788.7043, referenceCount: 7),
+      "2" : LocationData(212.312, 788.843, referenceCount: 0),
+      "4" : LocationData(12.553312, 97.43, referenceCount: 5),
+      "5" : LocationData(7812.312, 79.43, referenceCount: 1),
+    };
+
     //save the defaults on in the file
     await _writeStructToFile;
 
     //print our file
     _printFile;
+  }
+
+  static init() async{
+    testConversion();
 
     /*
     //get references to the file
@@ -117,9 +133,19 @@ class DataManager {
     JsonEncoder encoder = new JsonEncoder.withIndent('  ');
     String fileString = await _fileReference.readAsString();
     Map jsonMap = jsonDecode(fileString);
+    //NOTE: encoder.convert(jsonMap) here should work
+    //BUT because of some caching issue with the function it cuts off
+    //making it never cut off is going to be difficult
+    //but I could split the map into 6 parts and print that
+    var keys = jsonMap.keys.toList();
+    print("{");
     print("-------------------------");
-    print(encoder.convert(jsonMap));
-    print("-------------------------");
+    for(int i = 0; i < keys.length; i++){
+      var key = keys[i];
+      print(addQuotes(key) + ": " + encoder.convert(jsonMap[key]));
+      print("-------------------------");
+    }
+    print("}");
   }
 }
 
@@ -302,9 +328,9 @@ class SosContact{
 
   Map toJson(){ 
     Map map = new Map();
-    map[addQuotes("name")] = addQuotes(name);
-    map[addQuotes("label")] = addQuotes(label);
-    map[addQuotes("number")] = addQuotes(number);
+    map["name"] = myToJson(name);
+    map["label"] = myToJson(label);
+    map["number"] = myToJson(number);
     return map;
   }
 
@@ -508,7 +534,7 @@ class DeviceData{
 class LocationsData{
   //NOTE: we only add a new GPS update IF we get new GPS from the scanner
   //list of last couple gps updates (equivalent length)
-  Map<String, LocationStorage> microsecondsSinceEpoch2Location;
+  Map<String, LocationData> microsecondsSinceEpoch2Location;
   Queue<String> locationUpdatesOrder; //DONT ADD MANUALLY (use addUpdate)
   int locationsReferenced;
   int maxExtraUpdates;
@@ -526,7 +552,7 @@ class LocationsData{
 
   Map toJson(){ 
     Map map = new Map();
-    map[addQuotes("microsecondsSinceEpoch2Location")] = json.encode(microsecondsSinceEpoch2Location);
+    map[addQuotes("microsecondsSinceEpoch2Location")] = mapToJson(microsecondsSinceEpoch2Location);
     //NOTE: we don't need to save locationUpdatesOrder since its impliable from the above
     map[addQuotes("locationsReferenced")] = myToJson(locationsReferenced);
     map[addQuotes("maxExtraUpdates")] = myToJson(maxExtraUpdates);
@@ -538,7 +564,7 @@ class LocationsData{
   //NOTE: ONLY pass the optional param IF the GPS is known to be on
   addUpdate(double latitude, double longitude, int microsecondsSinceEpoch){
     //-----create struct
-    LocationStorage update = LocationStorage(latitude, longitude);
+    LocationData update = LocationData(latitude, longitude);
 
     //-----add to back of line (newer points)
     locationUpdatesOrder.addLast(microsecondsSinceEpoch.toString()); 
@@ -557,7 +583,7 @@ class LocationsData{
       int indexBeingChecked = 0;
       while(locationToRemoveIndex == null){
         String locationIndex = theLocations[indexBeingChecked];
-        LocationStorage theLocation = microsecondsSinceEpoch2Location[locationIndex];
+        LocationData theLocation = microsecondsSinceEpoch2Location[locationIndex];
         if(theLocation.referenceCount > 0){
           //move on to checking if the next location is not used
           indexBeingChecked++;
@@ -575,7 +601,7 @@ class LocationsData{
   }
 
   increaseReferenceCount(String microsecondsSinceEpochKEY){
-    LocationStorage locationToUpdate = microsecondsSinceEpoch2Location[microsecondsSinceEpochKEY];
+    LocationData locationToUpdate = microsecondsSinceEpoch2Location[microsecondsSinceEpochKEY];
     locationToUpdate.referenceCount += 1;
     if(locationToUpdate.referenceCount == 1){ //first time we are referencing this location
       locationsReferenced++;
@@ -583,7 +609,7 @@ class LocationsData{
   }
 
   decreaseReferenceCount(String microsecondsSinceEpochKEY){
-    LocationStorage locationToUpdate = microsecondsSinceEpoch2Location[microsecondsSinceEpochKEY];
+    LocationData locationToUpdate = microsecondsSinceEpoch2Location[microsecondsSinceEpochKEY];
     locationToUpdate.referenceCount -= 1;
     if(locationToUpdate.referenceCount == 0){ //we are no longer referencing this location
       locationsReferenced--;
@@ -598,7 +624,7 @@ class LocationsData{
 
   static LocationsData get defaultData{
     return LocationsData(
-      new Map<String, LocationStorage>(),
+      new Map<String, LocationData>(),
       //initially you have no locations 
       //and therefore no references
       0, 
@@ -607,12 +633,12 @@ class LocationsData{
   }
 }
 
-class LocationStorage{
+class LocationData{
   double latitude;
   double longitude;
   int referenceCount;
 
-  LocationStorage(
+  LocationData(
     this.latitude,
     this.longitude,
     {
@@ -634,7 +660,7 @@ class LocationStorage{
 
   //-------------------------Static Functions
   
-  static LocationStorage toStruct(String string){
+  static LocationData toStruct(String string){
     //TODO... fill this in
   }
 
@@ -679,10 +705,26 @@ String myToJson(dynamic data){
   //handle primatives
   if(data is int) return remQuotes(data.toString());
   else if(data is bool) return remQuotes(data.toString());
-  else if(data is String){
-    return remQuotes(data);
-  }
+  else if(data is double) return remQuotes(data.toString());
+  else if(data is String) return remQuotes(data);
   else{
     return remQuotes(data.toJson().toString());
   }
+}
+
+String mapToJson(Map<String,dynamic> map){
+  String str = "{";
+  List<String> keys = map.keys.toList();
+  for(int i = 0; i < keys.length; i++){
+    str += addQuotes(keys[i]);
+    str += " : ";
+    var location = map[keys[i]];
+    if(location is LocationData){
+      str += location.toJson().toString();
+    }
+    else str += addQuotes("value");
+    if(i != (keys.length - 1)) str += ",";
+  }
+  str += "}";
+  return str;
 }
