@@ -45,7 +45,6 @@ class DataManager {
     appData.sosData.sosContacts.add(SosContact("Jessica","cell","(956) 128-1297"));
 
     //fill our struct with location data
-    /*
     appData.locationData.microsecondsSinceEpoch2Location = {
       "3" : LocationData(1112.312, 7.43, referenceCount: 3),
       "1" : LocationData(12.312, 788.7043, referenceCount: 7),
@@ -53,7 +52,6 @@ class DataManager {
       "4" : LocationData(12.553312, 97.43, referenceCount: 5),
       "5" : LocationData(7812.312, 79.43, referenceCount: 1),
     };
-    */
 
     //fill our struct with device data
     appData.deviceData.add(
@@ -227,7 +225,7 @@ class AppData{
     map[addQuotes("settingsData")] = myToJson(settingsData);
     map[addQuotes("sosData")] = myToJson(sosData);
     map[addQuotes("microsecondsUntilLastGpsUpdateisUseless")] = microsecondsUntilLastGpsUpdateisUseless;
-    map[addQuotes("deviceData")] = json.encode(deviceData);
+    map[addQuotes("deviceData")] = arrayToJson(deviceData);
     map[addQuotes("defaultDeviceDataMaxUpdates")] = defaultDeviceDataMaxUpdates;
     map[addQuotes("locationData")] = myToJson(locationData);
 
@@ -493,15 +491,15 @@ class DeviceData{
 
   Map toJson(){ 
     Map map = new Map();
-    map["id"] = addQuotes(id);
-    map["type"] = addQuotes(type);
-    map["friendlyName"] = addQuotes(friendlyName);
-    map["assignedName"] = addQuotes(assignedName);
-    map["imageUrl"] = addQuotes(imageUrl);
-    map["microsecondsSinceEpoch2Value"] = json.encode(microsecondsSinceEpoch2Value);
+    map[addQuotes("id")] = addQuotes(id);
+    map[addQuotes("type")] = addQuotes(type);
+    map[addQuotes("friendlyName")] = addQuotes(friendlyName);
+    map[addQuotes("assignedName")] = addQuotes(assignedName);
+    map[addQuotes("imageUrl")] = addQuotes(imageUrl);
+    map[addQuotes("microsecondsSinceEpoch2Value")] = mapToJson(microsecondsSinceEpoch2Value);
     //NOTE: we don't need to save rssiUpdatesOrder since its impliable from the above
-    map["locationKeyToRssiKey"] = json.encode(locationKeyToRssiKey);
-    map["maxUpdates"] = maxUpdates;
+    map[addQuotes("locationKeyToRssiKey")] = mapToJson(locationKeyToRssiKey);
+    map[addQuotes("maxUpdates")] = maxUpdates;
     return map;
   }
 
@@ -736,7 +734,7 @@ Queue<String> mapToOrderedQueue(Map<String, dynamic> map){
   return orderedQueue;
 }
 
-final String quote = "\"";
+final String quote = '\"';
 remQuotes(String str){
   if(str.length >= 2){
     String startChar = str[0];
@@ -761,18 +759,41 @@ String myToJson(dynamic data){
   }
 }
 
-String mapToJson(Map<String,dynamic> map){
+String arrayToJson(List<DeviceData> list){
+  String str = "[";
+  for(int i = 0; i < list.length; i++){
+    str += list[i].toJson().toString();
+    //str += addQuotes("device data map");
+
+    //add comma to indicate next item in map
+    if(i != (list.length - 1)) str += ", ";
+  }
+  str += "]";
+  return str;
+}
+
+String mapToJson(Map<String,dynamic> map, {bool addQuoteKey: true}){
   String str = "{";
   List<String> keys = map.keys.toList();
   for(int i = 0; i < keys.length; i++){
-    str += addQuotes(keys[i]);
+    String key = keys[i];
+    str += (addQuoteKey) ? addQuotes(key) : key;
     str += " : ";
-    var location = map[keys[i]];
-    if(location is LocationData){
-      str += location.toJson().toString();
+    var value = map[keys[i]];
+
+    //interpret the map value
+    if(value is LocationData){
+      str += value.toJson().toString();
     }
-    else str += addQuotes("value");
-    if(i != (keys.length - 1)) str += ",";
+    else if(value is int){
+      str += value.toString();
+    }
+    else{
+      str += addQuotes(value);
+    }
+
+    //add comma to indicate next item in map
+    if(i != (keys.length - 1)) str += ", ";
   }
   str += "}";
   return str;
