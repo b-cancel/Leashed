@@ -2,12 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:leashed/deviceScanner.dart';
 import 'dart:math' as math;
 
 import 'package:leashed/navigation.dart';
+import 'package:leashed/recordSignature.dart';
 import 'package:leashed/scanner.dart';
+import 'package:leashed/scannerUI.dart';
 import 'package:leashed/widgets/bluetoothOffBanner.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:page_transition/page_transition.dart';
 
 //TODO... use image_picker_saver 0.1.0
 //to also let users select images from the web
@@ -28,21 +32,35 @@ class AddDeviceDetailsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Add Bluetooth Device"),
+        actions: <Widget>[
+          Container(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: RaisedButton.icon(
+              color: Colors.white,
+              onPressed: (){
+                //pop self
+                Navigator.pop(context); 
+                //pop add device list page
+                Navigator.pop(context); 
+              },
+              icon: Icon(
+                Icons.check,
+                color: Navigation.blueGrey,
+              ),
+              label: Text(
+                "Done",
+                style: TextStyle(
+                  color: Navigation.blueGrey,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: AddEditDeviceDetails(
         name: name,
         id: id,
         type: type,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: (){
-          //pop self
-          Navigator.pop(context); 
-          //pop add device list page
-          Navigator.pop(context); 
-        },
-        icon: Icon(Icons.check),
-        label: Text("Done"),
       ),
     );
   }
@@ -244,18 +262,19 @@ class _AddEditDeviceDetailsState extends State<AddEditDeviceDetails> {
               ? Container()
               : InkWell(
                 onTap: (){
-                  /*
                   Navigator.push(context, PageTransition(
-                    type: PageTransitionType.fade,
-                    duration: Duration.zero, 
-                    child: DeviceScanner(
-                      title: "Grabbing Device Signature",
-                      child: new LiveScanner( 
-                        deviceID: widget.id,
+                    type: PageTransitionType.upToDown,
+                    child: Scaffold(
+                      appBar: AppBar(
+                        title: Text("Inspecting Signal"),
                       ),
-                    ),
+                      body: ScanStarter(
+                        child: ScannerUI( 
+                          deviceID: widget.id,
+                        ),
+                      ),
+                    )
                   ));
-                  */
                 },
                 child: Container(
                   padding: EdgeInsets.all(64),

@@ -126,6 +126,17 @@ class _DeviceDetailsState extends State<DeviceDetails> {
           });
         },
       ),
+      floatingActionButton: Opacity(
+        opacity: (menuNum.value == 2) ? 1 : 0,
+        child: FloatingActionButton.extended(
+          backgroundColor: Colors.red,
+          onPressed: (){
+            Navigator.pop(context);
+          },
+          icon: Icon(FontAwesomeIcons.trashAlt),
+          label: Text("Done"),
+        ),
+      ),
     );
   }
 }

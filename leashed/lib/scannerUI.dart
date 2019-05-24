@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:leashed/navigation.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:charts_common/common.dart' as common;
+import 'package:leashed/recordSignature.dart';
 
 class ScannerUI extends StatefulWidget {
   final String deviceID;
@@ -9,7 +10,8 @@ class ScannerUI extends StatefulWidget {
 
   ScannerUI({
     this.deviceID,
-    this.animateToPage,
+    //used to animate to the page that lets us record signature
+    this.animateToPage, 
   });
 
   @override
@@ -128,7 +130,11 @@ class _ScannerUIState extends State<ScannerUI> {
           child: Container(
             color: Colors.grey[350],
             height: height,
-            child: Text("middle"),
+            child: (widget.deviceID.length > 5)
+            ? LiveScanner( 
+              deviceID: widget.deviceID,
+            )
+            : Container(),
           ),
         ),
         InkWell(
@@ -314,8 +320,7 @@ class WhiteCircle extends StatelessWidget {
 
   const WhiteCircle({
     this.value,
-    Key key,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -325,7 +330,7 @@ class WhiteCircle extends StatelessWidget {
         padding: EdgeInsets.all(8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(100),
-          color: Colors.white,
+          color: Colors.white.withOpacity(0.75),
         ),
         child: new Text(
           value,

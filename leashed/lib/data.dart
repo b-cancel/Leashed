@@ -40,6 +40,8 @@ class DataManager {
     //fill our structs with defaults
     await _writeStructWithDefaults;
 
+    appData.sosData.sosMessage = "some test sos message";
+
     //fill our struct with sosContacts
     appData.sosData.sosContacts.add(SosContact("jake","work","(956) 777-2692"));
     appData.sosData.sosContacts.add(SosContact("Jessica","cell","(956) 128-1297"));
@@ -102,10 +104,6 @@ class DataManager {
         maxUpdates: 100,
       ),
     );
-
-    /*
-    map[addQuotes("locationKeyToRssiKey")] = json.encode(locationKeyToRssiKey);
-    */
 
     //save the defaults on in the file
     await _writeStructToFile;
@@ -250,7 +248,8 @@ class AppData{
       SettingsData.toStruct(map["settingsData"]),
       SosData.toStruct(map["sosData"]),
       map["microsecondsUntilLastGpsUpdateisUseless"], 
-      List<DeviceData>(), //TODO... finish array to struct
+      deviceDataListToStruct(map["deviceData"]),
+      //sosContactListToStruct(map["sosContacts"]),
       map["defaultDeviceDataMaxUpdates"], 
       LocationsData.toStruct(map["locationsData"]),
     );
@@ -362,7 +361,7 @@ class ColorSetting{
 
 class SosData{
   String sosMessage;
-  List<SosContact> sosContacts;
+  List<SosContact> sosContacts; 
 
   SosData(
     this.sosMessage,
@@ -381,7 +380,7 @@ class SosData{
   static SosData toStruct(Map<String, dynamic> map){
     return SosData(
       map["sosMessage"],
-      new List<SosContact>(),//TODO... finish to list
+      sosContactListToStruct(map["sosContacts"]),
     );
   }
 
@@ -445,7 +444,7 @@ class DeviceData{
 
   //NOTE: we only add a new rssi update IF we get new rssi from the scanner
   //DONT ADD MANUALLY (use addUpdate)
-  Map<String, int> microsecondsSinceEpoch2Value;
+  Map<String, dynamic> microsecondsSinceEpoch2Value; //the dynamic is an INT
   Queue<String> rssiUpdatesOrder; 
 
   //the location key is how many microsecondsBeforeEpoch for the GPS update
@@ -453,7 +452,7 @@ class DeviceData{
   //NOTE: the keys are stored as strings from the sake of json.encode() working
   //  - it only knows how to automatically toJson maps with String keys
   //but ultimately we are storing ints here
-  Map<String, String> locationKeyToRssiKey;
+  Map<String, dynamic> locationKeyToRssiKey; //the dynamic is a STRING
   //TODO... what we really need is a two way map...
   //I should be able to 
   //1. grab my value from my key in constant time
@@ -609,8 +608,8 @@ class DeviceData{
       map["friendlyName"],
       map["assignedName"],
       map["imageUrl"],
-      new Map<String, int>(), //map["microsecondsSinceEpoch2Value"], //TODO...
-      locationKeyToRssiKey: new Map<String, String>(), //map["locationKeyToRssiKey"], //TODO... 
+      mapToStruct(map["microsecondsSinceEpoch2Value"]),
+      locationKeyToRssiKey: mapToStruct(map["locationKeyToRssiKey"]),
       maxUpdates: map["maxUpdates"],
     );
   }
@@ -625,7 +624,7 @@ class DeviceData{
 class LocationsData{
   //NOTE: we only add a new GPS update IF we get new GPS from the scanner
   //list of last couple gps updates (equivalent length)
-  Map<String, LocationData> microsecondsSinceEpoch2Location;
+  Map<String, dynamic> microsecondsSinceEpoch2Location; //the dynamic is LocationData
   Queue<String> locationUpdatesOrder; //DONT ADD MANUALLY (use addUpdate)
   int locationsReferenced;
   int maxExtraUpdates;
@@ -711,7 +710,7 @@ class LocationsData{
   
   static LocationsData toStruct(Map<String, dynamic> map){
     return LocationsData(
-      new Map<String, LocationData>(), //TODO... finish map to struct
+      mapToStruct(map["microsecondsSinceEpoch2Location"]),
       map["locationsReferenced"],
       map["maxExtraUpdates"],
     );
@@ -852,6 +851,43 @@ String mapToJson(Map<String,dynamic> map, {bool addQuoteKey: true}){
 
 //-------------------------EXTRA TO STRUCT-------------------------
 
+List<SosContact> sosContactListToStruct(List<dynamic> list){
+  List<SosContact> sosContacts = new List<SosContact>();
+  for(int i = 0; i < list.length; i++){
+    var item = list[i];
+    sosContacts.add(
+      SosContact.toStruct(item)
+    );
+  }
+  return sosContacts;
+}
+
+List<DeviceData> deviceDataListToStruct(List<dynamic> list){
+  List<DeviceData> deviceDataList = new List<DeviceData>();
+  for(int i = 0; i < list.length; i++){
+    var item = list[i];
+    deviceDataList.add(
+      DeviceData.toStruct(item)
+    );
+  }
+  return deviceDataList;
+}
+
 Map<String, dynamic> mapToStruct(Map<String, dynamic> map){
-  map.keys.toList();
+  Map<String, dynamic> newMap = new Map<String, dynamic>();
+  List keys = map.keys.toList();
+  for(int i = 0; i < keys.length; i++){
+    var key = keys[i];
+    var value = map[key];
+    if(value.runtimeType == int){
+      newMap[key] = (value as int);
+    }
+    else if(value.runtimeType == String){
+      newMap[key] = (value as String);
+    }
+    else{
+      newMap[key] = LocationData.toStruct(value);
+    }
+  }
+  return newMap;
 }

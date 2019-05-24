@@ -3,6 +3,7 @@ import 'package:leashed/helper/structs.dart';
 import 'package:leashed/helper/utils.dart';
 import 'package:leashed/scanner.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:leashed/scannerUI.dart';
 
 //TODO...
 
@@ -104,47 +105,31 @@ class _LiveScannerState extends State<LiveScanner> {
 
     DateTime lastScan = scanData.rssiUpdateDateTimes.last;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Row(
       children: <Widget>[
-        Container(
-          alignment: Alignment.centerLeft,
-          padding: EdgeInsets.all(16),
-          child: Text("Samlpe Count: " + sampleCount.toString()),
-        ),
-        Container(
-          padding: EdgeInsets.all(16),
-          child: TextFormField(
-            controller: rollingAverageValue,
-            decoration: InputDecoration(
-              prefix: new Text("Rolling Value: ")
-            ),
-            onFieldSubmitted: (str){
-              rollingAverageValue.text = str;
-              //set state so we can remake thegraph with this rolling average value
-              setState(() {
-                
-              });
-            },
-            keyboardType: TextInputType.numberWithOptions(
-              signed: false,
-              decimal: false,
-            ),
-          ),
-        ),
         Expanded(
-          child: Column(
+          child: Stack(
             children: <Widget>[
-              Expanded(
+              Container(
+                padding: EdgeInsets.only(top: 8, bottom: 8),
                 child: charts.LineChart(
                   createCharts(
                     dateTimes,
                     scanRSSIs,
-                    [1],
-                    [charts.MaterialPalette.blue.shadeDefault],
-                    [5],
+                    [3, 7],
+                    [
+                      charts.MaterialPalette.blue.shadeDefault,
+                      charts.MaterialPalette.pink.shadeDefault,
+                    ],
+                    [7, 3],
                   ),
                   animate: false,
+                  layoutConfig: charts.LayoutConfig(
+                    topMarginSpec: charts.MarginSpec.fixedPixel(0),
+                    rightMarginSpec: charts.MarginSpec.fixedPixel(0),
+                    bottomMarginSpec: charts.MarginSpec.fixedPixel(0),
+                    leftMarginSpec: charts.MarginSpec.fixedPixel(0),
+                  ),
                   defaultRenderer: new charts.LineRendererConfig(
                     roundEndCaps: false, //makes patterns more clear 
                     includePoints: false, //makes patterns more clear
@@ -158,19 +143,107 @@ class _LiveScannerState extends State<LiveScanner> {
                     renderSpec: new charts.NoneRenderSpec(),
                   ),
                   primaryMeasureAxis: new charts.NumericAxisSpec(
-                    //showAxisLine: false,
+                    showAxisLine: false,
                     viewport: new charts.NumericExtents(
                       minRSSI,
                       maxRSSI,
                     ),
-                    //renderSpec: new charts.NoneRenderSpec(),
+                    renderSpec: new charts.NoneRenderSpec(),
                   ),
                 ),
-              )
+              ),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: WhiteCircle(
+                  value: rssiToAdjustedRssi(maxRSSI).toString(),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: WhiteCircle(
+                  value: rssiToAdjustedRssi(minRSSI).toString(),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                top: 0,
+                child: WhiteCircle(
+                  value: scanRSSIs.length.toString(),
+                ),
+              ),
             ],
-          )
+          ),
+        ),
+        Container(
+          alignment: Alignment.centerRight,
+          color: Colors.white,
+          width: 25,
+          child: NewSignalPulse(
+            scanData: ScannerStaticVars.allDevicesFound[widget.deviceID].scanData,
+            interval: Duration(milliseconds: 100),
+          ),  
         ),
       ],
+    );
+  }
+}
+
+class NewSignalPulse extends StatefulWidget {
+  final ScanData scanData;
+  final Duration interval;
+
+  NewSignalPulse({
+    @required this.scanData,
+    this.interval: const Duration(milliseconds: 250),
+  });
+
+  @override
+  _NewSignalPulseState createState() => _NewSignalPulseState();
+}
+
+class _NewSignalPulseState extends State<NewSignalPulse> {
+  void update() async{
+    await Future.delayed(widget.interval);
+    if(mounted){
+      setState(() {});
+      update();
+    }
+  }
+
+  @override
+  void initState() {
+    update(); //start cyclical update
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    //NOTE: we use min so the scanner being off doesn't throw off what should be our average
+    Duration minDuration = widget.scanData.averageIntervalDuration ?? Duration(milliseconds: 100);
+    Duration averageInterval = minDuration;
+    averageInterval = (averageInterval == null) ? Duration(seconds: 1) : averageInterval;
+
+    DateTime lastScan = widget.scanData.rssiUpdateDateTimes.last;
+    Duration intervalSoFar = (DateTime.now()).difference(lastScan);
+
+    //0 -> averageInterval
+    //0 -> 1
+    int intervalLeftTill0 = averageInterval.inMicroseconds - intervalSoFar.inMicroseconds;
+    double float = intervalLeftTill0 / averageInterval.inMicroseconds;
+    print("average: " + averageInterval.toString() + " so far " + intervalSoFar.toString());
+    print("sub " + intervalLeftTill0.toString() + " avg " + averageInterval.inMilliseconds.toString());
+
+    //float affect size
+    double barWidth;
+    barWidth = lerp(0, 25, float);
+
+    //print("width: " + barWidth.toString());
+
+    return Container(
+      width: barWidth,
+      color: Colors.pink,
     );
   }
 }
