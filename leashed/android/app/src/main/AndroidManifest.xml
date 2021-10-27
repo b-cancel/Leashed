@@ -19,7 +19,7 @@
         android:label="leashed"
         android:icon="@mipmap/launcher_icon">
         <meta-data android:name="com.google.android.geo.API_KEY"
-               android:value="AIzaSyCHI75vJQrOiaRj_718HEcL8WH9UdWStq8"/>
+               android:value="ADD GEO LOCATION KEY HERE"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
